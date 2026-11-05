@@ -1,0 +1,34 @@
+# gerados automaticamente a partir da cena principal (refeitos pelo atualizar_tudo.ps1)
+# -> ficam fora do GitHub para nao estourar a cota do Git LFS
+01_Cena_Render_Cycles/*.blend
+02_Cena_VR_Otimizada/*.blend
+02_Cena_VR_Otimizada/*.glb
+02_Cena_VR_Otimizada/*.fbx
+02_Cena_VR_Otimizada/texturas/
+04_ThreeJS/*.blend
+# downloads originais do Rocketbox (287 MB; baixaveis de novo pelo LEIA-ME de 07_Personagens)
+07_Personagens/rocketbox/
+07_Personagens/_texturas_web/
+07_Personagens/_log.txt
+
+# gerados / temporarios
+*.blend1
+*_log.txt
+vr_log.txt
+_cache_texturas/
+01_Cena_Render_Cycles/backup/
+.claude/
+__pycache__/
+Thumbs.db
+desktop.ini
+
+# pacotes originais dos carros (baixados do Sketchfab; os .glb por veiculo ficam em modelos/carros)
+01_Cena_Render_Cycles/modelos/_fontes/
+01_Cena_Render_Cycles/modelos/*.zip
+
+# chave da API do ElevenLabs (nunca no GitHub)
+06_Audio/chave_elevenlabs.txt
+
+# pacote de referencias do CIEP (direitos das fontes: so consulta local)
+_referencias/
+04_ThreeJS/pipeline_log.txt

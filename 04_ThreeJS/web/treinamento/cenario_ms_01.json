@@ -1,0 +1,328 @@
+{
+  "id": "ms_01",
+  "titulo": "A mensagem — ocorrência em uma escola",
+  "versao": "rascunho 1 · para validação com instrutores",
+  "aviso_ficcao": "Situação fictícia. O prédio é inspirado no CIEP Tancredo Neves (Rio de Janeiro); pessoas, mensagens e fatos são inventados.",
+  "aprovacao": { "pontos_minimos": 70, "sem_falha_grave": true },
+
+  "variacoes": {
+    "origem": ["corrente_antiga", "brincadeira", "conflito", "ameaca_real"],
+    "responsavel": ["acalma", "filma"],
+    "desfecho": ["rende", "aponta"]
+  },
+  "nomes_variacao": {
+    "origem": { "corrente_antiga": "mensagem antiga que voltou a circular", "brincadeira": "aluno escreveu como 'brincadeira'", "conflito": "aluno em sofrimento, alvo de intimidação", "ameaca_real": "ameaça real: aluno armado na escola" },
+    "responsavel": { "acalma": "responsável se acalma quando é ouvido", "filma": "responsável filma e insiste" },
+    "desfecho": { "rende": "o aluno obedece à ordem verbal", "aponta": "o aluno aponta a arma" }
+  },
+
+  "fases": [
+    {
+      "id": "chegada", "nome": "Chegada e primeiras informações",
+      "acoes": [
+        { "id": "comunicar_chegada", "texto": "Informou a chegada pelo rádio", "pontos": 2, "base": "Procedimento operacional (comunicação com a sala de operações)" },
+        { "id": "ouvir_inspetora", "texto": "Ouviu a funcionária da portaria", "pontos": 3, "base": "Coleta de informações no local" },
+        { "id": "acalmar_responsavel", "texto": "Reduziu a tensão com o responsável exaltado, ouvindo antes de agir", "pontos": 5, "base": "Uso progressivo da força: verbalização (Portaria Interministerial 4.226/2010, validar)", "validar": true },
+        { "id": "separar_partes", "texto": "Separou as partes: pediu ao responsável que aguardasse fora da recepção", "pontos": 2, "base": "Preservação da ordem e das fontes de informação" },
+        { "id": "orientar_filmagem", "texto": "Tratou corretamente a filmagem: permitiu filmar o policial e pediu para não expor alunos", "pontos": 3, "base": "Filmar agente público em local público é lícito; ECA arts. 17, 18 e 143 (validar)", "condicao": "variacao.responsavel == 'filma'", "validar": true }
+      ],
+      "erros": [
+        { "id": "confronto_responsavel", "texto": "Tratou o responsável com ameaça ou rispidez, aumentando a tensão", "pontos": -4 },
+        { "id": "tomar_celular", "texto": "Tentou tomar o celular do responsável que filmava", "pontos": -5, "base": "Sem base legal para apreender o aparelho de quem filma (validar)" }
+      ]
+    },
+    {
+      "id": "verificacao", "nome": "Verificação da mensagem",
+      "acoes": [
+        { "id": "ouvir_diretora", "texto": "Ouviu a direção sobre como a mensagem chegou", "pontos": 3, "base": "Coleta de informações no local" },
+        { "id": "ver_print", "texto": "Examinou o print", "pontos": 3, "base": "Verificação da notícia" },
+        { "id": "checar_detalhes", "texto": "Conferiu data, hora, remetente e detalhes concretos do print", "pontos": 4, "base": "Avaliação da credibilidade da ameaça" },
+        { "id": "consultar_frequencia", "texto": "Consultou a frequência: onde o aluno citado deveria estar", "pontos": 3, "base": "Localização das pessoas envolvidas" },
+        { "id": "consultar_cameras", "texto": "Consultou as câmeras da escola", "pontos": 3, "base": "Verificação independente dos relatos" },
+        { "id": "consultar_livro", "texto": "Consultou o livro de ocorrências da escola", "pontos": 2, "base": "Histórico do caso" },
+        { "id": "consultar_radio", "texto": "Consultou a sala de operações sobre a mensagem", "pontos": 3, "base": "Verificação com a central (correntes e registros anteriores)" },
+        { "id": "preservar_print", "texto": "Orientou a direção a preservar o print e o aparelho, sem apagar nada", "pontos": 3, "base": "Preservação de vestígios digitais; CPP arts. 6º e 158-A (validar)", "validar": true },
+        { "id": "nao_divulgar", "texto": "Orientou a não repassar a mensagem nem o nome do aluno", "pontos": 3, "base": "ECA arts. 17, 18 e 143" }
+      ],
+      "erros": [
+        { "id": "alarme_desproporcional", "texto": "Mandou trancar a escola sem nenhum indicativo concreto de risco, espalhando pânico", "pontos": -2, "validar": true },
+        { "id": "concluir_sem_verificar", "texto": "Encerrou a ocorrência sem verificar a mensagem nem localizar o aluno citado", "pontos": -6 }
+      ]
+    },
+    {
+      "id": "aluno", "nome": "Contato com o adolescente",
+      "acoes": [
+        { "id": "localizar_aluno", "texto": "Localizou o aluno citado", "pontos": 3, "base": "Localização das pessoas envolvidas", "condicao": "variacao.origem != 'ameaca_real'" },
+        { "id": "abordagem_calma", "texto": "Abordou o adolescente com calma, sem expor e sem arma em punho", "pontos": 4, "base": "ECA arts. 17 e 18; uso progressivo da força", "condicao": "variacao.origem != 'ameaca_real'" },
+        { "id": "conversar_reservado", "texto": "Conversou em local reservado, com a direção presente", "pontos": 4, "base": "ECA arts. 17, 18 e 143 (validar)", "condicao": "variacao.origem != 'ameaca_real'", "validar": true },
+        { "id": "ouvir_aluno", "texto": "Ouviu a versão do aluno", "pontos": 3, "base": "Apuração dos fatos", "condicao": "variacao.origem != 'ameaca_real'" },
+        { "id": "acionar_familia", "texto": "Pediu que a escola chamasse a família do aluno", "pontos": 3, "base": "ECA art. 107 (comunicação à família, quando há apreensão) e boas práticas (validar)", "condicao": "variacao.origem != 'ameaca_real'", "validar": true },
+        { "id": "acolher", "texto": "Acolheu o aluno em sofrimento e identificou a intimidação que ele sofria", "pontos": 4, "base": "Lei 13.185/2015 (intimidação sistemática); ECA art. 70-A (validar)", "condicao": "variacao.origem == 'conflito'", "validar": true }
+      ],
+      "erros": [
+        { "id": "abordagem_dura", "texto": "Abordou o adolescente com ordens de rendição sem que ele representasse ameaça", "pontos": -4 },
+        { "id": "arma_sem_ameaca", "texto": "Apontou a arma para quem não ameaçava ninguém", "pontos": -4, "base": "Lei 13.060/2014" },
+        { "id": "expor_aluno", "texto": "Expôs o aluno ou o acusou na frente de outras pessoas", "pontos": -5, "base": "ECA arts. 17, 18 e 143" },
+        { "id": "busca_sem_suspeita", "texto": "Revistou o aluno ou a mochila sem fundada suspeita", "pontos": -4, "base": "CPP art. 244" },
+        { "id": "acessar_celular", "texto": "Vasculhou o celular do aluno sem consentimento ou ordem judicial", "pontos": -4, "base": "CF art. 5º, X e XII; jurisprudência do STJ sobre acesso a dados de celular (validar)", "validar": true },
+        { "id": "algemas_indevidas", "texto": "Algemou sem resistência, risco de fuga ou perigo", "pontos": -4, "base": "Súmula Vinculante 11" }
+      ]
+    },
+    {
+      "id": "ameaca", "nome": "Ameaça ativa",
+      "acoes": [
+        { "id": "comunicar_ameaca", "texto": "Comunicou a ameaça ativa e pediu apoio e socorro pelo rádio", "pontos": 4, "base": "Procedimento operacional (validar com norma interna)", "condicao": "variacao.origem == 'ameaca_real'", "validar": true },
+        { "id": "abrigamento", "texto": "Mandou trancar as salas e manter os alunos abrigados", "pontos": 4, "base": "Proteção das pessoas; protocolo de abrigamento da escola (validar)", "condicao": "variacao.origem == 'ameaca_real'", "validar": true },
+        { "id": "avancar_ameaca", "texto": "Foi até a ameaça com o parceiro, sem esperar do lado de fora", "pontos": 5, "base": "Doutrina de intervenção imediata em ameaça ativa (validar com norma interna)", "condicao": "variacao.origem == 'ameaca_real'", "validar": true },
+        { "id": "ordem_verbal", "texto": "Deu a ordem verbal clara antes de qualquer disparo", "pontos": 4, "base": "Uso progressivo da força; Lei 13.060/2014", "condicao": "variacao.origem == 'ameaca_real'" },
+        { "id": "resposta_proporcional", "texto": "Usou a força na medida da ameaça (sem disparo quando ele obedeceu; disparo só contra agressão atual)", "pontos": 6, "base": "CP arts. 23 e 25; Lei 13.060/2014", "condicao": "variacao.origem == 'ameaca_real'" },
+        { "id": "socorro", "texto": "Pediu socorro e atendeu o ferido", "pontos": 4, "base": "Dever de socorro (CP art. 135)", "condicao": "variacao.origem == 'ameaca_real'" },
+        { "id": "recolher_arma", "texto": "Recolheu a arma com segurança e preservou o local", "pontos": 3, "base": "CPP arts. 6º e 158-A a 158-F", "condicao": "variacao.origem == 'ameaca_real'" }
+      ],
+      "erros": [
+        { "id": "esperar_fora", "texto": "Ficou do lado de fora esperando o apoio durante a ameaça ativa", "pontos": -5, "validar": true },
+        { "id": "disparo_sem_alvo", "texto": "Disparo que não atingiu o alvo (risco a terceiros)", "pontos": -2 }
+      ],
+      "falhas_graves": [
+        { "id": "disparo_injustificado", "texto": "Disparou contra quem não representava ameaça", "pontos": -25, "base": "CP arts. 23 e 25; Lei 13.060/2014" },
+        { "id": "omissao_socorro", "texto": "Deixou ferido sem socorro", "pontos": -15, "base": "CP art. 135" },
+        { "id": "ignorou_ameaca", "texto": "Encerrou como boato uma ameaça real", "pontos": -20 }
+      ]
+    },
+    {
+      "id": "encerramento", "nome": "Decisão e encerramento",
+      "acoes": [
+        { "id": "decisao_correta", "texto": "Tomou a decisão adequada aos fatos verificados", "pontos": 10, "base": "Ver explicação da decisão" },
+        { "id": "registro_completo", "texto": "Registrou os fatos, as fontes consultadas e as providências, sem divulgar o nome do adolescente", "pontos": 3, "base": "ECA art. 143" },
+        { "id": "orientar_escola", "texto": "Orientou a escola sobre a comunicação com as famílias e a rede de proteção", "pontos": 3, "base": "ECA arts. 56 e 136 (Conselho Tutelar) (validar)", "validar": true }
+      ],
+      "erros": [
+        { "id": "decisao_errada", "texto": "Decisão final incompatível com os fatos", "pontos": -6 },
+        { "id": "registro_incompleto", "texto": "Registro incompleto ou que expõe o adolescente", "pontos": -3 }
+      ]
+    }
+  ],
+
+  "radio": {
+    "inicio": "Viatura, deslocar para o CIEP Tancredo Neves. A direção recebeu um print com ameaça de ataque à escola. Verificar a origem e a situação no local.",
+    "chegada": "Ciente, viatura no local. Mantenha a sala informada.",
+    "consulta": {
+      "corrente_antiga": "Sala de operações: essa mesma mensagem, com o mesmo texto, circula desde 2024 em grupos de vários estados. Já foi apurada como boato. Não há registro de ameaça nova contra esta escola.",
+      "outra": "Sala de operações: nenhum registro anterior de ameaça contra esta escola. Essa mensagem não consta como corrente conhecida."
+    },
+    "ameaca": "Ciente: disparos dentro da escola, ameaça ativa. Apoio e ambulância a caminho. Atenção, equipe.",
+    "socorro": "Ciente. Ambulância acionada para o CIEP Tancredo Neves.",
+    "final": "Ciente, ocorrência encerrada. Bom serviço."
+  },
+
+  "equipe": {
+    "pm_parceiro": "Tô contigo. Vamos ouvir todo mundo antes de concluir qualquer coisa.",
+    "pm_apoio": "Apoio no local. Estamos cobrindo o pátio e o portão."
+  },
+
+  "exploracao": {
+    "inspetora": "Bom dia. Eu cuido da portaria. Hoje está uma confusão por causa de um print.",
+    "diretora": "Bom dia. Sou a diretora. Estou preocupada com essa mensagem.",
+    "responsavel": "Eu quero saber o que a polícia vai fazer!",
+    "aluno": "Oi... aconteceu alguma coisa?",
+    "funcionario": "Bom dia, policial. Sou inspetor do corredor."
+  },
+
+  "falas": {
+    "inspetora": {
+      "relato": "Bom dia. A diretora recebeu um print hoje cedo dizendo que vai ter um ataque aqui. Os pais estão mandando mensagem sem parar.",
+      "entrada": {
+        "corrente_antiga": "O Lucas, do nono ano? Entrou normal, com a turma dele. Tem mãe dizendo que é ele, mas eu não sei de onde tiraram isso.",
+        "brincadeira": "O Lucas entrou rindo com os amigos, normal. Foi direto pra sala.",
+        "conflito": "O Lucas entrou quietinho, de cabeça baixa. Uns meninos da turma vivem implicando com ele.",
+        "ameaca_real": "O Lucas chegou atrasado, sozinho, com uma mochila que parecia pesada. Nem me deu bom dia."
+      },
+      "direcao": "A direção fica no prédio, depois da passarela. Entra pela recepção.",
+      "divulgar": "Tá certo. Vou pedir pro pessoal parar de repassar."
+    },
+    "responsavel": {
+      "inicial": "Finalmente! Tem um moleque querendo matar todo mundo nessa escola e ninguém faz nada! Minha filha está lá dentro!",
+      "acalmou": "Tá... desculpa. É que no grupo dos pais disseram que é o Lucas, do nono ano. Que ele anda com arma na mochila. Eu quero tirar minha filha daqui.",
+      "irritou": "Prender quem? Eu sou pai! Vou filmar tudo isso, todo mundo vai ver!",
+      "aguardar": "Tá bom. Vou esperar no pátio. Mas eu quero minha filha comigo.",
+      "filma": "Eu vou filmar tudo. Todo mundo tem que ver o que está acontecendo nessa escola!",
+      "filma_ok": "Tá, tá... só estou filmando o senhor.",
+      "filma_tomar": "Não vou dar nada! Isso é abuso!",
+      "divulgar": "Tá. Não vou mandar mais nada no grupo."
+    },
+    "diretora": {
+      "como_chegou": "Recebi esse print às sete e dez, encaminhado pela mãe de uma aluna do sétimo ano. Não sei quem escreveu primeiro. Está aqui no meu celular.",
+      "quem": "O nome que estão falando é Lucas, da turma 901. Ele deveria estar na sala 104, no corredor central. A frequência fica na recepção.",
+      "historico": "Tem coisa registrada no livro de ocorrências, aqui na mesa. Pode olhar.",
+      "preservar": "Não vou apagar nada. O celular fica comigo, guardado.",
+      "abrigamento": "Vou avisar os professores pelo telefone interno para trancar as salas e manter os alunos dentro.",
+      "chamar_aluno": {
+        "corrente_antiga": "Vou pedir ao seu Jorge para trazer o Lucas aqui, e ligo para a mãe dele.",
+        "brincadeira": "Vou pedir ao seu Jorge para trazer o Lucas aqui, e ligo para o pai dele.",
+        "conflito": "O seu Jorge disse que o Lucas está trancado no banheiro masculino e não quer sair. Vou ligar para a avó dele, que é a responsável.",
+        "ameaca_real": "O Lucas não está na sala. O seu Jorge vai procurar no corredor."
+      },
+      "divulgar": "Vou mandar um comunicado pedindo que ninguém repasse."
+    },
+    "aluno": {
+      "abordagem": {
+        "corrente_antiga": "Eu? Mas eu não fiz nada... o que aconteceu?",
+        "brincadeira": "Ih... é sobre o grupo, né?",
+        "conflito": "Sai daqui! ... Eu não fiz nada com ninguém..."
+      },
+      "mensagem": {
+        "corrente_antiga": "Isso aí? Minha prima recebeu igualzinho em São Paulo, ano passado. Não fui eu, juro.",
+        "brincadeira": "Foi zoeira, no grupo da turma. Eu não tenho arma nenhuma, era só pra assustar o Rafa.",
+        "conflito": "Eu mandei pro Rafa ontem... Eu só queria que eles parassem. Todo dia eles me zoam e ninguém faz nada. Eu não ia fazer nada."
+      },
+      "celular": {
+        "corrente_antiga": "Pode ver, ó. Não tem nada meu nisso aí.",
+        "brincadeira": "Tá... tá aqui. Eu não apaguei.",
+        "conflito": "Não... eu não quero mostrar."
+      },
+      "revista": "Tá bom... pode olhar.",
+      "dura": "Calma! Eu não fiz nada!",
+      "vai_direcao": "Tá bom. Eu vou.",
+      "ameaca_ordem": { "rende": "Tá bom! Tá bom! Não atira!", "aponta": "Sai daqui! Vocês não sabem de nada!" }
+    },
+    "funcionario": {
+      "ferido": "Ele atirou... pegou na minha perna. Os alunos estão trancados nas salas.",
+      "socorrido": "Obrigado... tá doendo muito.",
+      "traz_aluno": "Pode deixar, eu trago ele."
+    },
+    "parceiro": {
+      "dica_inicio": "Antes de concluir, vamos ver o print, onde está o aluno e o que as câmeras mostram.",
+      "ameaca": "Disparo no corredor! Tô contigo, vamos!",
+      "cobertura": "Te cubro. Fala com ele."
+    }
+  },
+
+  "prints": {
+    "corrente_antiga": { "titulo": "Grupo Mães 6º e 7º anos", "hora": "07:05", "linhas": [
+      { "de": "Andréa", "texto": "↪ Encaminhada com frequência\nATENÇÃO PAIS!!! Amanhã vai ter ataque na escola, um aluno avisou que vai levar arma. NÃO MANDEM SEUS FILHOS. Repassem!!!", "hora": "06:58", "nota": "imagem anexada com data 14/03/2024" },
+      { "de": "Kátia", "texto": "Meu Deus! Que escola???", "hora": "07:01" },
+      { "de": "Sônia", "texto": "Disseram que é o Lucas do 9º", "hora": "07:03" }
+    ] },
+    "brincadeira": { "titulo": "TURMA 901", "hora": "06:50", "linhas": [
+      { "de": "Lucas 901", "texto": "amanhã ninguém escapa kkkkkk", "hora": "21:14 · ontem" },
+      { "de": "Rafa", "texto": "kkkkk para Lucas", "hora": "21:15 · ontem" },
+      { "de": "Bia", "texto": "vai sujar pro teu lado mlk", "hora": "21:16 · ontem" }
+    ] },
+    "conflito": { "titulo": "Lucas 901 (conversa privada)", "hora": "06:47", "linhas": [
+      { "de": "Lucas 901", "texto": "se amanhã vocês fizerem de novo eu juro que vocês vão ver. eu não aguento mais", "hora": "22:41 · ontem" },
+      { "de": "Rafa", "texto": "kkkk chorou", "hora": "22:43 · ontem" }
+    ] },
+    "ameaca_real": { "titulo": "Lucas 901", "hora": "06:55", "linhas": [
+      { "de": "Lucas 901", "texto": "[foto de um revólver sobre uma cama]", "hora": "06:51", "foto": true },
+      { "de": "Lucas 901", "texto": "hoje ninguém sai daqui. vcs vão pagar", "hora": "06:52" }
+    ] }
+  },
+  "detalhes_print": {
+    "corrente_antiga": "A mensagem foi encaminhada muitas vezes e não cita o nome da escola. A imagem anexada traz a data 14/03/2024. O nome do Lucas aparece só num comentário de uma mãe, não na mensagem.",
+    "brincadeira": "Mensagem de ontem à noite, no grupo da turma, enviada pelo contato 'Lucas 901'. Tem risadas e respostas dos colegas. Não há foto, local, hora ou meio para executar.",
+    "conflito": "Mensagem privada de ontem à noite, do contato 'Lucas 901' para um colega. Fala em 'vocês vão ver' e 'não aguento mais'. A resposta do colega é de deboche.",
+    "ameaca_real": "Mensagem de hoje às 6h51, com foto de um revólver e 'hoje ninguém sai daqui'. É recente, tem meio (arma) e tempo (hoje) definidos."
+  },
+  "cameras": {
+    "corrente_antiga": "07:20 — Lucas entra pelo portão com dois colegas e vai para a sala 104. Nada de anormal nas imagens do pátio e do corredor.",
+    "brincadeira": "07:18 — Lucas entra rindo com dois colegas e vai para a sala 104. Mochila comum.",
+    "conflito": "07:25 — Lucas entra sozinho, de cabeça baixa. Às 07:40 sai da sala 104 e entra no banheiro masculino do corredor. Desde então não saiu.",
+    "ameaca_real": "07:31 — Lucas entra sozinho, segurando a alça de uma mochila pesada e olhando para trás. Não vai para a sala: às 07:34 entra no banheiro masculino do corredor central. Desde então não saiu."
+  },
+  "frequencia": {
+    "corrente_antiga": "Turma 901, sala 104 — Lucas: presente.",
+    "brincadeira": "Turma 901, sala 104 — Lucas: presente.",
+    "conflito": "Turma 901, sala 104 — Lucas: presente. Anotação da professora: 'saiu para o banheiro às 7h40 e não voltou'.",
+    "ameaca_real": "Turma 901, sala 104 — Lucas: ausente da sala. A portaria registrou a entrada dele às 7h31."
+  },
+  "livro": {
+    "corrente_antiga": "Nenhum registro envolvendo o aluno.",
+    "brincadeira": "Agosto: advertência a Lucas e a dois colegas por 'brincadeiras de mau gosto' no grupo da turma.",
+    "conflito": "Três registros neste semestre: Lucas foi alvo de apelidos e empurrões de colegas da 901. Família convocada; nenhuma outra providência.",
+    "ameaca_real": "Há duas semanas: briga com colegas da 901. Lucas disse que 'ia resolver do jeito dele'. A família não compareceu."
+  },
+  "mochila": {
+    "conflito": "Cadernos, um estojo, um casaco e um celular velho com a tela trincada. Nenhum objeto perigoso.",
+    "outra": "Cadernos e um casaco. Nenhum objeto perigoso."
+  },
+
+  "dialogos": {
+    "responsavel_inicio": [
+      { "id": "acolher", "fala": "Senhor, eu entendo a sua preocupação. Estou aqui para verificar isso. Me conta o que o senhor sabe.", "acao": "acalmar_responsavel", "feedback": "Ouvir primeiro reduz a tensão e traz informação. Quem grita quer ser ouvido." },
+      { "id": "ameacar", "fala": "Fica calmo ou o senhor vai sair daqui preso!", "erro": "confronto_responsavel", "feedback": "A ameaça de prisão sem motivo aumenta a tensão e não resolve nada." },
+      { "id": "expulsar", "fala": "Isso não é problema do senhor. Pode se retirar.", "erro": "confronto_responsavel", "feedback": "Ele é pai de uma aluna e está com medo: dispensá-lo assim só piora." }
+    ],
+    "responsavel_depois": [
+      { "id": "aguardar", "fala": "Peço que o senhor aguarde no pátio, no ponto de encontro. Vou verificar e volto a falar com o senhor.", "acao": "separar_partes" },
+      { "id": "divulgar", "fala": "E peço que não repasse a mensagem nem o nome de nenhum aluno: se for boato, isso expõe um adolescente; se for verdade, atrapalha o nosso trabalho.", "acao": "nao_divulgar" }
+    ],
+    "responsavel_filma": [
+      { "id": "permitir", "fala": "O senhor pode filmar o meu trabalho. Só não filme nem divulgue os alunos.", "acao": "orientar_filmagem", "feedback": "Filmar o policial em serviço, em local público, é permitido. O cuidado é não expor crianças e adolescentes." },
+      { "id": "tomar", "fala": "Me dá esse celular agora!", "erro": "tomar_celular", "feedback": "Não há base para apreender o celular de quem filma. A tensão sobe e a ocorrência se complica." }
+    ],
+    "aluno_abordagem": [
+      { "id": "calma", "fala": "Lucas, eu sou policial. Ninguém vai te machucar. A gente pode conversar ali na direção, com a diretora?", "acao": "abordagem_calma" },
+      { "id": "dura", "fala": "Mãos na cabeça! Encosta na parede!", "erro": "abordagem_dura", "feedback": "Nada indica que ele esteja armado ou ameaçando alguém agora. A abordagem dura assusta e fecha a conversa." },
+      { "id": "acusar", "fala": "Foi você que mandou aquela mensagem, né? Todo mundo já sabe!", "erro": "expor_aluno", "feedback": "Acusar antes de ouvir, e na frente de outros, expõe o adolescente (ECA arts. 17 e 18)." }
+    ],
+    "aluno_conversa": [
+      { "id": "mensagem", "fala": "Você sabe de uma mensagem que está circulando? Me conta o que você sabe." },
+      { "id": "celular_pedir", "fala": "Você me mostra a mensagem no seu celular? Só se você quiser." },
+      { "id": "celular_pegar", "fala": "Me dá o celular. Vou olhar tudo.", "erro": "acessar_celular", "feedback": "O conteúdo do celular é protegido: só com consentimento ou ordem judicial." },
+      { "id": "revistar", "fala": "Vou fazer uma revista em você e na mochila." },
+      { "id": "algemar", "fala": "Vou te algemar até esclarecer.", "erro": "algemas_indevidas", "feedback": "Ele colabora: não há resistência, risco de fuga nem perigo (Súmula Vinculante 11)." },
+      { "id": "acolher", "fala": "Eu acredito que você está sofrendo. Vamos resolver isso direito, com a escola e a sua família.", "condicao": "conflito" }
+    ],
+    "socorro": [
+      { "id": "socorrer", "fala": "Pedir ambulância pelo rádio e estancar o sangramento até o socorro chegar", "acao": "socorro" },
+      { "id": "depois", "fala": "Deixar para depois", "feedback": "Ferido sem socorro: o risco de morte aumenta a cada minuto." }
+    ],
+    "decisao": [
+      { "id": "boato", "fala": "Mensagem antiga, sem relação com o aluno: orientar a escola e as famílias, registrar e encaminhar a apuração da origem à Polícia Civil, sem expor o aluno citado." },
+      { "id": "ato_infracional", "fala": "Mensagem escrita pelo aluno, sem meio de executar: registrar na delegacia com o adolescente e o responsável, sem algemas, e comunicar o Conselho Tutelar." },
+      { "id": "protecao", "fala": "Ameaça ligada a sofrimento e intimidação: registrar com o responsável, acionar o Conselho Tutelar e a rede de proteção, e registrar também a intimidação sofrida pelo aluno." },
+      { "id": "flagrante", "fala": "Ameaça real com arma: apreensão do adolescente em flagrante de ato infracional, arma apreendida, local preservado para a perícia e condução à delegacia." },
+      { "id": "liberar", "fala": "Não há nada a fazer: liberar todo mundo e encerrar sem registro." }
+    ],
+    "decisao_certa": { "corrente_antiga": "boato", "brincadeira": "ato_infracional", "conflito": "protecao", "ameaca_real": "flagrante" },
+    "decisao_explicacao": {
+      "corrente_antiga": "A mensagem é antiga (data de 2024), foi encaminhada muitas vezes, não cita a escola e o nome do Lucas só aparece num comentário. A sala de operações confirmou que é uma corrente conhecida. O aluno não tem relação com ela: o registro serve para documentar e apurar a origem, sem expô-lo.",
+      "brincadeira": "O próprio aluno escreveu a mensagem no grupo da turma, sem meio nem plano. Mesmo como 'brincadeira', é fato que pode configurar ato infracional análogo a ameaça (CP art. 147, via ECA art. 103): registra-se com o responsável, sem algemas, e o Conselho Tutelar é comunicado. Validar o enquadramento com a Polícia Civil.",
+      "conflito": "O aluno escreveu a mensagem, mas é alvo de intimidação repetida (registrada no livro). O caso pede registro e, ao mesmo tempo, proteção: família, Conselho Tutelar e rede de proteção, e registro da intimidação sofrida (Lei 13.185/2015; CP art. 146-A, validar).",
+      "ameaca_real": "A mensagem era recente, com foto de arma; ele entrou com uma mochila pesada, não foi para a sala e houve disparo. É flagrante de ato infracional: apreensão, arma recolhida e preservada, local isolado para a perícia, socorro às vítimas e condução à delegacia especializada (ECA arts. 106, 172 e 173)."
+    },
+    "registro": [
+      { "id": "completo", "fala": "Registrar os fatos, as fontes consultadas (print, câmeras, frequência, livro), as providências e as orientações, identificando o adolescente só no documento oficial.", "acao": "registro_completo" },
+      { "id": "curto", "fala": "Registrar apenas 'ameaça em escola, aluno Lucas da 901' e encerrar.", "erro": "registro_incompleto", "feedback": "O registro precisa mostrar como a conclusão foi construída, e não pode expor o adolescente." }
+    ],
+    "orientacao": [
+      { "id": "orientar", "fala": "Orientar a direção: comunicar as famílias com informação verificada, não repassar prints, acionar o Conselho Tutelar e a rede de proteção quando couber.", "acao": "orientar_escola" },
+      { "id": "nada", "fala": "Não orientar: a escola resolve sozinha." }
+    ]
+  },
+
+  "historia": [
+    { "titulo": "Capítulo 1 · A corrente", "texto": "Manhã de terça-feira. Um print com ameaça de ataque circula entre os pais e chega à direção. Verifique antes de concluir.", "variacao": { "origem": "corrente_antiga", "responsavel": "acalma", "desfecho": "rende" } },
+    { "titulo": "Capítulo 2 · O grupo da turma", "texto": "Outro dia, outro print. Desta vez, o nome do remetente aparece na tela. O responsável que chegou primeiro está filmando tudo.", "variacao": { "origem": "brincadeira", "responsavel": "filma", "desfecho": "rende" } },
+    { "titulo": "Capítulo 3 · O banheiro", "texto": "Uma mensagem privada vazou para os pais. O aluno citado não está onde deveria estar.", "variacao": { "origem": "conflito", "responsavel": "acalma", "desfecho": "rende" } },
+    { "titulo": "Capítulo 4 · Hoje", "texto": "Mais um print. Mais pais nervosos. Tudo parece igual aos outros dias.", "variacao": { "origem": "ameaca_real", "responsavel": "acalma", "desfecho": "rende" } }
+  ],
+
+  "base_legal": {
+    "CF art. 227": "Proteção integral e prioridade absoluta a crianças e adolescentes.",
+    "ECA arts. 17 e 18": "Respeito à imagem, identidade e dignidade; vedado tratamento vexatório ou constrangedor.",
+    "ECA art. 143": "Vedada a divulgação de atos policiais referentes a adolescente a que se atribua ato infracional.",
+    "ECA arts. 103, 106, 107, 172 a 178": "Ato infracional, apreensão em flagrante, comunicação à família e condução (art. 178: vedado transporte em compartimento fechado de viatura em condições atentatórias à dignidade).",
+    "ECA arts. 56 e 136": "Comunicação ao Conselho Tutelar e suas atribuições (validar a aplicação ao caso).",
+    "CP art. 147": "Ameaça (para adolescente: ato infracional análogo, ECA art. 103).",
+    "CP art. 146-A e Lei 13.185/2015": "Intimidação sistemática (bullying). Validar a redação vigente (Lei 14.811/2024).",
+    "CPP art. 244": "Busca pessoal sem mandado exige fundada suspeita.",
+    "CF art. 5º, X e XII": "Intimidade e sigilo de dados: acesso ao conteúdo do celular só com consentimento ou ordem judicial (validar jurisprudência).",
+    "CPP arts. 6º e 158-A a 158-F": "Preservação do local e cadeia de custódia (arma, print, aparelhos).",
+    "CP arts. 23 e 25; Lei 13.060/2014": "Legítima defesa e uso proporcional da força; arma de fogo só contra agressão atual ou iminente.",
+    "Portaria Interministerial 4.226/2010": "Diretrizes sobre o uso da força (validar a norma interna vigente).",
+    "Súmula Vinculante 11": "Algemas só com resistência, risco de fuga ou perigo, justificadas por escrito.",
+    "CP art. 135": "Omissão de socorro.",
+    "_nota": "Rascunho para validação. Itens marcados como 'validar' dependem de norma interna e de confirmação jurídica."
+  }
+}

@@ -1,0 +1,97 @@
+{
+ "pm_parceiro": {
+  "arquivo": "personagens/pm_parceiro.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "andando",
+   "correndo",
+   "apontando"
+  ]
+ },
+ "pm_apoio": {
+  "arquivo": "personagens/pm_apoio.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "andando",
+   "correndo"
+  ]
+ },
+ "inspetora": {
+  "arquivo": "personagens/inspetora.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso",
+   "andando",
+   "correndo",
+   "rendido",
+   "algemado",
+   "algemado_andando",
+   "triste",
+   "estressada"
+  ]
+ },
+ "diretora": {
+  "arquivo": "personagens/diretora.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso",
+   "andando",
+   "correndo",
+   "rendido",
+   "algemado",
+   "algemado_andando",
+   "estressada",
+   "respirando"
+  ]
+ },
+ "responsavel": {
+  "arquivo": "personagens/responsavel.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso",
+   "andando",
+   "correndo",
+   "rendido",
+   "algemado",
+   "algemado_andando",
+   "irritado"
+  ]
+ },
+ "aluno": {
+  "arquivo": "personagens/aluno.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso",
+   "andando",
+   "correndo",
+   "rendido",
+   "algemado",
+   "algemado_andando",
+   "apontando",
+   "agachado",
+   "sentado_parado",
+   "bracos_para_cima"
+  ]
+ },
+ "funcionario": {
+  "arquivo": "personagens/funcionario.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso",
+   "andando",
+   "correndo",
+   "rendido",
+   "algemado",
+   "algemado_andando",
+   "agachado",
+   "sentado_parado"
+  ]
+ }
+}

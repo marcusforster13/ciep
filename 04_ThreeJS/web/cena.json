@@ -1,0 +1,280 @@
+{
+ "gerado_em": "2026-11-05 16:09",
+ "qualidade": "alta",
+ "lightmaps": {
+  "01_Rua_Estatico": {
+   "lm": "lightmaps/LM_01_Rua.png",
+   "max": 1.19315
+  },
+  "02_Patio_Estatico": {
+   "lm": "lightmaps/LM_02_Patio.png",
+   "max": 1.17142
+  },
+  "03_Predio_Fachada_Estatico": {
+   "lm": "lightmaps/LM_03_Predio_Fachada.png",
+   "max": 1.12356
+  },
+  "04_Terreo_Interior_Estatico": {
+   "lm": "lightmaps/LM_04_Terreo_Interior.png",
+   "max": 3.0
+  },
+  "05_Passarela_Estatico": {
+   "lm": "lightmaps/LM_05_Passarela.png",
+   "max": 1.20591
+  },
+  "06_Moveis_Estatico": {
+   "lm": "lightmaps/LM_06_Moveis.png",
+   "max": 0.78462
+  },
+  "07_Galeria_Estatico": {
+   "lm": "lightmaps/LM_07_Galeria.png",
+   "max": 0.81623
+  },
+  "10_Viatura_Estatico": {
+   "lm": "lightmaps/LM_10_Viatura.png",
+   "max": 1.27507
+  },
+  "Giroflex_Lente_1": {
+   "lm": "lightmaps/LM_10_Viatura.png",
+   "max": 1.27507
+  },
+  "Giroflex_Lente_2": {
+   "lm": "lightmaps/LM_10_Viatura.png",
+   "max": 1.27507
+  },
+  "Giroflex_Lente_3": {
+   "lm": "lightmaps/LM_10_Viatura.png",
+   "max": 1.27507
+  },
+  "Giroflex_Lente_4": {
+   "lm": "lightmaps/LM_10_Viatura.png",
+   "max": 1.27507
+  },
+  "Giroflex_Lente_5": {
+   "lm": "lightmaps/LM_10_Viatura.png",
+   "max": 1.27507
+  },
+  "Giroflex_Lente_6": {
+   "lm": "lightmaps/LM_10_Viatura.png",
+   "max": 1.27507
+  }
+ },
+ "lightmap_ganho": 3.14159,
+ "exposicao": 1.0,
+ "env": null,
+ "env_intensidade": 0.35,
+ "cameras": {
+  "Camera_Rua": {
+   "pos": [
+    3.0,
+    1.75,
+    41.5
+   ],
+   "alvo": [
+    1.6209,
+    2.3936,
+    31.6165
+   ]
+  },
+  "Camera_Patio": {
+   "pos": [
+    -12.0,
+    1.75,
+    26.0
+   ],
+   "alvo": [
+    -7.7933,
+    2.7716,
+    16.9856
+   ]
+  },
+  "Camera_Passarela": {
+   "pos": [
+    0.0,
+    1.75,
+    34.0
+   ],
+   "alvo": [
+    0.0,
+    1.819,
+    24.0002
+   ]
+  },
+  "Camera_Recepcao": {
+   "pos": [
+    -3.0,
+    1.75,
+    -1.5
+   ],
+   "alvo": [
+    -3.0,
+    1.0246,
+    -11.4737
+   ]
+  },
+  "Camera_Direcao": {
+   "pos": [
+    0.8,
+    1.75,
+    -4.0
+   ],
+   "alvo": [
+    8.0148,
+    0.58,
+    -10.8248
+   ]
+  },
+  "Camera_Corredor": {
+   "pos": [
+    -2.5,
+    1.75,
+    -9.5
+   ],
+   "alvo": [
+    -12.4966,
+    1.4892,
+    -9.5
+   ]
+  },
+  "Camera_Sala_104": {
+   "pos": [
+    5.85,
+    1.75,
+    -10.2
+   ],
+   "alvo": [
+    8.7141,
+    0.2557,
+    -19.6638
+   ]
+  }
+ },
+ "giroflex": {
+  "vermelho": [
+   7.25,
+   1.7204,
+   42.95
+  ],
+  "azul": [
+   7.25,
+   1.7204,
+   42.25
+  ]
+ },
+ "luz_dinamica": 1.0,
+ "pontos": {
+  "Inicio": {
+   "pos": [
+    3.0,
+    0.15,
+    41.5
+   ],
+   "rz": -2.9442
+  },
+  "Parceiro": {
+   "pos": [
+    4.4,
+    0.15,
+    41.0
+   ],
+   "rz": -2.7611
+  },
+  "Inspetora": {
+   "pos": [
+    3.9,
+    0.15,
+    35.6
+   ],
+   "rz": -0.2915
+  },
+  "Responsavel": {
+   "pos": [
+    -2.5,
+    0.15,
+    -4.4
+   ],
+   "rz": 0.0
+  },
+  "Diretora": {
+   "pos": [
+    3.4,
+    0.15,
+    -7.05
+   ],
+   "rz": 0.0
+  },
+  "Aluno_Sala": {
+   "pos": [
+    5.0,
+    0.15,
+    -12.0
+   ],
+   "rz": 0.0
+  },
+  "Aluno_Banheiro": {
+   "pos": [
+    -11.2,
+    0.15,
+    -12.4
+   ],
+   "rz": 1.5708
+  },
+  "Aluno_Corredor": {
+   "pos": [
+    -7.5,
+    0.15,
+    -9.5
+   ],
+   "rz": 1.5708
+  },
+  "Aluno_Patio": {
+   "pos": [
+    -16.0,
+    0.15,
+    4.0
+   ],
+   "rz": 1.5708
+  },
+  "Ferido": {
+   "pos": [
+    -6.8,
+    0.15,
+    -8.6
+   ],
+   "rz": 1.5708
+  },
+  "Ponto_Encontro": {
+   "pos": [
+    10.0,
+    0.15,
+    20.0
+   ],
+   "rz": -3.1416
+  },
+  "Porta_Direcao": {
+   "pos": [
+    -0.4,
+    0.15,
+    -5.45
+   ],
+   "rz": 1.5708
+  },
+  "Porta_Banheiro": {
+   "pos": [
+    -12.15,
+    0.15,
+    -10.6
+   ],
+   "rz": -3.1416
+  },
+  "Porta_Sala": {
+   "pos": [
+    5.85,
+    0.15,
+    -10.6
+   ],
+   "rz": -3.1416
+  }
+ },
+ "maquinas": 0
+}
