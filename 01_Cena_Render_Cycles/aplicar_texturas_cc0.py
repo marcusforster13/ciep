@@ -102,7 +102,7 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
         L(mp.outputs["Vector"], t.inputs["Vector"])
         return t
     td = tex(diff, False)
-    fator = [min(1.0, a / max(m, 1e-3)) for a, m in zip(alvo, media_linear(td.image))]
+    fator = [min(1.8, a / max(m, 1e-3)) for a, m in zip(alvo, media_linear(td.image))]
     mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"
     next(i for i in mix.inputs if i.name == "Factor" and i.type == "VALUE").default_value = 1.0
     L(td.outputs["Color"], next(i for i in mix.inputs if i.name == "A" and i.type == "RGBA"))
@@ -126,19 +126,24 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
 TABELA = {
     "Asfalto":            ("asfalto", 3.0, "#3a3a3c", None, .5),
     "Meio_Fio_Concreto":  ("concreto", 1.5, None, None, .35),
-    "Concreto_Aparente":  ("concreto", 2.0, "#a6a29a", None, .3),          # pilares, arcadas, paineis da fachada (concreto aparente)
-    "Piso_Patio":         ("concreto", 3.0, "#8f8b84", None, .25),
-    "Muro_Reboco":        ("reboco", 2.0, None, None, .4),
-    "Peitoril_Branco_1006": ("reboco_pintado", 1.5, "#e9e7e0", None, .15),
-    "Peitoril_Amarelo_1038": ("reboco_pintado", 1.5, "#e7a91c", None, .15),
-    "Peitoril_Azul_1070": ("reboco_pintado", 1.5, "#3e6aa8", None, .15),
-    "Peitoril_Azul_Claro_1035": ("reboco_pintado", 1.5, "#a9c2d8", None, .15),
-    "Laje_Teto":          ("reboco", 2.5, "#d2cec4", None, .15),
+    "Fachada_Branca":     ("fachada_branca", 2.5, "#e9e8e3", None, .12),      # white_stucco (Poly Haven): concreto pintado de branco, como na foto
+    "Laje_Pilotis":       ("fachada_branca", 2.5, "#d8d6d0", None, .1),
+    "Peitoril_Vermelho":  ("fachada_branca", 2.0, "#c81f3a", None, .1),
+    "Peitoril_Preto":     ("fachada_branca", 2.0, "#2c2d2f", None, .1),
+    "Piso_Patio":         ("piso_patio", 3.0, "#c2c1bc", None, .2),            # concrete_wall_008: placas lisas e claras do patio
+    "Piso_Pilotis":       ("piso_patio", 3.0, "#a9a69f", None, .2),
+    "Grama":              ("grama", 1.5, "#5b7a34", None, .3),                 # leafy_grass
+    "Piso_Granilite":     ("granilite", 2.4, "#b9b7b1", None, .1),             # granite_tile: placas de granilite
+    "Azulejo_Branco":     ("azulejo", 1.0, "#e8e6df", None, .15),              # long_white_tiles
+    "Reboco_Interno":     ("fachada_branca", 2.5, "#ebe8e0", None, .08),
+    "Barra_Azul":         ("fachada_branca", 2.5, "#4f74a8", None, .06),       # barra azul 1070 (PRO192-ALB-254.02), tom estimado
+    "Muro_Reboco":        ("reboco", 2.0, "#dcd9d2", None, .3),
+    "Laje_Teto":          ("fachada_branca", 2.5, "#eeece6", None, .05),
     "Porta_Madeira":      ("madeira_escura", 1.4, "#6b4a30", None, .15),
     "Madeira_Clara":      ("madeira_tabuas", 1.2, "#9a7650", None, .2),
-    "Tronco_Arvore":      ("casca_arvore", 1.0, "#5c4b3c", None, .4),
+    "Tronco_Arvore":      ("casca_arvore", 1.0, "#6b5a48", None, .4),
     "Poste_Metal":        ("metal_pintado", 1.0, "#3b3d40", grafite, .15),
-    "Porta_Ferro":        ("metal_pintado", 1.0, "#46607f", None, .15),
+    "Porta_Ferro":        ("metal_pintado", 1.0, "#5b6066", grafite, .15),
     "Grade_Metal":        ("metal_pintado", 1.0, "#2f3a46", grafite, .1),
 }
 METAL = {}

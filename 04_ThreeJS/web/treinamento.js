@@ -328,12 +328,12 @@ export async function iniciar(ctx) {
     const x = p.x, y = -p.z;
     if (y < -38) return 'rua';
     if (y < 0) return 'patio';
-    if (x > -15 && x < 15 && y > 3 && y < 14) {
-      if (y > 8 && y < 11) return 'corredor';
-      if (x < 0 && x > -6 && y < 8) return 'recepcao';
-      if (x > 0 && x < 6 && y < 8) return 'direcao';
-      if (x < -9 && y > 11) return 'banheiro';
-      if (x > 3 && x < 9 && y > 11) return 'sala';
+    if (x > -20 && x < 20 && y > 3 && y < 19) {               // bloco administrativo do terreo
+      if (y > 10 && y < 13) return 'corredor';
+      if (x < -2 && x > -10 && y < 10) return 'recepcao';
+      if (x > -2 && x < 6 && y < 10) return 'direcao';
+      if (x < -12 && y > 13) return 'banheiro';
+      if (x > 2 && x < 12 && y > 13) return 'sala';
       return 'predio';
     }
     return 'galeria';
@@ -371,13 +371,13 @@ export async function iniciar(ctx) {
 
   /* ================= caminhos (os personagens nao colidem: andam por uma rede de pontos livres) ================= */
   const NOS = {
-    rua: [4.4, -41.0], portao: [0, -39.2], portao_in: [0, -36.5], guarita: [3.9, -35.6], pass_1: [0, -18.5], pass_2: [0, -13.5], pass_n: [0, -2.5],
-    patio_o: [-8, -13.5], encontro: [10, -20], gal_ext: [-2.5, -1.5], gal: [-2.5, 1.5], rec_porta: [-2.5, 3.2], rec: [-2.5, 4.6], rec_fundo: [-3.0, 7.4],
-    direcao_porta: [-.6, 5.45], direcao: [1.0, 5.45], direcao_c: [2.0, 4.6], cor_c: [-3.0, 9.5], cor_o: [-7.5, 9.5], cor_bm: [-12.15, 9.5],
-    ban_porta: [-12.15, 10.6], ban: [-12.15, 12.0], ban_in: [-11.0, 12.3], cor_l: [3.0, 9.5], cor_sala: [5.85, 9.5], sala_porta: [5.85, 10.6], sala: [5.85, 12.0]
+    rua: [7.0, -41.0], portao: [2.5, -39.2], portao_in: [2.5, -36.5], guarita: [6.6, -35.6], pass_1: [2.5, -18.5], pass_2: [2.5, -13.5], pass_n: [2.5, -2.5],
+    patio_o: [-6, -13.5], encontro: [14, -20], gal: [2.5, 1.5], gal_rec: [-7.5, 1.5], rec_porta: [-7.5, 3.3], rec: [-7.0, 5.0], rec_fundo: [-6.8, 8.6],
+    direcao_porta: [-2.6, 5.45], direcao: [-1.0, 5.45], direcao_c: [0.8, 5.2], cor_c: [-6.8, 11.5], cor_o: [-11.0, 11.5], cor_bm: [-16.05, 11.5],
+    ban_porta: [-16.05, 12.6], ban: [-16.05, 14.2], ban_in: [-14.5, 15.5], cor_l: [0.0, 11.5], cor_sala: [6.95, 11.5], sala_porta: [6.95, 12.6], sala: [6.95, 14.2]
   };
   const ARESTAS = [['rua', 'portao'], ['portao', 'portao_in'], ['portao_in', 'guarita'], ['portao_in', 'pass_1'], ['pass_1', 'pass_2'], ['pass_2', 'pass_n'], ['pass_2', 'patio_o'], ['pass_1', 'encontro'],
-    ['pass_n', 'gal_ext'], ['gal_ext', 'gal'], ['gal', 'rec_porta'], ['rec_porta', 'rec'], ['rec', 'rec_fundo'], ['rec', 'direcao_porta'], ['direcao_porta', 'direcao'], ['direcao', 'direcao_c'],
+    ['pass_n', 'gal'], ['gal', 'gal_rec'], ['gal_rec', 'rec_porta'], ['rec_porta', 'rec'], ['rec', 'rec_fundo'], ['rec', 'direcao_porta'], ['direcao_porta', 'direcao'], ['direcao', 'direcao_c'],
     ['rec_fundo', 'cor_c'], ['cor_c', 'cor_o'], ['cor_o', 'cor_bm'], ['cor_bm', 'ban_porta'], ['ban_porta', 'ban'], ['ban', 'ban_in'], ['cor_c', 'cor_l'], ['cor_l', 'cor_sala'], ['cor_sala', 'sala_porta'], ['sala_porta', 'sala']];
   const VIZ = {}; for (const [a, b] of ARESTAS) { (VIZ[a] ||= []).push(b); (VIZ[b] ||= []).push(a); }
   const PORTA_NO = { direcao_porta: 'direcao', ban_porta: 'banheiro', sala_porta: 'sala' };
@@ -590,13 +590,13 @@ export async function iniciar(ctx) {
   /* ================= personagens ================= */
   // chave, modelo, nome, posicao na planta (x, y), para onde olha (dx, dy), voz, altura
   const ELENCO = [
-    ['parceiro', 'pm_parceiro', 'Policial parceiro', [4.4, -41.0], [-.3, 1], 'm', 1.8],
-    ['apoio', 'pm_apoio', 'Policial de apoio', [9.5, -41.5], [-1, 0], 'm', 1.8],
-    ['inspetora', 'inspetora', 'Funcionária da portaria', [3.9, -35.6], [-.3, -1], 'f', 1.64],
-    ['responsavel', 'responsavel', 'Responsável (pai de aluna)', [-2.5, 4.4], [0, -1], 'm', 1.78],
-    ['diretora', 'diretora', 'Diretora', [3.4, 7.05], [0, -1], 'f', 1.66],
-    ['funcionario', 'funcionario', 'Seu Jorge (inspetor de corredor)', [-7.5, 9.0], [1, 0], 'm', 1.74],
-    ['aluno', 'aluno', 'Lucas (aluno, 9º ano)', [4.9, 12.65], [0, 1], 'j', 1.68],
+    ['parceiro', 'pm_parceiro', 'Policial parceiro', [7.0, -41.0], [-.3, 1], 'm', 1.8],
+    ['apoio', 'pm_apoio', 'Policial de apoio', [12.0, -41.5], [-1, 0], 'm', 1.8],
+    ['inspetora', 'inspetora', 'Funcionária da portaria', [6.6, -35.6], [-.3, -1], 'f', 1.64],
+    ['responsavel', 'responsavel', 'Responsável (pai de aluna)', [-6.0, 5.0], [0, -1], 'm', 1.78],
+    ['diretora', 'diretora', 'Diretora', [2.4, 7.8], [0, -1], 'f', 1.66],
+    ['funcionario', 'funcionario', 'Seu Jorge (inspetor de corredor)', [-9.0, 11.0], [1, 0], 'm', 1.74],
+    ['aluno', 'aluno', 'Lucas (aluno, 9º ano)', [4.8, 15.35], [0, 1], 'j', 1.68],
   ];
   const ALTURA_SENTADO = alt => .15 + .46 - .925 * (alt / 1.78);
   function limparNPCs() { Object.values(npcs).forEach(n => scene.remove(n)); for (const k in npcs) delete npcs[k]; }
@@ -612,7 +612,7 @@ export async function iniciar(ctx) {
     npcs.apoio.visible = false;
     const r = npcs.responsavel; r.userData.base = 'irritado'; animar(r, 'irritado', 1e6, 0);
     const al = npcs.aluno, ua = al.userData;
-    if (v.origem === 'conflito') { al.position.copy(B(-11.0, 12.5)); al.rotation.y = ua.giroBase = olharPara(-1, 0); ua.base = 'agachado'; animar(al, 'agachado', 1e6, 0); itens.mochila && (itens.mochila.o.visible = true); }
+    if (v.origem === 'conflito') { al.position.copy(B(-13.6, 16.2)); al.rotation.y = ua.giroBase = olharPara(-1, 0); ua.base = 'agachado'; animar(al, 'agachado', 1e6, 0); itens.mochila && (itens.mochila.o.visible = true); }
     else if (v.origem === 'ameaca_real') { al.visible = false; itens.mochila && (itens.mochila.o.visible = false); }
     else { sentar(al); itens.mochila && (itens.mochila.o.visible = false); }
     if (itens.mochila) itens.mochila.h.visible = itens.mochila.o.visible;
@@ -642,7 +642,7 @@ export async function iniciar(ctx) {
     criarNPCs(v); sacar(false);
     moverPorta('direcao', 1, .1); moverPorta('banheiro', 0, .1); moverPorta('sala', 0, .1);
     for (const m of marcas) scene.remove(m); marcas.length = 0;
-    rig.position.copy(B(3.0, -41.5)); ctx.setYaw(Math.PI + .1);
+    rig.position.copy(B(5.5, -41.5)); ctx.setYaw(Math.PI + .1);
     const abrir = () => { radio(CEN.radio.inicio).then(() => dica('Informe a chegada pelo rádio (menu: T ou botão Y/B) e fale com a funcionária no portão.')); };
     if (cap) { fecharPaineis(); menu.mostrar({ tag: 'Modo história', titulo: cap.titulo, texto: cap.texto, longe: 1.3, botoes: [{ label: 'Começar', acao: () => { menu.esconder(); abrir(); } }] }); }
     else abrir();
@@ -710,7 +710,7 @@ export async function iniciar(ctx) {
     diz(f, F.funcionario.traz_aluno);
     irAte(f, NOS.sala, 1.3, 'andando', () => {
       irAte(al, NOS.direcao_c, 1.0, 'andando', () => { al.userData.giroBase = olharPara(-1, 0); al.userData.naDirecao = true; registrar('localizar_aluno'); legenda('Direção', 'O Lucas chegou à direção com o seu Jorge.', 4); });
-      setTimeout(() => irAte(f, [1.0, 4.4], 1.0), 1500);
+      setTimeout(() => irAte(f, [-0.8, 4.2], 1.0), 1500);
     });
   }
   // --- aluno (variacoes sem ameaca ativa)
@@ -758,13 +758,13 @@ export async function iniciar(ctx) {
     const al = npcs.aluno, u = al.userData, f = npcs.funcionario, v = S.variacao;
     al.visible = true; u.base = 'apontando'; animar(al, 'apontando', 1e6, .1); u.ameaca = true; u.semVirar = false; u.fig = false; armaNPC.visible = true; sincAmeaca();
     if (motivo === 'banheiro') {                                // o policial chegou antes dos disparos: ele sai da cabine armado
-      al.position.copy(B(-11.0, 12.5)); al.rotation.y = olharPara(-1, -1);
+      al.position.copy(B(-13.6, 16.2)); al.rotation.y = olharPara(-1, -1);
       legenda('Alerta', 'O aluno saiu da cabine com uma arma na mão!', 5);
     } else {
-      al.position.copy(B(-10.4, 9.6)); al.rotation.y = olharPara(1, 0);
+      al.position.copy(B(-14.5, 11.6)); al.rotation.y = olharPara(1, 0);
       if (A.abrigou && f) f.visible = false;                    // com o abrigamento, o inspetor entrou numa sala trancada
-      if (!A.abrigou && f) { f.rota = []; f.userData.rota = []; f.userData.destino = null; f.position.copy(B(-7.2, 8.45)); f.rotation.y = olharPara(-1, 0); f.userData.base = 'agachado'; animar(f, 'agachado', 1e6, .2); f.userData.ferido = true; A.feridos.add('funcionario'); u.alvo = f.position.clone().setY(1.0); }
-      const p = B(-10, 9.6).setY(1.4);
+      if (!A.abrigou && f) { f.rota = []; f.userData.rota = []; f.userData.destino = null; f.position.copy(B(-11.0, 10.45)); f.rotation.y = olharPara(-1, 0); f.userData.base = 'agachado'; animar(f, 'agachado', 1e6, .2); f.userData.ferido = true; A.feridos.add('funcionario'); u.alvo = f.position.clone().setY(1.0); }
+      const p = B(-14, 11.6).setY(1.4);
       somTiro(p); setTimeout(() => somTiro(p), 650);
       legenda('Alerta', A.abrigou ? 'Disparos no corredor central! As salas estão trancadas.' : 'Disparos no corredor central! Uma pessoa foi atingida.', 6);
       setTimeout(() => A && diz(npcs.parceiro, F.parceiro.ameaca, null), 1500);
@@ -836,7 +836,7 @@ export async function iniciar(ctx) {
     if (tipo === 'consulta') { A.consultou = true; registrar('consultar_radio'); const t = CEN.radio.consulta[S.variacao.origem === 'corrente_antiga' ? 'corrente_antiga' : 'outra']; fato('Sala de operações: ' + t.replace('Sala de operações: ', '')); radio(t); }
     if (tipo === 'ameaca') {
       A.comunicou = true; registrar('comunicar_ameaca'); radio(CEN.radio.ameaca);
-      const ap = npcs.apoio; if (ap) { ap.visible = true; ap.position.copy(B(4.4, -41)); irAte(ap, NOS.pass_n, 2.6, 'correndo'); }
+      const ap = npcs.apoio; if (ap) { ap.visible = true; ap.position.copy(B(7.0, -41)); irAte(ap, NOS.pass_n, 2.6, 'correndo'); }
     }
     if (tipo === 'socorro') pedirSocorro();
     status();
@@ -914,9 +914,9 @@ export async function iniciar(ctx) {
       novaOcorrencia(v, null); A.titulo = 'Treino de ameaça ativa'; A.fasesAvaliadas = ['ameaca', 'encerramento'];
       for (const id of ['comunicar_chegada', 'ouvir_inspetora']) registrar(id);
       A.chegada = true; A.entrouPredio = true;
-      npcs.responsavel.position.copy(B(10, -20)); npcs.responsavel.userData.base = 'nervoso'; A.gritou = A.respondeu = A.acalmou = A.responsavelLonge = true;
-      rig.position.copy(B(-2.5, 6.6)); ctx.setYaw(-Math.PI / 2 + .25);
-      npcs.parceiro.position.copy(B(-1.6, 6.2)); npcs.parceiro.rotation.y = olharPara(-1, .3);
+      npcs.responsavel.position.copy(B(14, -20)); npcs.responsavel.userData.base = 'nervoso'; A.gritou = A.respondeu = A.acalmou = A.responsavelLonge = true;
+      rig.position.copy(B(-6.8, 8.4)); ctx.setYaw(Math.PI / 2 - .35);
+      npcs.parceiro.position.copy(B(-5.6, 8.0)); npcs.parceiro.rotation.y = olharPara(-1, .3);
       dica('Você está na recepção. Algo está para acontecer no corredor à esquerda.', 5);
       setTimeout(() => escalar('disparos'), 4000);
       return;
@@ -995,7 +995,7 @@ export async function iniciar(ctx) {
   function cenaExploracao() {
     S.variacao = derivar({ ...CEN.historia[0].variacao }); criarNPCs(S.variacao); S.vida = 3; S.municao = CARREGADOR;
     moverPorta('direcao', 1, .1); moverPorta('banheiro', 0, .1); moverPorta('sala', 0, .1);
-    npcs.parceiro.position.copy(B(4.4, -41.0));
+    npcs.parceiro.position.copy(B(7.0, -41.0));
   }
   function explorar(ray) {
     const hi = ray.intersectObjects([...hitsItem.filter(h => itens[h.userData.item]?.o.visible !== false), ...Object.values(portas).map(p => p.col)], false)[0];
@@ -1095,7 +1095,7 @@ export async function iniciar(ctx) {
       if (z === 'recepcao' && !A.gritou && npcs.responsavel?.visible && V.distanceTo(npcs.responsavel.position) < 5) gritoInicial();
       if (dentroDoPredio(z) && !A.entrouPredio) { A.entrouPredio = true; A.tEntrou = agora; }
       if (real() && !A.ameacaAtiva) {
-        if (z === 'banheiro' || (z === 'corredor' && -V.z > 8 && V.x < -9.5)) escalar('banheiro');
+        if (z === 'banheiro' || (z === 'corredor' && V.x < -13.5)) escalar('banheiro');
         else if ((A.tEntrou && agora - A.tEntrou > (A.atrasoAmeaca ||= 70000 + Math.random() * 40000)) || agora - A.t0 > 210000) escalar('disparos');
       }
       if (A.ameacaAtiva) {

@@ -126,7 +126,7 @@ def aplicar_pbr(mat, pasta, tile, tile_antigo=1.0, tint=None, recolor=None, meta
         return t
     td = tex(diff, False)
     media = media_linear(td.image)
-    fator = [min(1.0, a / max(m, 1e-3)) for a, m in zip(alvo, media)]
+    fator = [min(1.8, a / max(m, 1e-3)) for a, m in zip(alvo, media)]
     mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"
     next(i for i in mix.inputs if i.name == "Factor" and i.type == "VALUE").default_value = 1.0
     L(td.outputs["Color"], next(i for i in mix.inputs if i.name == "A" and i.type == "RGBA"))
@@ -170,7 +170,7 @@ say("%d materiais trocados por PBR com texturas CC0" % n_pbr)
 SEM_LIGHTMAP = {"09_Luzes_Cameras", "99_Colisao", "10_Carro_Abordado", "08_Interativos", "12_Objetos_Soltos"}
 # niveis:  rapido (teste, ~2 min) | padrao (~5 min) | alta (~30-60 min)
 ALTA = "alta" in ARGS
-RES = {"03_Predio_Fachada": 2048, "04_Terreo_Interior": 2048, "02_Patio": 2048, "07_Galeria": 2048, "05_Passarela": 1024, "06_Moveis": 1024, "10_Viatura": 1024, "01_Rua": 512}
+RES = {"03_Predio_Fachada": 2048, "04_Terreo_Interior": 2048, "02_Patio": 2048, "07_Pilotis": 2048, "05_Passarela": 1024, "06_Moveis": 1024, "10_Viatura": 1024, "01_Rua": 512}
 RES_PADRAO = 512
 AMOSTRAS = 24 if RAPIDO else (600 if ALTA else 256)      # alta: so mais amostras (lightmaps maiores pesam no Quest)
 scene.render.engine = "CYCLES"; scene.cycles.device = "CPU"

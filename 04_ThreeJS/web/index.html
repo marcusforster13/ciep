@@ -85,7 +85,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1105-1614';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1105-1701';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -262,21 +262,23 @@ function setLanterna(on, pai) {
 
 /* ---------- vestigios (mesmas posicoes do prototipo; eixo Y para cima) ---------- */
 const INFO = [
-  { tag: 'Referência arquitetônica', title: 'O prédio dos CIEPs', pos: [-14, 5.5, 2.5],
-    body: 'Bloco longo de concreto aparente, três pavimentos, janelas em arco arredondado com peitoris pintados em cores alternadas e arcadas no térreo: elementos do projeto-padrão dos CIEPs (acervo da Fundação Oscar Niemeyer). A aparência geral segue a foto publicada do CIEP Tancredo Neves. As medidas deste modelo são ESTIMADAS, não oficiais.' },
-  { tag: 'Referência arquitetônica', title: 'Passarela com pórticos', pos: [-3.6, 2.4, 18],
-    body: 'Passarela coberta com pórticos em arco, ligando o portão ao prédio, como na foto do acervo do projeto-padrão. Largura e altura estimadas.' },
-  { tag: 'Chegada', title: 'Portão e portaria', pos: [2.2, 2.0, 36.5],
+  { tag: 'Referência: CIEP Tancredo Neves', title: 'A fachada', pos: [-22.5, 5.5, 2.5],
+    body: 'Fachada branca, janelas em arco arredondado com peitoril vermelho ou preto alternando, arcos abertos no térreo e platibanda lisa com juntas: como na foto da unidade (Leonardo Finotti, Arquitectura Viva). As medidas foram estimadas pelas proporções da foto (módulo de 5 m), não são oficiais.' },
+  { tag: 'Referência: projeto-padrão', title: 'Pilotis e rampa', pos: [30, 2.6, -2],
+    body: 'O térreo é aberto (pilotis) e a rampa fica no meio do vão, visível pelos arcos — elemento do projeto-padrão dos CIEPs e visível na foto do Tancredo Neves. A área de direção e pedagogia fica num bloco fechado no térreo (desenho PRO192-ALB-107.03); a distribuição interna é uma proposta.' },
+  { tag: 'Referência: projeto-padrão', title: 'Passarela com pórticos', pos: [-1.1, 2.4, 18],
+    body: 'Passarela coberta ligando o portão ao prédio, como na foto do acervo do projeto-padrão. Largura e altura estimadas.' },
+  { tag: 'Chegada', title: 'Portão e portaria', pos: [5, 2.0, 36.5],
     body: 'Primeira fonte de informação: quem viu as pessoas entrarem hoje. Ouça antes de concluir; relatos de terceiros podem ser boato.' },
-  { tag: 'Redução de tensão', title: 'Recepção', pos: [-2.5, 2.1, -3.6],
+  { tag: 'Redução de tensão', title: 'Recepção', pos: [-6.0, 2.1, -6.0],
     body: 'Um responsável exaltado quer respostas. Ouvir primeiro reduz a tensão e traz informação. Ameaçar ou dispensar a pessoa aumenta o conflito. Filmar o policial em serviço é permitido; o cuidado é não expor alunos.' },
-  { tag: 'Verificação', title: 'Direção', pos: [1.0, 2.1, -4.0],
+  { tag: 'Verificação', title: 'Direção', pos: [0.5, 2.1, -4.5],
     body: 'O print, as câmeras e o livro de ocorrências estão aqui. Data, remetente, detalhes concretos (meio, local, hora) e a localização do aluno citado ajudam a separar boato, brincadeira, sofrimento e ameaça real.' },
-  { tag: 'Adolescente', title: 'Corredor central', pos: [-3.0, 2.2, -9.5],
+  { tag: 'Adolescente', title: 'Corredor central', pos: [-6.8, 2.2, -11.5],
     body: 'O aluno citado é adolescente: respeito à imagem e à dignidade (ECA arts. 17 e 18), sem divulgação do nome (ECA art. 143), busca pessoal só com fundada suspeita (CPP art. 244), algemas só com resistência, fuga ou perigo (Súmula Vinculante 11).' },
-  { tag: 'Uso da força', title: 'Ameaça ativa', pos: [-10.5, 2.0, -9.5],
+  { tag: 'Uso da força', title: 'Ameaça ativa', pos: [-14.0, 2.0, -11.5],
     body: 'Se houver disparos, a prioridade é chegar à ameaça e proteger as pessoas: comunicar, mandar trancar as salas, ordem verbal clara e uso da força proporcional (CP arts. 23 e 25; Lei 13.060/2014). Depois, socorro imediato e preservação do local. Pontos a validar com a norma interna.' },
-  { tag: 'Proteção', title: 'Ponto de encontro no pátio', pos: [10, 1.9, 20],
+  { tag: 'Proteção', title: 'Ponto de encontro no pátio', pos: [14, 1.9, 20],
     body: 'Responsáveis e pessoas retiradas do prédio ficam longe da área de risco, sem atrapalhar a ação e sem repassar boatos.' },
 ];
 const hotspots = new THREE.Group(); scene.add(hotspots);
@@ -322,7 +324,7 @@ function irPara(nome) {
   rig.position.set(x, Math.max(0, y - 1.6), z);
   yaw = Math.atan2(-(ax - x), -(az - z)); pitch = Math.atan2(ay - y, Math.hypot(ax - x, az - z));
 }
-const NOMES = { Camera_Rua: "Rua", Camera_Patio: "Pátio", Camera_Passarela: "Passarela", Camera_Recepcao: "Recepção", Camera_Direcao: "Direção", Camera_Corredor: "Corredor", Camera_Sala_104: "Sala 104" };
+const NOMES = { Camera_Rua: "Rua", Camera_Patio: "Pátio", Camera_Passarela: "Passarela", Camera_Recepcao: "Recepção", Camera_Direcao: "Direção", Camera_Corredor: "Corredor", Camera_Sala_104: "Sala 104", Camera_Pilotis: "Pilotis" };
 Object.keys(CFG.cameras).forEach((k, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = `${i + 1} · ${NOMES[k] || k}`;
   b.onclick = () => irPara(k); $('vistas').appendChild(b);

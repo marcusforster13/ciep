@@ -1,45 +1,57 @@
 # Ambiente: o que veio de onde
 
-## Do projeto-padrão dos CIEPs (não é levantamento do Tancredo Neves)
+## Da unidade Tancredo Neves (foto de Leonardo Finotti, Arquitectura Viva) — referência principal da aparência
 
-| Elemento no modelo | Referência |
+| Elemento no modelo | Como aparece na foto |
 |---|---|
-| Bloco principal longo, 3 pavimentos, malha de pilares em módulos | PRO192-ALB-107.03 (plantas do 1º e 2º pavimentos) |
-| Corredor central com salas dos dois lados; área de direção e pedagogia no térreo | PRO192-ALB-107.03 ("área destinada à direção e pedagogia") |
-| Janelas em arco arredondado, uma por módulo, com peitoril pintado | PRO192-ALB-254.02 e foto "ft ciep 02" |
-| Sequência de cores dos peitoris (1006, 1038, 1070, 1035) | PRO192-ALB-254.02 ("cores concretina"); **os tons são estimados** |
-| Paredes de alvenaria do corredor em azul 1070; colunas em concreto aparente | PRO192-ALB-254.02 (anotação manuscrita); tom estimado |
-| Arcadas no térreo | foto "ft ciep 02" |
-| Passarela coberta com pórticos em arco | foto "ft ciep 02" |
-| Rampa no centro do bloco | PRO192-ALB-107.03 (marcação central); modelada só como volume, com acesso fechado |
-| Platibanda com nervuras verticais | foto "ft ciep 02" |
+| Fachada de concreto pintado de **branco**, lisa | toda a fachada |
+| Janelas em arco arredondado, uma por módulo, com persianas claras por dentro | dois pavimentos de janelas |
+| Peitoril **vermelho** ou **preto**, alternando de dois em dois | parte de baixo de cada abertura |
+| Térreo com arcos abertos (pilotis): vê-se através do prédio | arcos do térreo |
+| Rampa no vão do térreo, visível por um dos arcos | terceiro arco da foto |
+| Platibanda lisa com juntas verticais e junta horizontal na altura da cobertura | faixa alta da fachada |
+| Pátio em placas de concreto claras, em faixas, separadas por juntas de grama; palmeira; poste alto | primeiro plano |
 
-## Da unidade Tancredo Neves
+## Do projeto-padrão dos CIEPs (acervo da Fundação Oscar Niemeyer; não é levantamento do Tancredo Neves)
 
 | Elemento | Referência |
 |---|---|
-| Aparência geral da fachada, pátio aberto, letreiro com o nome sobre o térreo | foto de Leonardo Finotti (Arquitectura Viva), identificada como desta unidade |
+| Bloco longo de 3 pavimentos, malha de pilares em módulos | PRO192-ALB-107.03 |
+| Área de direção e pedagogia no térreo | PRO192-ALB-107.03 ("área destinada à direção e pedagogia") |
+| Corredor com barra azul 1070; colunas e paredes conforme o desenho de cores | PRO192-ALB-254.02 (tom do azul estimado) |
+| Passarela coberta com pórticos em arco | foto "ft ciep 02" (outra unidade) |
 
-A Figura 28 da dissertação da UFAL (plantas do Tancredo Neves) **não estava no pacote**: a distribuição interna do térreo
-(recepção, direção, banheiro, sala 104) é uma **proposta de produção**, não a configuração real da unidade.
+A Figura 28 da dissertação da UFAL (plantas do Tancredo Neves) **não estava no pacote**: a distribuição do bloco
+administrativo (recepção, direção, corredor, banheiro, sala 104) é uma **proposta de produção**.
 
 ## Medidas — todas ESTIMADAS (nenhuma é oficial)
 
-| Medida | Valor no modelo | Como foi estimada |
-|---|---|---|
-| Comprimento do bloco | 100 m (20 módulos de 5 m) | o desenho anota "100" junto à planta; módulo de 5 m pelas cotas "5 · 5" |
-| Profundidade do bloco | 17 m | proporção da planta |
-| Altura entre pavimentos | 3,8 m | proporção da foto |
-| Galeria do térreo | 3 m | proporção |
-| Corredor central | 3 m | proporção da planta |
-| Janela arredondada | 3,9 × 2,55 m, raio 0,75 m | ~78% do módulo, pela foto |
-| Passarela | 6 m de largura, pórticos a cada 5 m | foto |
-| Muro | 2,4 m | adotado |
+Medidas tiradas das proporções da foto do Tancredo Neves, assumindo **módulo de 5 m** (o desenho do projeto-padrão anota "100" no comprimento e "5" nos módulos).
 
-Os valores estão em `ciep.py` (bloco `MEDIDAS_ESTIMADAS`) e gravados no `.blend`. Trocar por medidas confirmadas é só mudar as constantes no início da seção "CIEP".
+| Medida | Valor no modelo |
+|---|---|
+| Comprimento do bloco | 100 m (20 módulos de 5 m) |
+| Profundidade do bloco | 22 m |
+| Altura entre pavimentos | 3,35 m |
+| Janela | 3,9 × 2,75 m, cantos com raio de 0,95 m; peitoril colorido de 0,92 m |
+| Arco do térreo | 3,9 × 3,0 m, raio 1,35 m |
+| Platibanda | 2,0 m acima da cobertura |
+| Bloco administrativo do térreo | 40 × 16 m, com galerias de 3 m sob os arcos |
+| Recepção · direção | 8 × 7 m cada |
+| Corredor central | 3 m de largura, 40 m de comprimento |
+| Sala 104 · banheiro masculino | 10 × 6 m · 8 × 6 m |
+| Passarela | 6 m de largura, pórticos a cada 5 m |
+| Muro | 2,4 m |
+
+Os valores estão em `ciep.py` (constantes no início da seção "CIEP" e `MEDIDAS_ESTIMADAS`, gravadas no `.blend`).
+
+## Texturas (CC0, Poly Haven)
+
+white_stucco (fachada, paredes, peitoris tingidos), granite_tile (piso de granilite), concrete_wall_008 (placas do pátio e
+piso dos pilotis), leafy_grass (grama), long_white_tiles (azulejo do banheiro), além das do Cassino clandestino (asfalto,
+reboco do muro, madeiras, metal pintado, casca de árvore). As fotos de referência **não** são usadas como textura.
 
 ## Área jogável e desempenho em VR
 
-Acessíveis: rua, portão e portaria, pátio, passarela, galeria, recepção, sala da direção, trecho de 30 m do corredor central,
-banheiro masculino e sala 104. O resto do prédio é só volume externo (interiores fechados com portas e blocos escuros).
-Cena otimizada: cerca de 100 mil triângulos, 30 malhas, colisão por caixas, iluminação pré-calculada por área.
+Rua, portão e portaria, pátio, passarela, pilotis (com a rampa), galeria, recepção, direção, corredor central de 40 m,
+banheiro masculino e sala 104. Os pavimentos superiores e as demais salas são só volume.
