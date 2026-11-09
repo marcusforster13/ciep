@@ -76,7 +76,9 @@
    "apontando",
    "agachado",
    "sentado_parado",
-   "bracos_para_cima"
+   "bracos_para_cima",
+   "irritado",
+   "triste"
   ]
  },
  "funcionario": {
@@ -92,6 +94,89 @@
    "algemado_andando",
    "agachado",
    "sentado_parado"
+  ]
+ },
+ "refem_menino_a": {
+  "arquivo": "personagens/refem_menino_a.glb",
+  "animacoes": [
+   "parada",
+   "nervoso",
+   "agachado",
+   "andando",
+   "correndo",
+   "rendido"
+  ]
+ },
+ "refem_menino_b": {
+  "arquivo": "personagens/refem_menino_b.glb",
+  "animacoes": [
+   "parada",
+   "nervoso",
+   "agachado",
+   "andando",
+   "correndo",
+   "rendido"
+  ]
+ },
+ "refem_menina_a": {
+  "arquivo": "personagens/refem_menina_a.glb",
+  "animacoes": [
+   "parada",
+   "nervoso",
+   "agachado",
+   "andando",
+   "correndo",
+   "chorando"
+  ]
+ },
+ "refem_menina_b": {
+  "arquivo": "personagens/refem_menina_b.glb",
+  "animacoes": [
+   "parada",
+   "nervoso",
+   "agachado",
+   "andando",
+   "correndo",
+   "chorando"
+  ]
+ },
+ "professora": {
+  "arquivo": "personagens/professora.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso",
+   "andando",
+   "correndo",
+   "rendido",
+   "algemado",
+   "algemado_andando",
+   "agachado",
+   "estressada"
+  ]
+ },
+ "mae": {
+  "arquivo": "personagens/mae.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso",
+   "andando",
+   "correndo",
+   "rendido",
+   "algemado",
+   "algemado_andando",
+   "triste",
+   "estressada"
+  ]
+ },
+ "negociador": {
+  "arquivo": "personagens/negociador.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "andando",
+   "correndo"
   ]
  }
 }

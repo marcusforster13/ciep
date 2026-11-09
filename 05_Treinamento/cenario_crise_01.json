@@ -1,0 +1,199 @@
+{
+  "id": "crise_01",
+  "titulo": "Sala 201 — crise com reféns na escola",
+  "versao": "rascunho 1 · para validação com instrutores e equipe de negociação",
+  "aviso": "Situação fictícia. Gerenciamento de crise com reféns numa escola: contenção, isolamento, contato sem concessões e negociação. Não há cenas de violência contra crianças: em desfecho ruim, o instrutor narra o que aconteceu.",
+  "aprovacao": { "pontos_minimos": 70, "sem_falha_grave": true },
+
+  "variacoes": {
+    "arma": ["faca", "revolver"],
+    "motivo": ["notoriedade", "vinganca", "suicida"],
+    "pressao": ["mae", "imprensa", "pai"],
+    "virada": ["acalma", "prazo", "ataque"]
+  },
+  "nomes_variacao": {
+    "arma": { "faca": "faca", "revolver": "revólver" },
+    "motivo": { "notoriedade": "busca de notoriedade (live, 'recorde')", "vinganca": "vingança por intimidação sofrida", "suicida": "crise suicida" },
+    "pressao": { "mae": "a mãe dele chega", "imprensa": "imprensa e drone de TV", "pai": "pai de aluna quer entrar" },
+    "virada": { "acalma": "o contato o acalma", "prazo": "ele dá um prazo", "ataque": "ele tenta atacar" }
+  },
+
+  "fases": [
+    { "id": "f1_chegada", "nome": "Fase 1 · Chegada e acionamento", "modo": "interventor",
+      "acoes": [
+        { "id": "ler_dossie", "texto": "Leu o dossiê do alerta no tablet antes de entrar", "pontos": 3, "base": "Coleta de informações" },
+        { "id": "comunicar_chegada", "texto": "Informou a chegada e confirmou a crise pelo rádio", "pontos": 2, "base": "Procedimento operacional" },
+        { "id": "acionar_especializada", "texto": "Acionou a equipe especializada (BOPE/negociação), SAMU e apoio", "pontos": 5, "base": "Doutrina de gerenciamento de crises: acionamento imediato (validar com norma interna)", "validar": true },
+        { "id": "ouvir_diretora", "texto": "Ouviu a diretora: local, quantos reféns, quem é o aluno", "pontos": 3, "base": "Coleta de informações" }
+      ] },
+    { "id": "f1_contencao", "nome": "Fase 1 · Conter, isolar e proteger", "modo": "interventor",
+      "acoes": [
+        { "id": "proteger_demais", "texto": "Protegeu as demais pessoas (abrigou o 1º andar, retirou o térreo e o pátio)", "pontos": 6, "base": "Prioridade: preservação de vidas" },
+        { "id": "isolar_perimetro", "texto": "Isolou o perímetro (portão e corredor) e afastou curiosos e pais", "pontos": 5, "base": "Respostas imediatas: conter e isolar" },
+        { "id": "conter_corredor", "texto": "Conteve o corredor do 1º andar em posição abrigada, fora da linha da porta", "pontos": 5, "base": "Segurança do primeiro interventor" },
+        { "id": "manter_contencao", "texto": "Manteve a contenção sem entrar e sem forçar a porta", "pontos": 5, "base": "Primeiro interventor não invade sem agressão ativa" }
+      ],
+      "erros": [
+        { "id": "linha_porta", "texto": "Ficou exposto na linha da porta da sala", "pontos": -3 },
+        { "id": "evacuar_corredor_crise", "texto": "Mandou turmas passarem pelo corredor da crise", "pontos": -4 },
+        { "id": "curiosos_no_perimetro", "texto": "Deixou pais e curiosos dentro do perímetro", "pontos": -3 }
+      ],
+      "falhas_graves": [
+        { "id": "invasao_precipitada", "texto": "Forçou a entrada sem agressão ativa em curso", "pontos": -25, "base": "Doutrina: critérios de ação (necessidade, validade do risco, aceitabilidade)" }
+      ] },
+    { "id": "f1_contato", "nome": "Fase 1 · Contato inicial sem concessões", "modo": "interventor",
+      "acoes": [
+        { "id": "contato_identificacao", "texto": "Identificou-se com calma e perguntou o nome dele", "pontos": 3, "base": "Contato inicial" },
+        { "id": "contato_sem_concessao", "texto": "Não fez concessões nem promessas no contato inicial", "pontos": 4, "base": "Estabelecer contato sem concessões" },
+        { "id": "ganhar_tempo", "texto": "Manteve a conversa para ganhar tempo, sem confrontar", "pontos": 4, "base": "O tempo favorece a resolução" },
+        { "id": "levantar_informacoes", "texto": "Levantou informações: arma, número de reféns, feridos, estado dele", "pontos": 4, "base": "Coleta de informações" },
+        { "id": "passagem_completa", "texto": "Passou a ocorrência ao comandante com informações corretas e completas", "pontos": 6, "base": "Quem negocia não comanda; passagem ao comando" }
+      ],
+      "erros": [
+        { "id": "ordem_agressiva", "texto": "Deu ordens agressivas ou ameaçou", "pontos": -4 },
+        { "id": "promessa_indevida", "texto": "Prometeu o que não podia cumprir", "pontos": -4 },
+        { "id": "assumiu_negociacao", "texto": "Insistiu em negociar depois da chegada da equipe especializada", "pontos": -3 },
+        { "id": "passagem_errada", "texto": "Passou ao comando informação errada ou incompleta", "pontos": -4 }
+      ] },
+    { "id": "f2_negociacao", "nome": "Fase 2 · Negociação", "modo": "negociador",
+      "acoes": [
+        { "id": "escuta_ativa", "texto": "Usou escuta ativa (paráfrase, rotular emoções, perguntas abertas)", "pontos": 8, "base": "Modelo da escada de mudança comportamental (validar)", "validar": true },
+        { "id": "vinculo", "texto": "Construiu vínculo (rapport) antes de pedir algo", "pontos": 6, "base": "Negociação em crise" },
+        { "id": "troca_refens", "texto": "Trocou pequenas concessões por libertação de reféns", "pontos": 6, "base": "Nunca dar sem receber; prioridade aos feridos e menores" },
+        { "id": "gestao_exigencias", "texto": "Lidou com exigências e prazos sem aceitar nem negar de forma seca", "pontos": 5, "base": "Gestão de exigências" },
+        { "id": "uso_tecnologia", "texto": "Usou as informações de tecnologia (live, drone, câmeras, mensagens)", "pontos": 4, "base": "Inteligência em apoio à negociação" },
+        { "id": "terceiros_avaliados", "texto": "Avaliou a mãe/terceiros antes de qualquer contato com ele", "pontos": 4, "base": "Intermediários só depois de avaliados (validar)", "condicao": "variacao.pressao == 'mae'", "validar": true },
+        { "id": "rendicao", "texto": "Conduziu a rendição com instruções claras e seguras", "pontos": 8, "base": "Plano de rendição" }
+      ],
+      "erros": [
+        { "id": "neg_ameaca", "texto": "Ameaçou ou confrontou o causador", "pontos": -5 },
+        { "id": "neg_mentira", "texto": "Mentiu sobre algo sério (impunidade, fuga)", "pontos": -6 },
+        { "id": "neg_minimizar", "texto": "Minimizou o que ele sente", "pontos": -3 },
+        { "id": "neg_concessao_gratis", "texto": "Concedeu algo sem pedir nada em troca", "pontos": -3 },
+        { "id": "neg_terceiro_sem_avaliar", "texto": "Colocou a mãe/terceiro na linha sem avaliar", "pontos": -5 }
+      ],
+      "falhas_graves": [
+        { "id": "neg_arma", "texto": "Concedeu arma, fuga ou plateia ao causador", "pontos": -25 },
+        { "id": "neg_provocou_ataque", "texto": "Provocou a escalada que levou ao ataque", "pontos": -20 }
+      ] },
+    { "id": "f_desfecho", "nome": "Desfecho", "modo": "todos",
+      "acoes": [
+        { "id": "intervencao_correta", "texto": "Reagiu corretamente à agressão ativa (intervenção imediata)", "pontos": 6, "base": "Agressor ativo: intervenção imediata (validar)", "condicao": "variacao.virada == 'ataque'", "validar": true },
+        { "id": "vidas_preservadas", "texto": "Todas as vidas preservadas", "pontos": 10, "base": "Objetivo do gerenciamento de crises" },
+        { "id": "apreensao_correta", "texto": "Apreensão do adolescente sem violência desnecessária, com proteção da identidade", "pontos": 4, "base": "ECA arts. 106, 143 e 178; Súmula Vinculante 11" }
+      ] }
+  ],
+
+  "radio": {
+    "inicio": "Viatura, urgente: o núcleo de inteligência detectou num grupo de Discord uma ameaça de ataque hoje ao CIEP Tancredo Neves, sala 201, com foto de arma. Deslocar com prioridade. O dossiê está no tablet.",
+    "chegada": "Ciente. Confirme a situação no local.",
+    "acionamento": "Ciente: crise com reféns. BOPE e equipe de negociação acionados, SAMU e apoio a caminho. Mantenha a contenção e não entre. Tempo estimado: cinco minutos.",
+    "bope_chegou": "Viatura, o BOPE chegou ao portão. O comandante da cena vai assumir no posto de comando, no pátio.",
+    "live_derrubada": "Sala de operações: a plataforma derrubou a transmissão ao vivo. Seguimos monitorando.",
+    "drone": "Drone no ar. A imagem já está no seu tablet.",
+    "final": "Ciente, crise encerrada. Bom serviço."
+  },
+
+  "dossie": [
+    "07h31 · servidor de Discord ligado a culto a ataques escolares (monitorado). Usuário \"Lucas_901\".",
+    "07h33 · foto de um volume dentro de uma mochila escolar. Legenda: \"hoje é na 201\".",
+    "Últimos 30 dias: elogios a autores de ataques, contagem de 'vítimas', pedidos de 'audiência' para uma live.",
+    "Perfil: 15 anos, aluno da turma 901, sala 201 (1º andar). Registros escolares de intimidação sofrida.",
+    "Risco: alto. Possível arma: faca ou arma de fogo (não confirmado)."
+  ],
+
+  "falas": {
+    "diretora_chegada": "Graças a Deus vocês chegaram! O Lucas entrou na 201 com a turma e trancou a porta. Ouvimos gritos. São uns dezoito alunos e a professora Cláudia.",
+    "diretora_info": "As outras turmas do primeiro andar estão nas salas. O térreo e o pátio ainda têm aluno. Os pais estão chegando no portão.",
+    "diretora_abrigo": "Vou avisar pelo telefone interno: trancar as portas e todo mundo longe das janelas e da porta.",
+    "diretora_evacua": "Vou tirar os alunos do térreo e do pátio pelo portão dos fundos, longe da rampa.",
+    "parceiro_fila": "Fico na outra ponta do corredor, abrigado. Ninguém passa.",
+    "pai_portao": "Minha filha está lá dentro! Me deixa passar!",
+    "pai_afastado": "Tá... tá bom. Eu espero aqui.",
+    "comandante_chegada": "Sou o comandante da cena. Me passa tudo o que você levantou.",
+    "comandante_assume": "Assumo daqui. Negociador, com você. Primeiro interventor, mantenha o perímetro interno.",
+    "negociador_chegada": "Negociador da equipe. A partir de agora o contato é só comigo.",
+    "professora_mensagem": "Ele está do lado do quadro, com a mochila nas costas. A gente está no fundo da sala, no chão. A Bia cortou o braço na janela, está sangrando pouco.",
+    "mae_chegada": "Eu sou a mãe do Lucas! Deixa eu falar com ele, por favor, ele vai me ouvir!",
+    "mae_info": "Ele não sai do computador... diz que lá ninguém zoa ele. Na escola apanhava. O pai foi embora. Ele gosta de desenhar e do cachorro dele, o Thor.",
+    "imprensa": "Estamos ao vivo do CIEP Tancredo Neves, onde um aluno mantém colegas reféns...",
+    "lucas_rendicao": "Tá bom... eu vou sair. Não atira.",
+    "bope_ataque": "Agressão em curso! Entrada imediata!"
+  },
+
+  "contato_porta": {
+    "abertura": [
+      { "id": "identifica", "fala": "Lucas? Aqui é a polícia. Meu nome é Silva. Estou aqui para que ninguém se machuque, nem você. Como você está?", "acao": "contato_identificacao", "efeito": [-10, 8] },
+      { "id": "ordem", "fala": "Larga essa arma e abre a porta agora!", "erro": "ordem_agressiva", "efeito": [15, -10] },
+      { "id": "promete", "fala": "Se você sair agora, prometo que não vai acontecer nada com você.", "erro": "promessa_indevida", "efeito": [0, -5] }
+    ],
+    "seguir": [
+      { "id": "tempo", "fala": "Não precisa decidir nada agora. Eu fico aqui com você. Me conta o que está acontecendo.", "acao": "ganhar_tempo", "efeito": [-8, 6] },
+      { "id": "info", "fala": "Tem alguém machucado aí dentro? Alguém precisa de ajuda?", "acao": "levantar_informacoes", "efeito": [-2, 3] },
+      { "id": "concessao", "fala": "O que você quer? Eu consigo pra você.", "erro": "promessa_indevida", "efeito": [5, -2] },
+      { "id": "pressiona", "fala": "Você sabe que não tem saída. Acaba logo com isso.", "erro": "ordem_agressiva", "efeito": [18, -12] }
+    ]
+  },
+  "respostas_porta": {
+    "identifica": "Vai embora! Ninguém aqui liga pra mim mesmo.",
+    "ordem": "Se alguém entrar, eu juro que faço!",
+    "promete": "Mentira. Vocês sempre mentem.",
+    "tempo": "Todo dia eles me zoavam. Todo dia. E a professora fingia que não via.",
+    "info": "Uma menina cortou o braço na janela. É pouco. Ninguém mais.",
+    "concessao": "Quero que todo mundo veja. A live tem que continuar.",
+    "pressiona": "Então vem! Eu não tenho nada a perder!"
+  },
+
+  "negociacao": {
+    "aberturas_lucas": {
+      "notoriedade": ["Tá todo mundo vendo agora. Mil pessoas na live. Ninguém nunca me via.", "Vão lembrar do meu nome. Igual lembram dos outros.", "Se cair a live, acabou a conversa."],
+      "vinganca": ["O Rafa e os amigos dele me batiam no banheiro. Todo mundo sabia.", "Eu falei pra diretora. Falei pro meu pai. Ninguém fez nada.", "Agora eles têm medo de mim. Agora eles sabem como é."],
+      "suicida": ["Eu não vou sair daqui vivo. Pode mandar entrar.", "Ninguém vai sentir falta. Nem minha mãe.", "Eu só quero que acabe. Tudo."]
+    },
+    "tecnicas": [
+      { "tipo": "parafrase", "rotulo": "Paráfrase", "modelos": { "notoriedade": "Você sente que passou a vida sem ninguém te enxergar.", "vinganca": "Você pediu ajuda várias vezes e ninguém te protegeu.", "suicida": "Você está cansado de tudo e não vê saída." }, "efeito": [-8, 10], "acao": "escuta_ativa" },
+      { "tipo": "rotular", "rotulo": "Rotular a emoção", "modelos": { "notoriedade": "Parece que você está com muita raiva de ter sido invisível.", "vinganca": "Parece que você está com muita raiva e muito ferido.", "suicida": "Parece que você está sentindo uma dor enorme." }, "efeito": [-10, 8], "acao": "escuta_ativa" },
+      { "tipo": "aberta", "rotulo": "Pergunta aberta", "modelos": { "notoriedade": "Me conta como foi até chegar aqui hoje.", "vinganca": "Me conta o que acontecia no banheiro.", "suicida": "Me conta o que te trouxe até esse ponto." }, "efeito": [-5, 7], "acao": "escuta_ativa" },
+      { "tipo": "pausa", "rotulo": "Silêncio e encorajamento mínimo", "modelos": { "notoriedade": "Hum... estou te ouvindo. Continua.", "vinganca": "Hum... estou te ouvindo. Continua.", "suicida": "Estou aqui. Pode continuar." }, "efeito": [-4, 4], "acao": "escuta_ativa" },
+      { "tipo": "minimizar", "rotulo": "", "modelos": { "notoriedade": "Isso não é motivo pra fazer uma coisa dessas.", "vinganca": "Isso é coisa de escola, todo mundo passa por isso.", "suicida": "Você é muito novo pra pensar nisso, tem a vida toda pela frente." }, "efeito": [14, -10], "erro": "neg_minimizar" },
+      { "tipo": "ameaca", "rotulo": "", "modelos": { "notoriedade": "Lá fora tem uma equipe pronta para entrar. Pensa bem.", "vinganca": "Lá fora tem uma equipe pronta para entrar. Pensa bem.", "suicida": "Lá fora tem uma equipe pronta para entrar. Pensa bem." }, "efeito": [22, -15], "erro": "neg_ameaca" },
+      { "tipo": "mentira", "rotulo": "", "modelos": { "notoriedade": "Se você sair, ninguém vai saber que foi você. Fica tudo apagado.", "vinganca": "Se você sair, o Rafa é que vai ser preso, não você.", "suicida": "Se você sair, não vai acontecer nada com você." }, "efeito": [-2, -14], "erro": "neg_mentira" }
+    ],
+    "trocas": [
+      { "id": "agua", "fala": "Está muito quente aí. Eu mando água para todo mundo. Em troca, você deixa a Bia sair para cuidar do braço.", "libera": 1, "requer_vinculo": 30 },
+      { "id": "pequenos", "fala": "Você mostrou que pode ser diferente. Deixa os menores saírem e a gente continua conversando só nós dois.", "libera": 6, "requer_vinculo": 50 },
+      { "id": "professora", "fala": "A professora está passando mal. Deixa ela sair com os que sobraram, e eu continuo aqui com você.", "libera": 99, "requer_vinculo": 65 }
+    ],
+    "exigencias": {
+      "live": { "lucas": "Eu quero que a live continue. Se cair, acabou.", "ok": "Eu não decido isso, mas estou ouvindo você. O que você quer que as pessoas saibam de você? Me fala, que eu escuto.", "nega": "Não, a live vai cair e pronto.", "aceita": "Tudo bem, a live continua." },
+      "rafa": { "lucas": "Traz o Rafa aqui. Quero que ele peça desculpa na frente de todo mundo.", "ok": "Isso não depende só de mim. O que aconteceu com você precisa ser apurado direito, e eu quero te ajudar nisso. Me conta mais.", "nega": "Isso nunca vai acontecer.", "aceita": "Tá bom, vou buscar o Rafa." },
+      "prazo": { "lucas": "Vocês têm dez minutos. Depois disso eu faço.", "ok": "Estou aqui agora, falando com você. Vamos usar esse tempo para resolver isso juntos, sem ninguém se machucar.", "nega": "Ninguém aceita prazo seu.", "aceita": "Tá bom, dez minutos." }
+    },
+    "rendicao": [
+      { "id": "plano", "fala": "Vamos fazer assim: primeiro você coloca a mochila e o que tiver na mão no chão, longe de você. Depois abre a porta devagar e sai com as mãos vazias à vista. Ninguém vai te machucar. Eu estou aqui o tempo todo.", "acao": "rendicao" },
+      { "id": "pressa", "fala": "Sai logo, joga a arma e sai correndo!", "erro": "neg_ameaca" }
+    ],
+    "mae": [
+      { "id": "avaliar", "fala": "Senhora, preciso entender o seu filho primeiro. Me conta do que ele gosta, com quem conversa.", "acao": "terceiros_avaliados" },
+      { "id": "na_linha", "fala": "Fala com ele direto, ele vai te ouvir.", "erro": "neg_terceiro_sem_avaliar" }
+    ]
+  },
+
+  "narracoes": {
+    "ataque_contencao": "Ele avançou contra os colegas. Diante de agressão ativa, a contenção deixa de ser a resposta: a equipe entrou imediatamente e o neutralizou. Uma aluna ficou ferida e foi socorrida. É por isso que o primeiro interventor deve estar posicionado e pronto, e por isso o critério muda quando há ataque em curso.",
+    "ataque_provocado": "A pressão e o confronto fizeram ele perder o controle. A equipe entrou às pressas. Houve feridos. Na negociação, ameaçar, mentir e minimizar aumentam o risco: o tempo e o vínculo é que salvam vidas.",
+    "invasao_precipitada": "A porta foi forçada sem agressão em curso. Ele reagiu ao susto e atacou quem estava perto. A doutrina pede contenção e negociação enquanto não houver ataque: a invasão é a última alternativa, decidida pelo comandante segundo necessidade, validade do risco e aceitabilidade.",
+    "rendicao": "Ele colocou a mochila no chão, abriu a porta e saiu com as mãos à vista. Todos os reféns saíram vivos. O adolescente foi apreendido sem violência e levado pela equipe especializada, com a identidade preservada.",
+    "passagem": "Você passou a ocorrência ao comandante da cena. A partir daqui a equipe de negociação conduz a crise e você mantém o perímetro."
+  },
+
+  "base_legal": {
+    "Doutrina de gerenciamento de crises": "Respostas imediatas: conter, isolar, estabelecer contato sem concessões. Quem negocia não comanda e quem comanda não negocia. Critérios de ação: necessidade, validade do risco, aceitabilidade legal, moral e ética (validar com a doutrina e as portarias da instituição).",
+    "Agressor ativo": "Havendo ataque em curso, a contenção dá lugar à intervenção imediata (validar com a norma interna).",
+    "CP arts. 23 e 25; Lei 13.060/2014": "Uso da força proporcional; arma de fogo só contra agressão atual ou iminente.",
+    "ECA arts. 106, 143, 172 a 178": "Apreensão em flagrante de adolescente, comunicação à família, vedação de divulgação e de transporte em condições atentatórias.",
+    "Súmula Vinculante 11": "Algemas só com resistência, risco de fuga ou perigo, justificadas por escrito.",
+    "CF art. 227": "Proteção integral de crianças e adolescentes.",
+    "_nota": "Rascunho para validação com instrutores e com a equipe de negociação. Itens 'validar' dependem de norma interna."
+  }
+}

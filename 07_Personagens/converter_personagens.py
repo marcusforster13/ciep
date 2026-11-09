@@ -33,8 +33,16 @@ PAPEIS = {
     "diretora": ("Female_Adult_08", _civil("f", {"estressada": "f_gestic_talk_femalestressed_01", "respirando": "f_idle_breathe_01"})),
     "responsavel": ("Male_Adult_14", _civil("m", {"irritado": "m_idle_angry_01"})),
     # aluno: nao ha avatar adolescente no Rocketbox baixado; usa o adulto de aparencia mais jovem (Male_Adult_01), mais baixo
-    "aluno": ("Male_Adult_01", _civil("m", {"apontando": "m_idle_neutral_01+apontando", "agachado": "m_crouch_idle", "sentado_parado": "m_idle_neutral_01+sentado_parado", "bracos_para_cima": "m_idle_neutral_01+bracos_para_cima"})),
+    "aluno": ("Male_Adult_01", _civil("m", {"apontando": "m_idle_neutral_01+apontando", "agachado": "m_crouch_idle", "sentado_parado": "m_idle_neutral_01+sentado_parado", "bracos_para_cima": "m_idle_neutral_01+bracos_para_cima", "irritado": "m_idle_angry_01", "triste": "m_gestic_talk_neutral_01"})),
     "funcionario": ("Male_Adult_16", _civil("m", {"agachado": "m_crouch_idle", "sentado_parado": "m_idle_neutral_01+sentado_parado"})),
+    # missao "Sala 201" (crise com refens): criancas refens, professora, mae do aluno e negociador do BOPE
+    "refem_menino_a": ("Male_Child_01", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca"}),
+    "refem_menino_b": ("Male_Child_02", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca"}),
+    "refem_menina_a": ("Female_Child_02", {"parada": "f_idle_neutral_01", "nervoso": "f_idle_nervous_01", "agachado": "f_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "chorando": "f_gestic_talk_sad_01"}),
+    "refem_menina_b": ("Female_Child_01", {"parada": "f_idle_neutral_01", "nervoso": "f_idle_nervous_01", "agachado": "f_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "chorando": "f_gestic_talk_sad_01"}),
+    "professora": ("Female_Adult_02", _civil("f", {"agachado": "f_crouch_idle", "estressada": "f_gestic_talk_femalestressed_01"})),
+    "mae": ("Female_Adult_05", _civil("f", {"triste": "f_gestic_talk_sad_01", "estressada": "f_gestic_talk_femalestressed_01"})),
+    "negociador": ("Police_Male_06", {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01"}),
 }
 REF_TPOSE = "Female_Adult_08"     # T-pose adulta usada como referencia para as criancas
 

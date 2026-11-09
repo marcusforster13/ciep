@@ -85,7 +85,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1105-1701';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1109-1254';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -187,6 +187,7 @@ gltf.scene.traverse(o => {
     if (/Vidro_Janela/.test(m.name)) { m.transparent = true; m.opacity = .45; m.depthWrite = false; m.roughness = .05; }      // vidro das janelas do terreo
     if (/Vidro_Porta/.test(m.name)) { m.transparent = true; m.opacity = .25; m.depthWrite = false; m.roughness = .05; }      // espelho e visores
     if (/Tela_Acesa/.test(m.name)) { m.color.setScalar(.1); m.emissiveIntensity = .7; }      // telas do celular e do monitor
+    if (/leaves|Folha_Palmeira/i.test(m.name)) { m.transparent = false; m.alphaTest = .45; m.side = THREE.DoubleSide; m.depthWrite = true; }      // folhas: recorte pela transparencia, dos dois lados
     if (m.transmission > 0) { m.transmission = 0; m.transparent = true; m.opacity = 0.45; m.roughness = 0.05; }
     m.envMapIntensity = CFG.env_intensidade ?? 0.35;
     if (lm && o.geometry.attributes.uv1) {
@@ -242,6 +243,35 @@ function seguirChao() {
 }
 window.__casa = { rig, camera, mover, ver(x, z, y, p = 0) { rig.position.set(x, 0, z); yaw = y; pitch = p; }, get colisao() { return colisaoAtiva; }, get alvos() { return alvosCol.length; } };   // diagnostico
 $('loading').remove();
+
+/* ---------- bandeira do Brasil no mastro mais alto do patio (desenhada aqui, tremulando) ---------- */
+{
+  const W = 1000, Hh = 700, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const g = cv.getContext('2d');
+  const u = W / 20;                                               // proporcao oficial 20 x 14 modulos
+  g.fillStyle = '#009c3b'; g.fillRect(0, 0, W, Hh);
+  g.fillStyle = '#ffdf00'; g.beginPath(); g.moveTo(1.7 * u, Hh / 2); g.lineTo(W / 2, 1.7 * u); g.lineTo(W - 1.7 * u, Hh / 2); g.lineTo(W / 2, Hh - 1.7 * u); g.closePath(); g.fill();
+  g.fillStyle = '#002776'; g.beginPath(); g.arc(W / 2, Hh / 2, 3.5 * u, 0, 7); g.fill();
+  g.save(); g.beginPath(); g.arc(W / 2, Hh / 2, 3.5 * u, 0, 7); g.clip();                 // faixa branca curva com o lema
+  g.strokeStyle = '#ffffff'; g.lineWidth = .5 * u; g.beginPath(); g.arc(W / 2 - 2 * u, Hh / 2 + 7.2 * u, 8.2 * u, -Math.PI * .66, -Math.PI * .3); g.stroke();
+  g.fillStyle = '#009c3b'; g.font = `600 ${.3 * u}px Arial`; g.textAlign = 'center';
+  const lema = 'ORDEM E PROGRESSO'; const r0 = 8.2 * u, cx = W / 2 - 2 * u, cy = Hh / 2 + 7.2 * u, a0 = -Math.PI * .555;
+  [...lema].forEach((ch, i) => { const a = a0 + i * .021; g.save(); g.translate(cx + r0 * Math.cos(a), cy + r0 * Math.sin(a) + .1 * u); g.rotate(a + Math.PI / 2); g.fillText(ch, 0, 0); g.restore(); });
+  g.fillStyle = '#ffffff'; const rr = (x, y, s) => { g.beginPath(); g.arc(x, y, s, 0, 7); g.fill(); };
+  for (let k = 0; k < 27; k++) { const a = Math.sin(k * 12.9898) * 43758.5453 % 1, b = Math.sin(k * 78.233) * 12345.678 % 1;
+    const x = W / 2 + Math.abs(a) * 5.4 * u - 2.7 * u, y = Hh / 2 + .6 * u + Math.abs(b) * 2.6 * u;
+    if (Math.hypot(x - W / 2, y - Hh / 2) < 3.2 * u) rr(x, y, (k % 5 === 0 ? .14 : .09) * u); }
+  g.restore();
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const L = 2.0, A = 1.4, geo = new THREE.PlaneGeometry(L, A, 24, 8); geo.translate(-L / 2, 0, 0);     // presa ao mastro pela borda direita
+  const base = geo.attributes.position.array.slice();
+  const flag = new THREE.Mesh(geo, iluminar(new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: .8 })));
+  flag.position.set(-9.0 - .06, .15 + 9.5 - A / 2 - .12, 12.5); scene.add(flag);       // mastro de 9,5 m em (-9,0; -12,5) da planta
+  window.__bandeira = t => {
+    const p = geo.attributes.position.array;
+    for (let i = 0; i < p.length; i += 3) { const d = -base[i] / L; p[i + 2] = base[i + 2] + d * (.16 * Math.sin(t * 3.2 + base[i] * 3.1) + .05 * Math.sin(t * 5.3 + base[i + 1] * 4)); p[i + 1] = base[i + 1] - d * d * .12; }
+    geo.attributes.position.needsUpdate = true; geo.computeVertexNormals();
+  };
+}
 
 /* ---------- luzes dinamicas: giroflex e lanterna ---------- */
 const giro = {};
@@ -324,7 +354,7 @@ function irPara(nome) {
   rig.position.set(x, Math.max(0, y - 1.6), z);
   yaw = Math.atan2(-(ax - x), -(az - z)); pitch = Math.atan2(ay - y, Math.hypot(ax - x, az - z));
 }
-const NOMES = { Camera_Rua: "Rua", Camera_Patio: "Pátio", Camera_Passarela: "Passarela", Camera_Recepcao: "Recepção", Camera_Direcao: "Direção", Camera_Corredor: "Corredor", Camera_Sala_104: "Sala 104", Camera_Pilotis: "Pilotis" };
+const NOMES = { Camera_Rua: "Rua", Camera_Patio: "Pátio", Camera_Passarela: "Passarela", Camera_Recepcao: "Recepção", Camera_Direcao: "Direção", Camera_Corredor: "Corredor", Camera_Sala_104: "Sala 104", Camera_Pilotis: "Pilotis", Camera_Rampa: "Rampa", Camera_Pav1: "1º andar", Camera_Sala_201: "Sala 201" };
 Object.keys(CFG.cameras).forEach((k, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = `${i + 1} · ${NOMES[k] || k}`;
   b.onclick = () => irPara(k); $('vistas').appendChild(b);
@@ -472,6 +502,7 @@ renderer.setAnimationLoop(() => {
   hotspots.children.forEach((g, i) => { g.lookAt(V1); g.userData.ring.scale.setScalar(1 + .18 * Math.sin(t * 3 + i)); });
   window.__trein?.quadro();
   window.__som?.quadro(dt);
+  window.__bandeira?.(t);
   renderer.render(scene, camera);
 });
 

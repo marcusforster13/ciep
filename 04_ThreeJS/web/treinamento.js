@@ -193,10 +193,11 @@ export async function iniciar(ctx) {
     return g;
   }
   const modelos = {};
-  const modelosProntos = fetch(HQ('personagens/manifest.json')).then(r => r.ok ? r.json() : {}).then(man => {
-    const gl = new GLTFLoader();
-    return Promise.all(Object.entries(man).map(([papel, info]) => gl.loadAsync(HQ(info.arquivo)).then(g => { modelos[papel] = g; }).catch(() => { })));
-  }).catch(() => { });
+  const PAPEIS_CRISE = /^(refem_|professora|mae|negociador)/;          // so a missao "Sala 201" usa: carregam quando ela comeca
+  const manifesto = fetch(HQ('personagens/manifest.json')).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+  const glP = new GLTFLoader();
+  const carregarPapeis = filtro => manifesto.then(man => Promise.all(Object.entries(man).filter(([papel]) => filtro(papel) && !modelos[papel]).map(([papel, info]) => glP.loadAsync(HQ(info.arquivo)).then(g => { modelos[papel] = g; }).catch(() => { }))));
+  const modelosProntos = carregarPapeis(p => !PAPEIS_CRISE.test(p));
   function personagem(papel, nome, cor, altura) {
     const base = modelos[papel];
     if (!base) return boneco(nome, cor, altura);
@@ -326,6 +327,7 @@ export async function iniciar(ctx) {
   const olharPara = (dx, dy) => Math.atan2(dx, -dy);
   const zona = p => {                                          // onde esta um ponto da cena web
     const x = p.x, y = -p.z;
+    if (p.y > 3.0) return 'pavimento1';                        // 1o andar (chega-se pela rampa)
     if (y < -38) return 'rua';
     if (y < 0) return 'patio';
     if (x > -20 && x < 20 && y > 3 && y < 19) {               // bloco administrativo do terreo
@@ -596,7 +598,7 @@ export async function iniciar(ctx) {
     ['responsavel', 'responsavel', 'Responsável (pai de aluna)', [-6.0, 5.0], [0, -1], 'm', 1.78],
     ['diretora', 'diretora', 'Diretora', [2.4, 7.8], [0, -1], 'f', 1.66],
     ['funcionario', 'funcionario', 'Seu Jorge (inspetor de corredor)', [-9.0, 11.0], [1, 0], 'm', 1.74],
-    ['aluno', 'aluno', 'Lucas (aluno, 9º ano)', [4.8, 15.35], [0, 1], 'j', 1.68],
+    ['aluno', 'aluno', 'Lucas (aluno, 9º ano)', [6.65, 15.9], [-1, 0], 'j', 1.68],
   ];
   const ALTURA_SENTADO = alt => .15 + .46 - .925 * (alt / 1.78);
   function limparNPCs() { Object.values(npcs).forEach(n => scene.remove(n)); for (const k in npcs) delete npcs[k]; }
@@ -618,7 +620,7 @@ export async function iniciar(ctx) {
     if (itens.mochila) itens.mochila.h.visible = itens.mochila.o.visible;
   }
   function sentar(n) { const u = n.userData; u.sentado = true; u.semVirar = true; u.fig = false; u.base = 'sentado_parado'; animar(n, 'sentado_parado', 1e6, 0); n.position.y = ALTURA_SENTADO(u.altura); }
-  function levantar(n) { const u = n.userData; if (!u.sentado) return; u.sentado = false; u.semVirar = false; u.fig = true; u.base = 'parada'; n.position.y = .15; n.position.z += .45; animar(n, 'parada', 1e6, .2); }
+  function levantar(n) { const u = n.userData; if (!u.sentado) return; u.sentado = false; u.semVirar = false; u.fig = true; u.base = 'parada'; n.position.y = .15; n.position.x -= Math.sin(n.rotation.y) * .45; n.position.z -= Math.cos(n.rotation.y) * .45; animar(n, 'parada', 1e6, .2); }      // levanta e da um passo para tras da cadeira
 
   /* ================= paineis de opcoes ================= */
   const fechar = () => dialogo.esconder();
@@ -893,6 +895,7 @@ export async function iniciar(ctx) {
         { label: 'Modo história (4 ocorrências guiadas)', acao: () => comecar('historia') },
         { label: 'Modo treino (objetivos e dicas na tela)', acao: () => comecar('treino') },
         { label: 'Modo avaliação (sem dicas, variação sorteada)', acao: () => comecar('avaliacao') },
+        { label: 'MISSÃO SALA 201 · crise com reféns (gerenciamento de crise e negociação)', cor: 'rgba(240,163,64,.3)', acao: escolherCrise },
         { label: 'Treino de ameaça ativa (direto na recepção)', acao: () => comecar('ameaca') },
         { label: S.voz === false ? 'Voz sintética: desligada (só legendas)' : 'Voz sintética: ligada', acao: () => { S.voz = S.voz === false; aviso(); } },
         { label: 'Cancelar', acao: () => menu.esconder() }
@@ -924,6 +927,7 @@ export async function iniciar(ctx) {
     novaOcorrencia(S.historia ? derivar({ ...CEN.historia[0].variacao }) : sortear(), S.historia ? CEN.historia[0] : null);
   }
   function abrirMenu() {
+    if (S.crise) return S.crise.menu();
     if (!S.ativo) return aviso();
     fecharPaineis();
     const b = [];
@@ -991,6 +995,27 @@ export async function iniciar(ctx) {
     }
   }
 
+  /* ================= missao "Sala 201" (crise com refens): motor em crise.js ================= */
+  function escolherCrise() {
+    fecharPaineis();
+    menu.mostrar({ tag: 'Missão Sala 201', titulo: 'Qual é o seu papel?', texto: 'Um aluno radicalizado num grupo de Discord está armado na sala 201 com a turma. Escolha o papel que será avaliado.',
+      botoes: [
+        { label: 'Primeiro interventor — conter, isolar, contato inicial e passagem ao comando', acao: () => iniciarCrise('interventor', 'treino') },
+        { label: 'Negociador — da passagem do comando até o desfecho', acao: () => iniciarCrise('negociador', 'treino') },
+        { label: 'Completo — as duas fases, do alerta ao desfecho', acao: () => iniciarCrise('completo', 'treino') },
+        { label: 'Completo em modo avaliação (sem dicas)', acao: () => iniciarCrise('completo', 'avaliacao') },
+        { label: 'Voltar', acao: aviso }
+      ] });
+  }
+  async function iniciarCrise(papel, modo) {
+    fecharPaineis(); menu.mostrar({ tag: 'Missão Sala 201', titulo: 'Carregando a missão…', texto: 'Personagens e equipamentos.', botoes: [] });
+    await Promise.all([modelosProntos, carregarPapeis(p => PAPEIS_CRISE.test(p))]);
+    const m = await import('./' + HQ('crise.js'));
+    menu.esconder();
+    if (A) { A = null; } S.ativo = false;
+    S.crise = await m.iniciarCrise(H, { papel, modo });
+  }
+
   /* ================= modo livre (antes de iniciar): cena montada, personagens respondem ================= */
   function cenaExploracao() {
     S.variacao = derivar({ ...CEN.historia[0].variacao }); criarNPCs(S.variacao); S.vida = 3; S.municao = CARREGADOR;
@@ -1016,6 +1041,7 @@ export async function iniciar(ctx) {
   /* ================= clique / gatilho ================= */
   function usar(ray, c) {
     for (const p of paineis) if (p.clique(ray)) return true;
+    if (S.crise) return S.crise.usar(ray, c);
     if (S.armaNaMao && (!c || c.userData.mao !== 'left')) {
       // com a arma na mao, clicar no aluno armado da a ordem verbal (o primeiro clique); depois, dispara
       const al = npcs.aluno;
@@ -1076,6 +1102,7 @@ export async function iniciar(ctx) {
     return L.slice(0, 6);
   }
   function status() {
+    if (S.crise) return S.crise.status();
     const el = document.getElementById('statusTrein'); if (!el) return;
     el.hidden = !S.ativo || S.modo === 'treino';
     el.innerHTML = `<b>${A ? A.titulo : 'A mensagem'}</b> · ${fmt(tempo())}<br>Na mão: ${S.armaNaMao ? (S.recarregando ? 'arma (recarregando…)' : `arma · ${S.municao ?? CARREGADOR}/${CARREGADOR}`) : 'nada'} · fatos verificados: ${A ? A.fatos.length : 0}`;
@@ -1089,6 +1116,7 @@ export async function iniciar(ctx) {
     const agora = performance.now(), dt = Math.min(.1, (agora - ultimo) / 1000); ultimo = agora;
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
     confronto();
+    if (S.crise) S.crise.quadro(dt);
     camera.getWorldPosition(V);
     const z = zona(V);
     if (S.ativo && A && A.fase !== 'fim') {
@@ -1143,6 +1171,10 @@ export async function iniciar(ctx) {
   bt.onclick = aviso; document.getElementById('acoes')?.prepend(bt);
   modelosProntos.then(() => { if (!S.ativo) cenaExploracao(); });
 
+  // pecas do motor usadas pela missao (crise.js)
+  const H = { scene, camera, rig, renderer, ctx, CFG, HQ, S, npcs, menu, dialogo, Painel, fecharPaineis, legenda, diz, dizer, radio, vozSintetica, personagem, animar, irAte, NOS,
+    B, olharPara, zona, visto, moverPorta, portas, sacar, disparar, armaNPC, armaSolta, somTiro, acenderFlash, veu, suave, espera, limparNPCs, ajustarAreaClique, levantar,
+    fmt, aviso, cenaExploracao, estado: S, fimCrise: () => { S.crise = null; cenaExploracao(); } };
   window.__trein = {
     clique: ray => usar(ray), gatilho: (ray, c) => usar(ray, c), botao, recarregar, soltar: () => { },
     apontar, painelAberto: () => paineis.some(p => p.mesh.visible),

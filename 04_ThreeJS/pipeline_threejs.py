@@ -167,10 +167,10 @@ for m in bpy.data.materials:
 say("%d materiais trocados por PBR com texturas CC0" % n_pbr)
 
 # ------------------------------------------------------------------ 2. lightmaps (bake do Cycles)
-SEM_LIGHTMAP = {"09_Luzes_Cameras", "99_Colisao", "10_Carro_Abordado", "08_Interativos", "12_Objetos_Soltos"}
+SEM_LIGHTMAP = {"09_Luzes_Cameras", "99_Colisao", "10_Carro_Abordado", "08_Interativos", "12_Objetos_Soltos", "98_Bloqueios"}
 # niveis:  rapido (teste, ~2 min) | padrao (~5 min) | alta (~30-60 min)
 ALTA = "alta" in ARGS
-RES = {"03_Predio_Fachada": 2048, "04_Terreo_Interior": 2048, "02_Patio": 2048, "07_Pilotis": 2048, "05_Passarela": 1024, "06_Moveis": 1024, "10_Viatura": 1024, "01_Rua": 512}
+RES = {"03_Predio_Fachada": 2048, "04_Terreo_Interior": 2048, "02_Patio": 2048, "07_Pilotis": 2048, "11_Pavimento_1": 2048, "05_Passarela": 1024, "06_Moveis": 1024, "10_Viatura": 1024, "01_Rua": 512}
 RES_PADRAO = 512
 AMOSTRAS = 24 if RAPIDO else (600 if ALTA else 256)      # alta: so mais amostras (lightmaps maiores pesam no Quest)
 scene.render.engine = "CYCLES"; scene.cycles.device = "CPU"
@@ -257,13 +257,14 @@ if hdr_src:
 # ------------------------------------------------------------------ 4. exportar
 # texturas dos modelos prontos (carros): PNG grandes -> JPG de ate 1024 px (o .glb cai de ~40 MB para ~15 MB)
 def para_jpg(img, dados):
-    out = os.path.join(CACHE, "modelo_" + bpy.path.clean_name(img.name) + ".jpg")
+    alfa = any(k in img.name.lower() for k in ("leaves", "alpha", "folha"))      # folhas das arvores: PNG, para manter o recorte
+    out = os.path.join(CACHE, "modelo_" + bpy.path.clean_name(img.name) + (".png" if alfa else ".jpg"))
     if not os.path.exists(out):
         w, h = img.size
         copia = img.copy()
         if max(w, h) > 1024:
             k = 1024 / max(w, h); copia.scale(max(1, int(w * k)), max(1, int(h * k)))
-        copia.filepath_raw = out; copia.file_format = "JPEG"; copia.save(); bpy.data.images.remove(copia)
+        copia.filepath_raw = out; copia.file_format = "PNG" if alfa else "JPEG"; copia.save(); bpy.data.images.remove(copia)
     novo = bpy.data.images.load(out, check_existing=True)
     if dados: novo.colorspace_settings.name = "Non-Color"
     return novo
