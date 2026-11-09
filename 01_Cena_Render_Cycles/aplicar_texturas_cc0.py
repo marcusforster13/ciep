@@ -126,12 +126,13 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
 TABELA = {
     "Asfalto":            ("asfalto", 3.0, "#3a3a3c", None, .5),
     "Meio_Fio_Concreto":  ("concreto", 1.5, None, None, .35),
-    "Fachada_Branca":     ("fachada_branca", 2.5, "#e9e8e3", None, .12),      # white_stucco (Poly Haven): concreto pintado de branco, como na foto
-    "Laje_Pilotis":       ("fachada_branca", 2.5, "#d8d6d0", None, .1),
-    "Peitoril_Vermelho":  ("fachada_branca", 2.0, "#c81f3a", None, .1),
-    "Peitoril_Preto":     ("fachada_branca", 2.0, "#2c2d2f", None, .1),
+    "Fachada_Branca":     ("fachada_concreto", 3.0, "#e9e8e3", neutro, .1),      # white_stucco (Poly Haven): concreto pintado de branco, como na foto
+    "Laje_Pilotis":       ("fachada_concreto", 3.0, "#d8d6d0", neutro, .1),
+    "Peitoril_Vermelho":  ("fachada_concreto", 2.0, "#c81f3a", neutro, .1),
+    "Peitoril_Preto":     ("fachada_concreto", 2.0, "#2c2d2f", neutro, .1),
     "Piso_Patio":         ("piso_patio", 3.0, "#888986", neutro, .2),            # concrete_wall_008: placas lisas e claras do patio
-    "Piso_Pilotis":       ("piso_patio", 3.0, "#7a7a77", neutro, .2),
+    "Piso_Corredor":      ("piso_corredor", 2.0, "#3c3e41", None, .2),     # concrete_floor_worn_001: corredor grafite (foto 1 do autor)
+    "Piso_Pilotis":       ("piso_corredor", 2.5, "#7c7d7a", neutro, .2),
     "Grama":              ("grama", 1.5, "#56693a", None, .3),                 # leafy_grass
     "Piso_Granilite":     ("granilite", 2.4, "#b9b7b1", None, .1),             # granite_tile: placas de granilite
     "Azulejo_Branco":     ("azulejo", 1.0, "#e8e6df", None, .15),              # long_white_tiles

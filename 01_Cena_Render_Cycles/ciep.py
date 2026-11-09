@@ -194,7 +194,8 @@ M = {
     "int_forro": mat("Interior_Forro", "#1d1f22", .9), "interior": mat("Interior_Carro", "#2a2b2e", .8),
     "tela": mat("Tela_Acesa", "#000000", .2, emit="#9fc4ff", forca=2.0),
 }
-M["piso"] = mat("Piso_Granilite", "#a9a7a2", .45)          # textura CC0 granite_tile (aplicar_texturas_cc0.py)
+M["piso"] = mat("Piso_Granilite", "#a9a7a2", .45)
+M["piso_corredor"] = mat("Piso_Corredor", "#3c3e41", .45)   # corredores: piso grafite liso e gasto (foto do corredor de CIEP enviada pelo autor)          # textura CC0 granite_tile (aplicar_texturas_cc0.py)
 M["azulejo"] = mat("Azulejo_Branco", "#e8e6df", .2)          # textura CC0 long_white_tiles
 M["persiana"] = tela_mat("Janela_Persiana", np_image("janela_persiana", tex_persiana()), 0)
 M["persiana_ext"] = tela_mat("Janela_Persiana_Externa", np_image("janela_persiana_ext", tex_persiana_ext()), 0)
@@ -684,6 +685,7 @@ for k in range(NM + 1):
 
 # ------------------------------------------------------------------ 4. bloco administrativo (terreo)
 box("Piso_Terreo_Jogavel", (BX1 - BX0, BY1 - BY0, .15), (0, (BY0 + BY1) / 2, FZ - .073), M["piso"], C_TER)
+box("Piso_Corredor_Terreo", (BX1 - BX0, YC1 - YC0, .004), (0, (YC0 + YC1) / 2, FZ + .004), M["piso_corredor"], C_TER)
 box("Terreo_Forro", (BX1 - BX0, BY1 - BY0, .02), (0, (BY0 + BY1) / 2, FZ + PD - .02), M["laje"], C_TER)
 def janelas_frente(xa, xb, entrada=None, divisorias=()):
     vaos = []
@@ -1046,29 +1048,59 @@ PC0, PC1 = 9.5, 12.5                           # corredor
 RX0, RX1, RY0, RY1 = 24.5, 34.5, 13.0, 19.0    # rampa: lancos de x 24,5 a 34,5; patamar em x 34,5 .. 36,3
 HX0, HX1, HY0, HY1 = 24.5, 36.3, 12.7, 19.4    # vao na laje
 ang = math.atan((PISO / 2) / (RX1 - RX0))
-def lanco(nome, y, z0, sobe_x):
-    zc = FZ + z0 + PISO / 4
-    box(nome, ((RX1 - RX0) / math.cos(ang), 2.0, .2), ((RX0 + RX1) / 2, y, zc - .1 / math.cos(ang)), M["piso_pilotis"], C_GAL, rot=(0, -ang if sobe_x else ang, 0))
-    for dy in (-1.05, 1.05):                                    # guarda-corpo de concreto dos dois lados, acompanhando o lanco
-        box(nome + "_Guarda_Corpo", ((RX1 - RX0) / math.cos(ang), .12, 1.1), ((RX0 + RX1) / 2, y + dy, zc + .55), M["branco_fach"], C_GAL, rot=(0, -ang if sobe_x else ang, 0))
-lanco("Rampa_Lanco_A", (RY0 + 2.0 / 2 + .0), 0.0, True)        # sobe para +x
-lanco("Rampa_Lanco_B", RY1 - 1.0, PISO / 2, False)             # sobe para -x
-box("Rampa_Patamar", (HX1 - RX1, RY1 - RY0, .25), ((RX1 + HX1) / 2, (RY0 + RY1) / 2, FZ + PISO / 2 - .125), M["piso_pilotis"], C_GAL)
-box("Rampa_Patamar_Guarda_Corpo", (.12, RY1 - RY0, 1.1), (HX1 + .06, (RY0 + RY1) / 2, FZ + PISO / 2 + .55), M["branco_fach"], C_GAL)
-box("Rampa_Patamar_Pilar", (.4, .4, PISO / 2), (HX1 - .3, (RY0 + RY1) / 2, FZ + PISO / 4), M["branco_fach"], C_GAL)
-box("Rampa_Nucleo", (RX1 - RX0, .2, PISO - .4), ((RX0 + RX1) / 2, (RY0 + RY1) / 2, FZ + (PISO - .4) / 2), M["branco_fach"], C_GAL)   # parede entre os lancos
+def prisma(nome, x0, x1, y0, y1, zb0, zb1, zt0, zt1, m, col):
+    """Parede com base e topo inclinados (pontas verticais): guarda-corpo e parede central que acompanham a rampa."""
+    v = [(x0, y0, zb0), (x1, y0, zb1), (x1, y1, zb1), (x0, y1, zb0), (x0, y0, zt0), (x1, y0, zt1), (x1, y1, zt1), (x0, y1, zt0)]
+    malha(nome, v, [(0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (2, 3, 7, 6), (1, 2, 6, 5), (3, 0, 4, 7)], m, col)
+MEIO = (RY0 + RY1) / 2                                          # parede central entre os lancos (y 15,9 .. 16,1)
+LA0, LA1, LB0, LB1 = RY0, MEIO - .1, MEIO + .1, RY1              # lanco A (sobe para +x) e lanco B (sobe para -x), 2,9 m cada
+def z_a(x): return FZ + (x - RX0) / (RX1 - RX0) * PISO / 2       # piso do lanco A
+def z_b(x): return FZ + PISO / 2 + (RX1 - x) / (RX1 - RX0) * PISO / 2
+def lanco(nome, y0, y1, sobe_x):
+    zc = FZ + (PISO / 4 if sobe_x else 3 * PISO / 4)
+    box(nome, ((RX1 - RX0) / math.cos(ang), y1 - y0, .2), ((RX0 + RX1) / 2, (y0 + y1) / 2, zc - .1 / math.cos(ang)), M["piso_pilotis"], C_GAL, rot=(0, -ang if sobe_x else ang, 0))
+lanco("Rampa_Lanco_A", LA0, LA1, True)
+lanco("Rampa_Lanco_B", LB0, LB1, False)
+T_GC = .12                                                      # guarda-corpo de concreto, 1,10 m acima do piso
+prisma("Rampa_Guarda_Corpo_A", RX0, RX1, LA0 - T_GC, LA0, z_a(RX0) - .25, z_a(RX1) - .25, z_a(RX0) + 1.1, z_a(RX1) + 1.1, M["parede_az"], C_GAL)
+prisma("Rampa_Guarda_Corpo_B", RX0, RX1, LB1, LB1 + T_GC, z_b(RX0) - .25, z_b(RX1) - .25, z_b(RX0) + 1.1, z_b(RX1) + 1.1, M["parede_az"], C_GAL)
+# entre os lances: cada lance tem o proprio guarda-corpo, 1,10 m acima do seu piso (como nas rampas de CIEP); entre os dois fica aberto
+prisma("Rampa_Guarda_Corpo_Centro_A", RX0, RX1, LA1, LA1 + T_GC, FZ, FZ, z_a(RX0) + 1.1, z_a(RX1) + 1.1, M["parede_az"], C_GAL)
+prisma("Rampa_Guarda_Corpo_Centro_B", RX0, RX1, LB0 - T_GC, LB0, z_b(RX0) - .25, z_b(RX1) - .25, z_b(RX0) + 1.1, z_b(RX1) + 1.1, M["parede_az"], C_GAL)
+for k in (1, 2):                                                # pilares sob o lanco B (ele fica alto perto do 1o andar)
+    xp = RX0 + k * (RX1 - RX0) / 3
+    box("Rampa_Lanco_B_Coluna", (.3, .3, z_b(xp) - .25 - FZ), (xp, (LB0 + LB1) / 2, FZ + (z_b(xp) - .25 - FZ) / 2), M["branco_fach"], C_GAL)
+ZP = FZ + PISO / 2                                              # patamar: piso e guarda-corpo continuo em U (sul, leste, norte)
+box("Rampa_Patamar", (HX1 - RX1, RY1 - RY0, .25), ((RX1 + HX1) / 2, MEIO, ZP - .125), M["piso_pilotis"], C_GAL)
+box("Rampa_Patamar_Guarda_Corpo", (T_GC, RY1 - RY0 + 2 * T_GC, 1.35), (HX1 + T_GC / 2, MEIO, ZP + 1.1 - .675), M["parede_az"], C_GAL)
+for nome, y in (("Rampa_Patamar_Guarda_Corpo_Sul", RY0 - T_GC / 2), ("Rampa_Patamar_Guarda_Corpo_Norte", RY1 + T_GC / 2)):
+    box(nome, (HX1 - RX1, T_GC, 1.35), ((RX1 + HX1) / 2, y, ZP + 1.1 - .675), M["parede_az"], C_GAL)
+# como nas fotos de rampas de CIEP: paredes pintadas na cor da barra, corrimao tubular pintado dos dois lados de cada lanco
+# (a ~0,85 m do piso, preso na parede por suportes) e faixa amarela de seguranca no inicio e no fim da rampa
+M["corrimao"] = mat("Corrimao_Pintado", "#24508f", .4, .3)
+for nome, yw, sgn, zf_ in (("A_Sul", LA0, 1, z_a), ("A_Centro", LA1, -1, z_a), ("B_Centro", LB0, 1, z_b), ("B_Norte", LB1, -1, z_b)):
+    yr = yw + sgn * .07
+    barra("Rampa_Corrimao_" + nome, (RX0 + .15, yr, zf_(RX0 + .15) + .85), (RX1 - .15, yr, zf_(RX1 - .15) + .85), .022, M["corrimao"], C_SOLTO, seg=8)
+    for k in range(6):
+        x = RX0 + .4 + k * (RX1 - RX0 - .8) / 5
+        box("Rampa_Corrimao_Suporte", (.03, .07, .03), (x, yw + sgn * .035, zf_(x) + .85), M["corrimao"], C_SOLTO)
+M["faixa_seg"] = M.get("faixa_am") or mat("Faixa_Seguranca_Amarela", "#e2b62a", .6)
+box("Rampa_Faixa_Seguranca", (.3, LA1 - LA0, .006), (RX0 - .2, (LA0 + LA1) / 2, FZ + .003), M["faixa_seg"], C_SOLTO)
+box("Rampa_Faixa_Seguranca", (.3, LB1 - LB0, .006), (RX0 - .2, (LB0 + LB1) / 2, P1Z + .028), M["faixa_seg"], C_SOLTO)
+box("Rampa_Patamar_Pilar", (.4, .4, PISO / 2 - .25), (HX1 - .3, MEIO, FZ + (PISO / 2 - .25) / 2), M["branco_fach"], C_GAL)
 # laje do 1o pavimento com o vao da rampa (substitui a laje inteira)
 for nome, x0, x1, y0, y1 in (("Laje_1_O", X0, HX0, 0, PROF), ("Laje_1_L", HX1, X1, 0, PROF), ("Laje_1_M_Frente", HX0, HX1, 0, HY0), ("Laje_1_M_Fundos", HX0, HX1, HY1, PROF)):
     box(nome, (x1 - x0, y1 - y0, .35), ((x0 + x1) / 2, (y0 + y1) / 2, Z1 - .175), M["pilotis"], C_FAC)
-# guarda-corpo em volta do vao (fica aberto onde o lanco B chega, x = 24,5, y 17 .. 19)
+# guarda-corpo em volta do vao (fica aberto onde o lanco B chega, x = 24,5, y 16,1 .. 19)
 for nome, tam, pos in (("Vao_Guarda_Corpo_Frente", (HX1 - HX0, .12, 1.1), ((HX0 + HX1) / 2, HY0 - .06, P1Z + .55)),
                        ("Vao_Guarda_Corpo_Fundos", (HX1 - HX0, .12, 1.1), ((HX0 + HX1) / 2, HY1 + .06, P1Z + .55)),
                        ("Vao_Guarda_Corpo_Leste", (.12, HY1 - HY0, 1.1), (HX1 + .06, (HY0 + HY1) / 2, P1Z + .55)),
-                       ("Vao_Guarda_Corpo_Oeste", (.12, 17.0 - HY0, 1.1), (HX0 - .06, (HY0 + 17.0) / 2, P1Z + .55))):
-    box(nome, tam, pos, M["branco_fach"], C_PAV)
+                       ("Vao_Guarda_Corpo_Oeste", (.12, MEIO + .1 - HY0, 1.1), (HX0 - .06, (HY0 + MEIO + .1) / 2, P1Z + .55))):
+    box(nome, tam, pos, M["parede_az"], C_PAV)
 # piso e forro do trecho acessivel (2 mm acima da laje: lightmap proprio)
 for nome, x0, x1, y0, y1 in (("Piso_Pav1_A", PX0, HX0, .17, PROF - .17), ("Piso_Pav1_B", HX1, PX1, .17, PROF - .17), ("Piso_Pav1_C", HX0, HX1, .17, HY0), ("Piso_Pav1_D", HX0, HX1, HY1, PROF - .17)):
     box(nome, (x1 - x0, y1 - y0, .02), ((x0 + x1) / 2, (y0 + y1) / 2, P1Z + .011), M["piso"], C_PAV)
+box("Piso_Corredor_Pav1", (PX1 - PX0, PC1 - PC0, .004), ((PX0 + PX1) / 2, (PC0 + PC1) / 2, P1Z + .023), M["piso_corredor"], C_PAV)
 box("Forro_Pav1", (PX1 - PX0, PROF - .34, .02), ((PX0 + PX1) / 2, PROF / 2, Z2 - .35 - .02), M["laje"], C_PAV)
 # paredes do 1o pavimento
 BAR1 = (M["barra_az"], (1,), 1.4); BAR1n = (M["barra_az"], (-1,), 1.4)
