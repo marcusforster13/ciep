@@ -123,6 +123,26 @@ def tex_persiana(S=256):
     a *= (.85 + .15 * yy)[..., None]                                                    # um pouco de sombra no alto da abertura
     return np.clip(a, 0, 1)
 
+def tex_persiana_ext(S=256, seed=7):
+    """Janela vista da rua (foto do Tancredo Neves): sala escura ao fundo, persianas de laminas claras
+    recolhidas em alturas diferentes em cada folha, caixilho de aluminio e travessa."""
+    r = np.random.default_rng(seed); yy, xx = np.mgrid[0:S, 0:S] / S        # yy = 0 no alto da abertura
+    a = np.ones((S, S, 3)) * np.array(hx("#1d1f21"))
+    a *= (.75 + .5 * yy)[..., None]                                      # fundo da sala: um pouco mais claro perto do peitoril
+    lam = (yy * 22) % 1
+    for x0, x1 in ((.0, .33), (.33, .66), (.66, 1.0)):
+        desce = r.uniform(.35, 1.0)                                      # ate onde a persiana desce nesta folha
+        abert = r.uniform(.25, .6)                                       # laminas mais ou menos abertas
+        m = (xx >= x0) & (xx < x1) & (yy < desce)
+        cor = np.array(hx("#d9dad6")) * (.62 + .38 * np.sin(np.clip(lam / (1 - abert), 0, 1) * PI) ** .5)[..., None]
+        fresta = lam > (1 - abert)
+        a[m & ~fresta] = cor[m & ~fresta]
+        a[m & fresta] *= 1.4
+    for xc in (.006, .33, .66, .994): a[np.abs(xx - xc) < .012] = hx("#a3a5a7")
+    a[np.abs(yy - .5) < .01] = hx("#a3a5a7")
+    a *= (.8 + .2 * yy)[..., None]                                       # sombra da verga no alto
+    return np.clip(a, 0, 1)
+
 M = {
     "asfalto": mat("Asfalto", "#3a3a3c", .9), "faixa": mat("Pintura_Viaria_Branca", "#d8d6cc", .7),
     "meiofio": mat("Meio_Fio_Concreto", "#9c988f", .95),
@@ -177,6 +197,7 @@ M = {
 M["piso"] = mat("Piso_Granilite", "#a9a7a2", .45)          # textura CC0 granite_tile (aplicar_texturas_cc0.py)
 M["azulejo"] = mat("Azulejo_Branco", "#e8e6df", .2)          # textura CC0 long_white_tiles
 M["persiana"] = tela_mat("Janela_Persiana", np_image("janela_persiana", tex_persiana()), 0)
+M["persiana_ext"] = tela_mat("Janela_Persiana_Externa", np_image("janela_persiana_ext", tex_persiana_ext()), 0)
 
 # ------------------------------------------------------------------ geometria (mesmas funcoes do Cassino clandestino)
 def finish(name, bm, loc, mats, col, parent=None, rot=(0, 0, 0), smooth=False, bevel=0.0, seg=2):
@@ -542,7 +563,7 @@ box("Guarita_Bancada", (2.6, .5, .05), (GX, GY - 1.05, FZ + .9), M["mad_cl"], C_
 
 # ------------------------------------------------------------------ 2. patio: placas de concreto em faixas, com juntas de grama (foto)
 box("Patio_Grama", (112, 62, .1), (0, -7, FZ - .1), M["grama"], C_PAT)            # chao de grama sob tudo (aparece nas juntas)
-FAIXA, JUNTA = 3.6, .32
+FAIXA, JUNTA = 3.6, .13
 x = -55.0
 while x < 55:
     w = min(FAIXA, 55 - x)
@@ -596,8 +617,7 @@ def arvore_real(nome, arquivo, x, y, rz=0.0):
     box(nome + "_Canteiro_Terra", (2.1, 2.1, .02), (x, y, FZ + .12), M["terra"], C_PAT)
 arvore_real("Jacaranda_1", "jacaranda.glb", -24.0, -24.0, .4)
 arvore_real("Jacaranda_2", "jacaranda.glb", 24.0, -31.0, 2.1)
-for k, (x, y) in enumerate(((-44, -10), (-40, -10), (44, -10), (40, -10), (-20, -36.8), (24, -36.8))):      # arbustos nos canteiros (leves)
-    modelo_ph("Arbusto_%d" % k, "shrub_04", (x, y, FZ), k * 1.3, C_SOLTO, alt=1.3, max_tris=1500) or modelo_ph("Arbusto_%d" % k, "shrub_01", (x, y, FZ), k * 1.3, C_SOLTO, alt=1.3, max_tris=1500)
+# (arbustos removidos a pedido do autor: so ocupavam triangulos)
 for k, (x, y, rz) in enumerate(((-14, -7, 0), (-20, -7, 0), (14, -7, 0), (28, -7, 0), (-12, -22, PI / 2), (14, -22, PI / 2))):
     r = vazio("Banco_Patio", (x, y, FZ), C_PAT, rz)
     box("Banco_Patio_Tampo", (2.2, .45, .1), (0, 0, .45), M["branco_fach"], C_PAT, r)
@@ -644,6 +664,8 @@ for fy, rz, lado in ((0.0, 0.0, -1), (PROF, PI, 1)):
             zb = zc - .05 - JH / 2
             box("Fachada_Peitoril_Cor", (JW - .04, .14, .92), (xc, fy - lado * .03, zb + .46), M["peit_verm" if verm else "peit_preto"], C_FAC)
             quadro("Fachada_Janela", (xc, fy - lado * .1, zb + .92 + (JH - .92) / 2), "-y" if lado < 0 else "+y", JW - .1, JH - .92, M["persiana"], C_SOLTO)
+            # vista da rua: a mesma janela com a sala escura ao fundo, 2 cm para fora (de dentro continua a persiana clara)
+            quadro("Fachada_Janela_Externa", (xc, fy - lado * .08, zb + .92 + (JH - .92) / 2), "-y" if lado < 0 else "+y", JW - .1, JH - .92, M["persiana_ext"], C_SOLTO)
 # terreo: arcos na frente e nos fundos (pilotis)
 for fy, rz in ((0.0, 0.0), (PROF, PI)):
     for k in range(NM):
@@ -771,29 +793,26 @@ def por(nome, chave, montar, x, y, z, rz, col):
     ob = bpy.data.objects.new(nome, peca(chave, montar)); col.objects.link(ob); ob.location = (x, y, z); ob.rotation_euler = (0, 0, rz)
     return ob
 T = C_TMP
-def _tb(a, b, r=.011, m=None): barra("t", a, b, r, m or M["estrutura_verde"], T, seg=8)
+def _tb(a, b, r=.011, m=None): barra("t", a, b, r, m or M["estrutura_verde"], T, seg=6)
 
 # --- carteira escolar padrao FNDE: mesa com porta-livros + cadeira empilhavel (aluno olha para +y; mesa em y = 0)
 def _carteira():
     box("tampo", (.60, .45, .022), (0, 0, .71), M["tampo"], T, bevel=.006)
     box("borda", (.61, .46, .012), (0, 0, .697), M["borda_abs"], T, bevel=.004)
     box("portalivros", (.50, .30, .01), (0, .02, .56), M["grade"], T)
-    for k in range(6): box("portalivros_barra", (.008, .30, .03), (-.22 + k * .088, .02, .575), M["grade"], T)
     for sx in (-1, 1):                                          # estrutura em tubo oblongo pintado
         _tb((sx * .27, -.18, 0), (sx * .27, -.18, .70)); _tb((sx * .27, .18, 0), (sx * .27, .18, .70))
         _tb((sx * .27, -.2, .015), (sx * .27, .2, .015)); _tb((sx * .27, -.18, .69), (sx * .27, .18, .69))
-        for sy in (-1, 1): cyl("ponteira", .016, .016, .02, (sx * .27, sy * .18, .01), M["pp_preto"], T, seg=8)
     _tb((-.27, .18, .55), (.27, .18, .55))
     # cadeira (atras da mesa)
-    box("assento", (.40, .38, .035), (0, -.48, .43), M["cadeira_az"], T, bevel=.025, seg=3)
-    box("encosto", (.38, .03, .22), (0, -.69, .72), M["cadeira_az"], T, rot=(-.12, 0, 0), bevel=.012, seg=3)
+    box("assento", (.40, .38, .035), (0, -.48, .43), M["cadeira_az"], T, bevel=.02, seg=1)
+    box("encosto", (.38, .03, .22), (0, -.69, .72), M["cadeira_az"], T, rot=(-.12, 0, 0), bevel=.012, seg=1)
     for sx in (-1, 1):
         _tb((sx * .19, -.31, 0), (sx * .19, -.31, .42)); _tb((sx * .19, -.66, 0), (sx * .19, -.66, .42))
         _tb((sx * .19, -.66, .42), (sx * .19, -.71, .84)); _tb((sx * .19, -.31, .42), (sx * .19, -.66, .42))
         _tb((sx * .19, -.3, .03), (sx * .19, -.67, .03))
-        for sy in (-.31, -.66): cyl("ponteira", .015, .015, .02, (sx * .19, sy, .01), M["pp_preto"], T, seg=8)
 def carteira(nome, x, y, rz=PI / 2, z=None):                   # rz = PI/2: o aluno olha para -x (o quadro)
-    return por(nome, "carteira_fnde", _carteira, x, y, FZ if z is None else z, rz, C_SOLTO)
+    return por(nome, "carteira_fnde", _carteira, x, y, FZ if z is None else z, rz, C_MOV)
 
 # --- mesa do professor: estrutura metalica, tampo madeirado com borda e gaveteiro de duas gavetas
 def _mesa_prof():
@@ -1115,7 +1134,7 @@ def tex_escorrimento(S=256, H=512, seed=3):
         perfil = np.exp(-((np.arange(len(xs)) - w) / (w * .6)) ** 2)
         queda = np.clip(1 - yy / L, 0, 1) ** 1.6
         a[:, xs] = np.maximum(a[:, xs], f * queda * perfil[None, :])
-    a = np.clip(a + .12 * np.clip(1 - yy / .15, 0, 1), 0, 1) * (.85 + .15 * r.random((H, S)))
+    a = np.clip(a + .12 * np.clip(1 - yy / .15, 0, 1), 0, 1) * (.85 + .15 * r.random((H, S))) * .55
     rgba = np.zeros((H, S, 4), np.float32); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .23, .21, .18; rgba[..., 3] = a
     img = bpy.data.images.new("escorrimento_fachada", S, H, alpha=True); img.pixels.foreach_set(np.flipud(rgba).ravel()); img.pack()
     return img
@@ -1128,8 +1147,8 @@ for attr, val in (("surface_render_method", "BLENDED"), ("blend_method", "BLEND"
 for fy, vir, sgy in ((-.176, "-y", -1), (PROF + .176, "+y", 1)):
     for k in range(NM):
         for z0 in (Z1, Z2):
-            if rnd.random() < .6:
-                xc = X0 + MOD * (k + .5) + rnd.uniform(-.6, .6); w = rnd.uniform(1.4, 3.2); hh = rnd.uniform(.9, 1.6)
+            if rnd.random() < .25:
+                xc = X0 + MOD * (k + .5) + rnd.uniform(-.6, .6); w = rnd.uniform(1.2, 2.4); hh = rnd.uniform(.4, .8)
                 zb = z0 + PISO / 2 - .05 - JH / 2
                 quadro("Fachada_Escorrimento", (xc, fy, zb - hh / 2 + .05), vir, w, hh, M["escorre"], C_SOLTO)
         quadro("Platibanda_Escorrimento", (X0 + MOD * (k + .5) + rnd.uniform(-1, 1), fy - sgy * .05, Z3 + PL_H - .2 - .7), vir, rnd.uniform(2.5, 4.8), 1.4, M["escorre"], C_SOLTO)
@@ -1163,17 +1182,77 @@ def detalhes_sala(nome, x0, x1, y0, y1, zf, qx, porta_y):
 detalhes_sala("Sala_104", 2.0, 12.0, YC1, BY1, FZ, 2.0 + .15, YC1)
 for nome, x0, x1, y0, y1, py in (("Sala_201", 10.0, 20.0, .5, PC0, PC0), ("Sala_202", 20.0, 30.0, .5, PC0, PC0), ("Sala_203", 30.0, 40.0, .5, PC0, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5, PC1)):
     detalhes_sala(nome, x0, x1, y0, y1, P1Z, x0 + .14, py)
-# --- ginasio coberto (o segundo volume dos CIEPs): cobertura em arco sobre pilares, quadra poliesportiva aberta
-GX0, GX1, GY0, GY1 = 34.0, 54.0, -35.0, -13.0
-box("Ginasio_Piso", (GX1 - GX0, GY1 - GY0, .12), ((GX0 + GX1) / 2, (GY0 + GY1) / 2, FZ + .02), M["quadra"], C_PAT)
-for nome, tam, pos in (("Ginasio_Linha", (15.0, .06, .005), ((GX0 + GX1) / 2, GY0 + 3.0, FZ + .085)), ("Ginasio_Linha", (15.0, .06, .005), ((GX0 + GX1) / 2, GY1 - 3.0, FZ + .085)),
-                       ("Ginasio_Linha", (.06, 16.0, .005), (GX0 + 2.5, (GY0 + GY1) / 2, FZ + .085)), ("Ginasio_Linha", (.06, 16.0, .005), (GX1 - 2.5, (GY0 + GY1) / 2, FZ + .085)),
-                       ("Ginasio_Linha", (15.0, .06, .005), ((GX0 + GX1) / 2, (GY0 + GY1) / 2, FZ + .085))):
-    box(nome, tam, pos, M["texto_br"], C_SOLTO)
-torno("Ginasio_Circulo", [(1.8, FZ + .086), (1.86, FZ + .086)], M["texto_br"], C_SOLTO, pos=((GX0 + GX1) / 2, (GY0 + GY1) / 2, 0), seg=32)
-for y in (GY0 + 1.5, GY1 - 1.5):                                 # traves de futsal
-    for dx in (-1.5, 1.5): box("Ginasio_Trave", (.08, .08, 2.0), ((GX0 + GX1) / 2 + dx, y, FZ + 1.0), M["branco"], C_SOLTO)
-    box("Ginasio_Trave_Travessao", (3.08, .08, .08), ((GX0 + GX1) / 2, y, FZ + 2.0), M["branco"], C_SOLTO)
+# --- ginasio coberto (o segundo volume dos CIEPs): cobertura em arco sobre pilares e quadra poliesportiva escolar
+# Padrao das quadras de escola publica (memoriais FNDE / prefeituras): piso de concreto com pintura acrilica ou epoxi,
+# area de jogo verde e faixa externa vermelho-oxido; linhas de 5 cm por modalidade (futsal branco, basquete amarelo,
+# volei azul); arquibancada em placas de concreto sobre estrutura de concreto. Medidas da quadra (14 x 22 m) ESTIMADAS.
+M.update({"quadra": mat("Piso_Quadra", "#2f6a4b", .55), "quadra_borda": mat("Piso_Quadra_Borda", "#93453a", .55),
+          "linha_br": mat("Linha_Quadra_Branca", "#e9e9e4", .5), "linha_am": mat("Linha_Quadra_Amarela", "#e3b52c", .5),
+          "linha_az": mat("Linha_Quadra_Azul", "#2d5fa8", .5), "tabela": mat("Tabela_Basquete", "#f1f1ee", .4),
+          "aro": mat("Aro_Basquete", "#d2541f", .4, .5), "rede": mat("Rede_Trave", "#f2f2f2", .8, alpha=.35)})
+GX0, GX1, GY0, GY1 = 33.0, 55.0, -36.5, -11.0
+QX, QY, QW, QL = 42.25, -23.75, 14.0, 22.0                     # centro, largura (x) e comprimento (y) da area de jogo
+ZQ = FZ + .085                                                  # topo do piso da quadra
+box("Ginasio_Piso", (GX1 - GX0, GY1 - GY0, .12), ((GX0 + GX1) / 2, (GY0 + GY1) / 2, FZ + .02), M["piso_pilotis"], C_PAT)
+box("Ginasio_Piso_Borda", (17.5, 24.9, .004), (QX, QY, ZQ + .002), M["quadra_borda"], C_PAT)
+box("Ginasio_Piso_Jogo", (QW, QL, .004), (QX, QY, ZQ + .004), M["quadra"], C_PAT)
+def faixa(nome, pts, m, w=.05, z=ZQ + .007, fechado=False):
+    """Linha pintada no piso: fita de largura w ao longo de uma polilinha."""
+    if fechado: pts = list(pts) + [pts[0]]
+    vs, fs = [], []
+    for i, (x, y) in enumerate(pts):
+        a = pts[max(i - 1, 0)]; b = pts[min(i + 1, len(pts) - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]; L = math.hypot(dx, dy) or 1; nx, ny = -dy / L * w / 2, dx / L * w / 2
+        vs += [(x + nx, y + ny, z), (x - nx, y - ny, z)]
+        if i: fs.append((2 * i - 2, 2 * i - 1, 2 * i + 1, 2 * i))
+    malha(nome, vs, fs, m, C_SOLTO)
+def arco_pts(cx, cy, r, a0, a1, n=24): return [(cx + r * math.cos(a0 + (a1 - a0) * k / n), cy + r * math.sin(a0 + (a1 - a0) * k / n)) for k in range(n + 1)]
+qx0, qx1, qy0, qy1 = QX - QW / 2, QX + QW / 2, QY - QL / 2, QY + QL / 2
+# futsal (branco): limites, linha central, circulo central, areas de meta e marcas de penalti
+faixa("Ginasio_Linha_Futsal", [(qx0, qy0), (qx1, qy0), (qx1, qy1), (qx0, qy1)], M["linha_br"], fechado=True)
+faixa("Ginasio_Linha_Futsal", [(qx0, QY), (qx1, QY)], M["linha_br"])
+faixa("Ginasio_Linha_Futsal", arco_pts(QX, QY, 2.5, 0, 2 * PI, 40), M["linha_br"])
+for s, yl in ((1, qy0), (-1, qy1)):
+    a_esq = (PI / 2, PI) if s > 0 else (PI, 1.5 * PI)
+    a_dir = (0, PI / 2) if s > 0 else (1.5 * PI, 2 * PI)
+    faixa("Ginasio_Linha_Futsal", arco_pts(QX - 1.5, yl, 4.0, *a_esq), M["linha_br"])
+    faixa("Ginasio_Linha_Futsal", arco_pts(QX + 1.5, yl, 4.0, *a_dir), M["linha_br"])
+    faixa("Ginasio_Linha_Futsal", [(QX - 1.5, yl + s * 4.0), (QX + 1.5, yl + s * 4.0)], M["linha_br"])
+    torno("Ginasio_Marca_Penalti", [(0, ZQ + .007), (.1, ZQ + .007)], M["linha_br"], C_SOLTO, pos=(QX, yl + s * 5.0, 0), seg=12)
+# basquete (amarelo): garrafao, lance livre e linha de 3 pontos (reduzida, quadra escolar)
+for s, yl in ((1, qy0), (-1, qy1)):
+    faixa("Ginasio_Linha_Basquete", [(QX - 1.8, yl), (QX - 1.8, yl + s * 4.6), (QX + 1.8, yl + s * 4.6), (QX + 1.8, yl)], M["linha_am"])
+    faixa("Ginasio_Linha_Basquete", arco_pts(QX, yl + s * 4.6, 1.8, 0, PI) if s > 0 else arco_pts(QX, yl + s * 4.6, 1.8, PI, 2 * PI), M["linha_am"])
+    tres = arco_pts(QX, yl + s * 1.2, 6.0, PI, 0, 30) if s > 0 else arco_pts(QX, yl + s * 1.2, 6.0, PI, 2 * PI, 30)
+    faixa("Ginasio_Linha_Basquete", [(QX - 6.0, yl)] + tres + [(QX + 6.0, yl)], M["linha_am"])
+faixa("Ginasio_Linha_Basquete", arco_pts(QX, QY, 1.8, 0, 2 * PI, 32), M["linha_am"])
+# volei (azul): 9 x 18 centrada, linhas de ataque a 3 m da rede
+vx0, vx1, vy0, vy1 = QX - 4.5, QX + 4.5, QY - 9.0, QY + 9.0
+faixa("Ginasio_Linha_Volei", [(vx0, vy0), (vx1, vy0), (vx1, vy1), (vx0, vy1)], M["linha_az"], z=ZQ + .006, fechado=True)
+for dy in (-3.0, 3.0): faixa("Ginasio_Linha_Volei", [(vx0, QY + dy), (vx1, QY + dy)], M["linha_az"], z=ZQ + .006)
+for sx in (-1, 1):                                              # postes de volei (sem rede, encaixados no piso)
+    cyl("Ginasio_Poste_Volei", .045, .045, 2.55, (QX + sx * 5.2, QY, ZQ + 1.275), M["metal"], C_SOLTO, seg=10)
+# traves de futsal com rede e tabelas de basquete atras do fundo
+for s, yl in ((1, qy0), (-1, qy1)):
+    for dx in (-1.5, 1.5):
+        box("Ginasio_Trave", (.08, .08, 2.0), (QX + dx, yl, ZQ + 1.0), M["branco"], C_SOLTO)
+        barra("Ginasio_Trave_Fundo", (QX + dx, yl, ZQ + 2.0), (QX + dx, yl - s * .9, ZQ), .015, M["metal"], C_SOLTO, seg=6)
+    box("Ginasio_Trave_Travessao", (3.08, .08, .08), (QX, yl, ZQ + 2.0), M["branco"], C_SOLTO)
+    malha("Ginasio_Rede", [(QX - 1.5, yl, ZQ + 2.0), (QX + 1.5, yl, ZQ + 2.0), (QX + 1.5, yl - s * .9, ZQ), (QX - 1.5, yl - s * .9, ZQ)], [(0, 1, 2, 3)], M["rede"], C_SOLTO)
+    yp = yl - s * 1.25                                          # poste da tabela, fora da area de jogo
+    box("Ginasio_Basquete_Poste", (.18, .18, 3.5), (QX, yp, ZQ + 1.75), M["grafite"], C_SOLTO)
+    box("Ginasio_Basquete_Braco", (.12, 1.1, .12), (QX, yp + s * .55, ZQ + 3.3), M["grafite"], C_SOLTO)
+    box("Ginasio_Basquete_Tabela", (1.8, .04, 1.05), (QX, yp + s * 1.1, ZQ + 3.38), M["tabela"], C_SOLTO)
+    for zq in (3.15, 3.63): box("Ginasio_Basquete_Quadro", (.59, .045, .03), (QX, yp + s * 1.1, ZQ + zq), M["preto"], C_SOLTO)
+    for dx in (-.28, .28): box("Ginasio_Basquete_Quadro", (.03, .045, .48), (QX + dx, yp + s * 1.1, ZQ + 3.39), M["preto"], C_SOLTO)
+    torno("Ginasio_Basquete_Aro", [(.225, 3.05), (.245, 3.05), (.245, 3.07), (.225, 3.07), (.225, 3.05)], M["aro"], C_SOLTO, pos=(QX, yp + s * 1.1 + s * .26, ZQ), seg=20)
+# arquibancada de concreto (4 degraus de 0,45 x 0,80) ao longo do lado leste, com escada lateral e guarda-corpo
+for k in range(4):
+    box("Ginasio_Arquibancada", (.8, 18.0, .45 * (k + 1)), (51.7 + .8 * k + .4, QY, FZ + .45 * (k + 1) / 2), M["concreto"], C_PAT)
+for k in range(8): box("Ginasio_Arquibancada_Escada", (.4, 1.0, .225 * (k + 1)), (51.7 + .4 * k + .2, QY + 9.5, FZ + .225 * (k + 1) / 2), M["concreto"], C_PAT)
+barra("Ginasio_Arquibancada_Guarda_Corpo", (54.9, QY - 9.0, FZ + 2.9), (54.9, QY + 10.0, FZ + 2.9), .025, M["grafite"], C_SOLTO, seg=8)
+for k in range(8): barra("Ginasio_Arquibancada_Montante", (54.9, QY - 9.0 + k * 2.7, FZ + 1.8), (54.9, QY - 9.0 + k * 2.7, FZ + 2.9), .02, M["grafite"], C_SOLTO, seg=6)
+bloqueio("Bloqueio_Arquibancada", (3.3, 19.0, 1.8), (53.35, QY + .5, FZ + .9))
 H_G = 6.5                                                        # altura dos pilares (ESTIMADA)
 for k in range(6):
     y = GY0 + k * (GY1 - GY0) / 5
@@ -1183,8 +1262,9 @@ n_arco = 14                                                      # cobertura em 
 for i in range(n_arco):
     a0, a1 = PI * i / n_arco, PI * (i + 1) / n_arco; R = (GX1 - GX0) / 2
     xa, za = (GX0 + GX1) / 2 - R * math.cos(a0), H_G + 2.2 * math.sin(a0); xb, zb = (GX0 + GX1) / 2 - R * math.cos(a1), H_G + 2.2 * math.sin(a1)
-    malha("Ginasio_Cobertura", [(xa, GY0 - .6, FZ + za), (xb, GY0 - .6, FZ + zb), (xb, GY1 + .6, FZ + zb), (xa, GY1 + .6, FZ + za)], [(0, 1, 2, 3)], M["telha"], C_PAT)
-for x in (GX0, GX1): box("Ginasio_Mureta", (.2, GY1 - GY0, 1.0), (x, (GY0 + GY1) / 2, FZ + .5), M["branco_fach"], C_PAT)
+    corda = math.hypot(xb - xa, zb - za)                         # placa com espessura (plano simples saia preto no lightmap)
+    box("Ginasio_Cobertura", (corda + .02, GY1 - GY0 + 1.2, .06), ((xa + xb) / 2, (GY0 + GY1) / 2, FZ + (za + zb) / 2), M["telha"], C_PAT, rot=(0, -math.atan2(zb - za, xb - xa), 0))
+box("Ginasio_Mureta", (.2, GY1 - GY0, 1.0), (GX0, (GY0 + GY1) / 2, FZ + .5), M["branco_fach"], C_PAT)
 # --- biblioteca (terceiro volume): predio OCTOGONAL de um pavimento (o decreto de tombamento cita "as bibliotecas octogonais"), faixa de janelas e beiral
 BXc, BYc, BR = -44.0, -27.0, 6.5
 torno("Biblioteca_Parede", [(BR, FZ), (BR, FZ + 1.0)], M["branco_fach"], C_PAT, pos=(BXc, BYc, 0), seg=8)

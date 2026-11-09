@@ -85,7 +85,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1109-1254';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1109-1429';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -354,7 +354,8 @@ function irPara(nome) {
   rig.position.set(x, Math.max(0, y - 1.6), z);
   yaw = Math.atan2(-(ax - x), -(az - z)); pitch = Math.atan2(ay - y, Math.hypot(ax - x, az - z));
 }
-const NOMES = { Camera_Rua: "Rua", Camera_Patio: "Pátio", Camera_Passarela: "Passarela", Camera_Recepcao: "Recepção", Camera_Direcao: "Direção", Camera_Corredor: "Corredor", Camera_Sala_104: "Sala 104", Camera_Pilotis: "Pilotis", Camera_Rampa: "Rampa", Camera_Pav1: "1º andar", Camera_Sala_201: "Sala 201" };
+const NOMES = { Camera_Rua: "Rua", Camera_Patio: "Pátio", Camera_Passarela: "Passarela", Camera_Recepcao: "Recepção", Camera_Direcao: "Direção", Camera_Corredor: "Corredor", Camera_Sala_104: "Sala 104", Camera_Pilotis: "Pilotis", Camera_Rampa: "Rampa", Camera_Pav1: "1º andar", Camera_Sala_201: "Sala 201", Camera_Quadra: "Quadra" };
+CFG.cameras.Camera_Quadra = CFG.cameras.Camera_Quadra || { pos: [37.5, 1.75, 35.0], alvo: [45.0, 1.0, 21.0] };   // quadra (vista definida aqui, sem rebake)
 Object.keys(CFG.cameras).forEach((k, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = `${i + 1} · ${NOMES[k] || k}`;
   b.onclick = () => irPara(k); $('vistas').appendChild(b);

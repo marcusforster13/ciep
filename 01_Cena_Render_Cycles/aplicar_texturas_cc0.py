@@ -130,9 +130,9 @@ TABELA = {
     "Laje_Pilotis":       ("fachada_branca", 2.5, "#d8d6d0", None, .1),
     "Peitoril_Vermelho":  ("fachada_branca", 2.0, "#c81f3a", None, .1),
     "Peitoril_Preto":     ("fachada_branca", 2.0, "#2c2d2f", None, .1),
-    "Piso_Patio":         ("piso_patio", 3.0, "#c2c1bc", None, .2),            # concrete_wall_008: placas lisas e claras do patio
-    "Piso_Pilotis":       ("piso_patio", 3.0, "#a9a69f", None, .2),
-    "Grama":              ("grama", 1.5, "#5b7a34", None, .3),                 # leafy_grass
+    "Piso_Patio":         ("piso_patio", 3.0, "#888986", neutro, .2),            # concrete_wall_008: placas lisas e claras do patio
+    "Piso_Pilotis":       ("piso_patio", 3.0, "#7a7a77", neutro, .2),
+    "Grama":              ("grama", 1.5, "#56693a", None, .3),                 # leafy_grass
     "Piso_Granilite":     ("granilite", 2.4, "#b9b7b1", None, .1),             # granite_tile: placas de granilite
     "Azulejo_Branco":     ("azulejo", 1.0, "#e8e6df", None, .15),              # long_white_tiles
     "Reboco_Interno":     ("fachada_branca", 2.5, "#ebe8e0", None, .08),
