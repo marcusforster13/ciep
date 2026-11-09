@@ -203,6 +203,13 @@ for col in bpy.data.collections:
         if not me.uv_layers:
             me.uv_layers.new(name="UVMap")
         me.uv_layers[0].name = "UVMap"
+        # protecao: so a UV da textura e a do lightmap. Uma camada a mais (ex.: peca com UV de outro nome juntada na colecao)
+        # empurra o lightmap para TEXCOORD_2 e o site le a UV errada (o patio inteiro fica preto).
+        extras = [l.name for l in list(me.uv_layers)[1:] if l.name != "Lightmap"]
+        for nome_uv in extras:
+            me.uv_layers.remove(me.uv_layers[nome_uv])
+        if extras:
+            say("AVISO %s: %d camada(s) de UV extra removida(s): %s" % (o.name, len(extras), ", ".join(extras)))
         lm = me.uv_layers.get("Lightmap") or me.uv_layers.new(name="Lightmap")
         me.uv_layers["UVMap"].active_render = True
         me.uv_layers.active = lm
