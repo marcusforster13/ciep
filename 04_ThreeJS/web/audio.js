@@ -10,12 +10,16 @@ import * as THREE from 'three';
 
 // posicoes em coordenadas da cena web (Y para cima)
 const DEF = {
-  amb_transito_noite:  { tipo: 'ambiente', fora: .32, dentro: .08 },
-  amb_bar:             { tipo: 'ambiente', fora: .04, dentro: .2 },
-  maquinas_caca_niquel: { tipo: 'posicional', pos: [-1.3, 1.2, -11.0], vol: .36, ref: 2.2, rolloff: 1.5 },
-  musica_sala_reservada: { tipo: 'posicional', pos: [9, 1.4, -11.5], vol: .36, ref: 2.0, rolloff: 1.5 },
-  cachorro_longe:      { tipo: 'esporadico', area: [[-30, -15], [-20, 20]], vol: .4, intervalo: [25, 60] },
-  sirene_longe:        { tipo: 'evento', vol: .4 },
+  // CIEP: patio com criancas no modo normal; silencio tenso na ameaca e na crise (fase: 'normal' | 'ameaca' | 'crise')
+  amb_patio_escola:    { tipo: 'ambiente', fora: .34, dentro: .1, fases: ['normal'] },
+  amb_tensao_crise:    { tipo: 'ambiente', fora: .22, dentro: .3, fases: ['ameaca', 'crise'] },
+  // ventiladores das salas (um som por sala, no meio dos dois ventiladores)
+  ventilador_parede:   { tipo: 'posicional', posicoes: [[19.6, 6.05, -5], [29.6, 6.05, -5], [39.6, 6.05, -5], [19.6, 6.05, -17], [11.6, 2.7, -16]], vol: .22, ref: 1.4, rolloff: 2.2 },
+  // turma da sala 201 chorando baixo atras da porta (so na missao)
+  choro_crianca_baixo: { tipo: 'posicional', pos: [11.3, 4.4, -2.6], vol: .32, ref: 1.6, rolloff: 1.6, fases: ['crise'] },
+  sinal_escola:        { tipo: 'periodico', vol: .45, intervalo: [140, 260], fases: ['normal'] },
+  sirene_longe:        { tipo: 'evento', vol: .45 },
+  gritos_criancas_susto: { tipo: 'evento', vol: .6 },
   radio_chiado:        { tipo: 'evento', vol: .3 },
   radio_bip:           { tipo: 'evento', vol: .6 },
   porta_abrindo:       { tipo: 'evento', vol: .5 },
@@ -107,7 +111,8 @@ export async function iniciarAudio({ scene, camera, renderer }) {
         const a = new THREE.Audio(listener); a.setBuffer(b); a.setLoop(true); a.setVolume(0); a.play();
         ambientes.push({ a, d, n }); iniciados.add(n);
       } else if (d.tipo === 'posicional' && !d.soTreino) {
-        posicional(n, d); iniciados.add(n);
+        for (const pos of d.posicoes || [d.pos]) posicional(n, { ...d, pos });
+        iniciados.add(n);
       }
     }
     if (primeira) agendarEsporadicos();
@@ -121,6 +126,10 @@ export async function iniciarAudio({ scene, camera, renderer }) {
   }
   function agendarEsporadicos() {
     for (const [n, d] of Object.entries(DEF)) {
+      if (d.tipo === 'periodico' && buffers[n]) {
+        const tocarP = () => { if (!mudo && (!d.fases || d.fases.includes(fase))) api.tocar(n); setTimeout(tocarP, THREE.MathUtils.randFloat(...d.intervalo) * 1000); };
+        setTimeout(tocarP, THREE.MathUtils.randFloat(20, 45) * 1000);
+      }
       if (d.tipo !== 'esporadico' || !buffers[n]) continue;
       const tocar = () => {
         if (!mudo) {
@@ -136,19 +145,26 @@ export async function iniciarAudio({ scene, camera, renderer }) {
   }
 
   // volume dos ambientes conforme dentro/fora da casa (transicao suave)
-  let dentro = 0, falaAte = 0, abaixa = 1;
+  let dentro = 0, falaAte = 0, abaixa = 1, fase = 'normal';
+  const naFase = d => (!d.fases || d.fases.includes(fase)) ? 1 : 0;
   function quadro(dt) {
     if (!ligado) return;
     camera.getWorldPosition(V);
-    const alvo = (V.x > -6 && V.x < 6 && V.z > -13 && V.z < 0) ? 1 : 0;      // dentro do predio do bar
+    const alvo = (V.x > -50 && V.x < 50 && V.z > -22 && V.z < 0) ? 1 : 0;    // sob o predio (galerias, salas, pilotis)
     dentro += (alvo - dentro) * Math.min(1, dt * 1.5);
     const alvoAbaixa = listener.context.currentTime < falaAte ? .45 : 1;
     abaixa += (alvoAbaixa - abaixa) * Math.min(1, dt * (alvoAbaixa < abaixa ? 6 : 1.5));
-    for (const { a, d, n } of ambientes) a.setVolume(mudo ? 0 : vol(n, d.fora * (1 - dentro) + d.dentro * dentro) * abaixa);
-    for (const p of posicionais) { p.atual = (p.atual ?? p.k) + (p.k - (p.atual ?? p.k)) * Math.min(1, dt * 2.5); p.a.setVolume(mudo ? 0 : vol(p.n, p.d.vol) * p.atual * abaixa); }
+    for (const am of ambientes) { am.f = (am.f ?? naFase(am.d)) + (naFase(am.d) - (am.f ?? naFase(am.d))) * Math.min(1, dt * .8); am.a.setVolume(mudo ? 0 : vol(am.n, am.d.fora * (1 - dentro) + am.d.dentro * dentro) * abaixa * am.f); }
+    for (const p of posicionais) { const k = p.k * naFase(p.d); p.atual = (p.atual ?? k) + (k - (p.atual ?? k)) * Math.min(1, dt * 1.5); p.a.setVolume(mudo ? 0 : vol(p.n, p.d.vol) * p.atual * abaixa); }
   }
 
-  const api = {
+  var api = {
+    // fase do treinamento: 'normal' (escola funcionando), 'ameaca' (historia com ameaca ativa) ou 'crise' (missao Sala 201).
+    // Ao entrar na crise, a sirene chega de longe duas vezes (viaturas e, depois, o BOPE).
+    fase(f) {
+      if (f === fase) return; const antes = fase; fase = f;
+      if (f === 'crise' && antes !== 'crise') { setTimeout(() => fase === 'crise' && api.tocar('sirene_longe'), 9000); setTimeout(() => fase === 'crise' && api.tocar('sirene_longe'), 75000); }
+    },
     tem: n => !!buffers[n],
     duracao: n => fala[n]?.dur || buffers[n]?.duration || 0,           // segundos (falas gravadas)
     // eventos do treinamento; retorna false se o arquivo nao existe. Com analisar=true devolve um medidor de volume

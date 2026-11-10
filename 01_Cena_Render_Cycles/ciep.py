@@ -149,7 +149,7 @@ M = {
     "concreto": mat("Concreto_Aparente", "#a6a29a", .95),
     "branco_fach": mat("Fachada_Branca", "#ecebe6", .85),      # foto do Tancredo Neves: concreto pintado de branco
     "pilotis": mat("Laje_Pilotis", "#dedcd6", .9), "piso_pilotis": mat("Piso_Pilotis", "#b9b6ae", .9),
-    "peit_verm": mat("Peitoril_Vermelho", "#c81f3a", .6), "peit_preto": mat("Peitoril_Preto", "#2a2b2d", .6),
+    "peit_verm": mat("Peitoril_Azul", "#3060c0", .6), "peit_preto": mat("Peitoril_Branco", "#e6e4de", .6),   # azul e branco, como os CIEPs pintados hoje
     "junta": mat("Junta_Fachada", "#b9b8b2", .9), "barra_az": mat("Barra_Azul", "#4f74a8", .55), "palmeira": mat("Folha_Palmeira", "#4f7a3a", .8),
     "patio": mat("Piso_Patio", "#8f8b84", .9),
     "muro": mat("Muro_Reboco", "#d9d6cf", .95),
@@ -296,7 +296,7 @@ def camera(nome, pos, alvo, lente=22):
 import json as _json
 try: VISUAL = _json.load(open(os.path.join(AQUI, "config_visual.json"), encoding="utf-8"))
 except Exception: VISUAL = {}
-FACHADA_GASTA = VISUAL.get("fachada", "branca") == "gasta"      # chave da fachada: config_visual.json
+FACHADA_GASTA = VISUAL.get("fachada", "branca") in ("gasta", "pintada")      # chave da fachada: config_visual.json
 PH_DIR = os.path.join(AQUI, "modelos", "polyhaven"); _ph = {}
 def modelo_ph(nome, asset, pos, rz=0.0, col=None, escala=1.0, max_tris=2000, alt=None, parent=None):
     """Modelo CC0 do Poly Haven (mesmo fluxo do Cassino e do Busca e Apreensao). Devolve None se o arquivo faltar."""
@@ -1239,6 +1239,7 @@ for y, divs in ((BY0, (-10.0, -2.0, 6.0)), (BY1, (-12.0, -6.0, 2.0, 12.0))):
     for v0, v1, zb, zt in janelas_frente(BX0, BX1, None, divs):
         if zb < .5: continue
         xa = BX0 + v0; off = -.16 if y == BY0 else .16
+        if y == BY0 and xa < -6.3 and xa + (v1 - v0) > -8.7: continue      # sem grade na entrada da recepcao
         for k in range(int((v1 - v0) / .15) + 1):
             box("Janela_Gradil_Barra", (.016, .016, zt - zb), (xa + k * .15, y + off, FZ + (zb + zt) / 2), M["grade"], C_SOLTO)
         for z in (zb + .05, zt - .05): box("Janela_Gradil_Tubo", (v1 - v0, .03, .03), (xa + (v1 - v0) / 2, y + off, FZ + z), M["grade"], C_SOLTO)
@@ -1278,8 +1279,9 @@ T_GC = .12                                                      # guarda-corpo d
 prisma("Rampa_Guarda_Corpo_A", RX0, RX1, LA0 - T_GC, LA0, z_a(RX0) - .25, z_a(RX1) - .25, z_a(RX0) + 1.1, z_a(RX1) + 1.1, M["parede_az"], C_GAL)
 prisma("Rampa_Guarda_Corpo_B", RX0, RX1, LB1, LB1 + T_GC, z_b(RX0) - .25, z_b(RX1) - .25, z_b(RX0) + 1.1, z_b(RX1) + 1.1, M["parede_az"], C_GAL)
 # entre os lances: cada lance tem o proprio guarda-corpo, 1,10 m acima do seu piso (como nas rampas de CIEP); entre os dois fica aberto
-prisma("Rampa_Guarda_Corpo_Centro_A", RX0, RX1, LA1, LA1 + T_GC, FZ, FZ, z_a(RX0) + 1.1, z_a(RX1) + 1.1, M["parede_az"], C_GAL)
-prisma("Rampa_Guarda_Corpo_Centro_B", RX0, RX1, LB0 - T_GC, LB0, z_b(RX0) - .25, z_b(RX1) - .25, z_b(RX0) + 1.1, z_b(RX1) + 1.1, M["parede_az"], C_GAL)
+# cada lanco com o seu guarda-corpo (como antes); 10 cm cada, encostados em MEIO: nao se sobrepoem mais (antes 4 cm piscavam)
+prisma("Rampa_Guarda_Corpo_Centro_A", RX0, RX1, LA1, MEIO, FZ, FZ, z_a(RX0) + 1.1, z_a(RX1) + 1.1, M["parede_az"], C_GAL)
+prisma("Rampa_Guarda_Corpo_Centro_B", RX0, RX1, MEIO, LB0, z_b(RX0) - .25, z_b(RX1) - .25, z_b(RX0) + 1.1, z_b(RX1) + 1.1, M["parede_az"], C_GAL)
 for k in (1, 2):                                                # pilares sob o lanco B (ele fica alto perto do 1o andar)
     xp = RX0 + k * (RX1 - RX0) / 3
     box("Rampa_Lanco_B_Coluna", (.3, .3, z_b(xp) - .25 - FZ), (xp, (LB0 + LB1) / 2, FZ + (z_b(xp) - .25 - FZ) / 2), M["branco_fach"], C_GAL)
@@ -1438,10 +1440,9 @@ for fy, vir in (((-.182, "-y"), (PROF + .182, "+y")) if not FACHADA_GASTA else (
         quadro("Platibanda_Tom_Placa", (xc, -.206 if vir == "-y" else PROF + .206, Z3 + PL_H / 2 - .2), vir, MOD, PL_H, rnd.choice(TOM_PLATIB), C_SOLTO)
 # --- salas como a foto atual do Tancredo: ventilador de parede, eletrodutos aparentes, forro modular, estante branca
 def ventilador_parede(nome, x, y, z, rz):
-    r = vazio(nome, (x, y, z), C_SOLTO, rz)
-    box(nome + "_Suporte", (.08, .12, .08), (0, .04, 0), M["preto"], C_SOLTO, r)
-    cyl(nome + "_Motor", .09, .09, .2, (0, -.1, 0), M["preto"], C_SOLTO, r, rot=(PI / 2, 0, 0), seg=14)
-    cyl(nome + "_Grade", .26, .26, .1, (0, -.26, -.02), M["grade"], C_SOLTO, r, rot=(PI / 2 + .25, 0, 0), seg=24)
+    # so a chapa de fixacao na parede (+x); motor, grade e helice girando sao montados no site (crise/vida.js).
+    # Antes o ventilador inteiro saia virado para DENTRO da parede (a grade aparecia na sala vizinha).
+    box(nome + "_Suporte", (.03, .12, .16), (x + .105, y, z), M["preto"], C_SOLTO)
 def eletrodutos(nome, x0, x1, y, z, n=2):
     for k in range(n): cyl(nome, .02, .02, x1 - x0, ((x0 + x1) / 2, y, z - k * .06), M["pvc"], C_SOLTO, rot=(0, PI / 2, 0), seg=8)
 def forro_modular(nome, x0, x1, y0, y1, z, passo=.625):
@@ -1468,6 +1469,39 @@ def detalhes_sala(nome, x0, x1, y0, y1, zf, qx, porta_y):
 detalhes_sala("Sala_104", 2.0, 12.0, YC1, BY1, FZ, 2.0 + .15, YC1)
 for nome, x0, x1, y0, y1, py in (("Sala_201", 10.0, 20.0, .5, PC0, PC0), ("Sala_202", 20.0, 30.0, .5, PC0, PC0), ("Sala_203", 30.0, 40.0, .5, PC0, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5, PC1)):
     detalhes_sala(nome, x0, x1, y0, y1, P1Z, x0 + .14, py)
+# --- vida na sala de aula: materia no quadro, relogio, cadernos e estojos nas carteiras, mochilas no chao
+M.update({"cad_%d" % i: mat("Caderno_Capa_%d" % i, c, .7) for i, c in enumerate(("#c0392b", "#1f6fb2", "#e2a91b", "#2e8b57", "#7a3fa0", "#e86a92"))})
+M.update({"moc_%d" % i: mat("Mochila_Sala_%d" % i, c, .85) for i, c in enumerate(("#2b3a55", "#8c1d24", "#1d1d20", "#2f6b8f", "#5b2a6e", "#3d4a2a"))})
+M["lapis"] = mat("Lapis_Amarelo", "#f2c230", .5)
+MATERIAS = (("PORTUGUÊS", "Interpretação de texto", "1) Leia o texto da pág. 42", "2) Responda no caderno"),
+            ("MATEMÁTICA", "Frações equivalentes", "1/2 = 2/4 = 4/8", "Exercícios pág. 58"),
+            ("CIÊNCIAS", "O ciclo da água", "evaporação · condensação", "precipitação"),
+            ("HISTÓRIA", "Brasil Colônia", "Trabalho: entregar sexta", "Ler cap. 3"))
+def vida_sala(nome, x0, x1, y0, y1, idx):
+    qx = x0 + .14; yc = (y0 + y1) / 2; zq = P1Z + 1.5
+    t1, t2, t3, t4 = MATERIAS[idx % len(MATERIAS)]
+    texto(nome + "_Quadro_Texto", "Rio, 10 de novembro", .09, (qx + .025, yc - 1.0, zq + .46), "+x", M["texto_az"], C_SOLTO)
+    texto(nome + "_Quadro_Texto", t1, .17, (qx + .025, yc + .1, zq + .26), "+x", M["texto_az"], C_SOLTO)
+    texto(nome + "_Quadro_Texto", t2, .12, (qx + .025, yc + .1, zq + .04), "+x", M["texto_pr"], C_SOLTO)
+    texto(nome + "_Quadro_Texto", t3, .11, (qx + .025, yc + .1, zq - .17), "+x", M["texto_pr"], C_SOLTO)
+    texto(nome + "_Quadro_Texto", t4, .11, (qx + .025, yc + .1, zq - .37), "+x", M["texto_pr"], C_SOLTO)
+    r = vazio(nome + "_Relogio", (x0 + .1, yc - 2.7, P1Z + 2.45), C_SOLTO)
+    cyl(nome + "_Relogio_Aro", .16, .16, .04, (0, 0, 0), M["preto"], C_SOLTO, r, rot=(0, PI / 2, 0), seg=24)
+    cyl(nome + "_Relogio_Mostrador", .14, .14, .045, (0, 0, 0), M["branco"], C_SOLTO, r, rot=(0, PI / 2, 0), seg=24)
+    box(nome + "_Relogio_Ponteiro", (.01, .008, .1), (.026, 0, .04), M["preto"], C_SOLTO, r)
+    box(nome + "_Relogio_Ponteiro", (.01, .07, .008), (.026, .03, 0), M["preto"], C_SOLTO, r)
+    ys = [y0 + 1.6 + k * 1.25 for k in range(int((y1 - y0 - 2.4) / 1.25) + 1)]
+    for x in [x0 + 2.8 + k * 1.5 for k in range(5)]:
+        for y in ys:
+            if rnd.random() < .6:                                   # caderno aberto ou fechado sobre o tampo
+                ang = rnd.uniform(-.35, .35)
+                box(nome + "_Caderno", (.2, .28, .012), (x + rnd.uniform(-.05, .08), y + rnd.uniform(-.12, .12), P1Z + .728), M["cad_%d" % rnd.randrange(6)], C_SOLTO, rot=(0, 0, ang))
+                if rnd.random() < .5:
+                    cyl(nome + "_Lapis", .004, .004, .17, (x + .1, y + rnd.uniform(-.1, .1), P1Z + .737), M["lapis"], C_SOLTO, rot=(PI / 2, 0, rnd.uniform(0, PI)), seg=6)
+            if rnd.random() < .45:                                  # mochila no chao, ao lado da cadeira
+                box(nome + "_Mochila_Chao", (.3, .17, .38), (x + .48 + rnd.uniform(-.05, .05), y + .34, P1Z + .19), M["moc_%d" % rnd.randrange(6)], C_SOLTO, rot=(rnd.uniform(-.2, .2), 0, rnd.uniform(-.4, .4)), bevel=.05)
+for k, (nome, x0, x1, y0, y1) in enumerate((("Sala_201", 10.0, 20.0, .5, PC0), ("Sala_202", 20.0, 30.0, .5, PC0), ("Sala_203", 30.0, 40.0, .5, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5))):
+    vida_sala(nome, x0, x1, y0, y1, k)
 # --- ginasio coberto (o segundo volume dos CIEPs): cobertura em arco sobre pilares e quadra poliesportiva escolar
 # Padrao das quadras de escola publica (memoriais FNDE / prefeituras): piso de concreto com pintura acrilica ou epoxi,
 # area de jogo verde e faixa externa vermelho-oxido; linhas de 5 cm por modalidade (futsal branco, basquete amarelo,

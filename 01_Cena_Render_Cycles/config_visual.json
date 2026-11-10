@@ -1,4 +1,4 @@
 {
-  "_ajuda": "fachada: 'gasta' (concreto gasto, como a maioria dos CIEPs hoje) ou 'branca' (Tancredo Neves restaurado). Depois de trocar, rode o atualizar_tudo.ps1.",
-  "fachada": "gasta"
+  "_ajuda": "fachada: 'gasta' (concreto gasto, como a maioria dos CIEPs hoje) , 'pintada' (branco e azul, concreto pintado com desgaste) ou 'branca' (Tancredo Neves restaurado). Depois de trocar, rode o atualizar_tudo.ps1.",
+  "fachada": "pintada"
 }

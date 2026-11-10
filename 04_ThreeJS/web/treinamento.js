@@ -1126,6 +1126,11 @@ export async function iniciar(ctx) {
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
     confronto();
     if (S.crise) S.crise.quadro(dt);
+    if (vida) {                                                    // na missao, crise.js controla o patio (criseInicio/disparo/evacuar)
+      if (!S.crise) { vida.normal(); vida.mostrar(!(A && A.ameacaAtiva)); } else if (!vida.emCrise()) vida.mostrar(false);
+      vida.quadro(dt);
+    }
+    window.__som?.fase(S.crise ? 'crise' : A && A.ameacaAtiva ? 'ameaca' : 'normal');
     camera.getWorldPosition(V);
     const z = zona(V);
     if (S.ativo && A && A.fase !== 'fim') {
@@ -1179,11 +1184,14 @@ export async function iniciar(ctx) {
   const bt = document.createElement('button'); bt.type = 'button'; bt.textContent = 'Iniciar treinamento'; bt.id = 'bTrein';
   bt.onclick = aviso; document.getElementById('acoes')?.prepend(bt);
   modelosProntos.then(() => { if (!S.ativo) cenaExploracao(); });
+  // vida da escola (ventiladores, lampada piscando, gente no patio): vida.js
+  let vida = null;
+  modelosProntos.then(() => import('./' + HQ('vida.js'))).then(m => m.iniciarVida(H)).then(v => { vida = v; }).catch(e => console.warn('vida da escola nao carregou:', e));
 
   // pecas do motor usadas pela missao (crise.js)
   const H = { scene, camera, rig, renderer, ctx, CFG, HQ, S, npcs, menu, dialogo, Painel, fecharPaineis, legenda, diz, dizer, radio, vozSintetica, personagem, animar, irAte, NOS,
     B, olharPara, zona, visto, moverPorta, portas, sacar, disparar, armaNPC, armaSolta, somTiro, acenderFlash, veu, suave, espera, limparNPCs, ajustarAreaClique, levantar,
-    fmt, aviso, cenaExploracao, estado: S, fimCrise: () => { S.crise = null; cenaExploracao(); } };
+    fmt, aviso, cenaExploracao, carregarPapeis, estado: S, fimCrise: () => { S.crise = null; cenaExploracao(); } };
   window.__trein = {
     clique: ray => usar(ray), gatilho: (ray, c) => usar(ray, c), botao, recarregar, soltar: () => { },
     apontar, painelAberto: () => paineis.some(p => p.mesh.visible),

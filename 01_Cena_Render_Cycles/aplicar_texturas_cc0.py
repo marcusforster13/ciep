@@ -146,14 +146,14 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
 import json as _json
 try: _VIS = _json.load(open(os.path.join(AQUI or os.path.join(os.path.expanduser("~"), "Desktop", "novovr", "01_Cena_Render_Cycles"), "config_visual.json"), encoding="utf-8"))
 except Exception: _VIS = {}
-_FACH = ("fachada_gasta", 4.0, "#b3ab9e", neutro, .25) if _VIS.get("fachada") == "gasta" else ("fachada_concreto", 3.0, "#e9e8e3", neutro, .1)
+_FACH = ("fachada_gasta", 4.0, "#b3ab9e", neutro, .25) if _VIS.get("fachada") == "gasta" else ("fachada_concreto", 3.0, "#868580", neutro, .12) if _VIS.get("fachada") == "pintada" else ("fachada_concreto", 3.0, "#e9e8e3", neutro, .1)
 TABELA = {
     "Asfalto":            ("asfalto", 3.0, "#3a3a3c", None, .5),
     "Meio_Fio_Concreto":  ("concreto", 1.5, None, None, .35),
     "Fachada_Branca":     _FACH,                                          # config_visual.json: concreto gasto (concrete_wall_006) ou branca (painted_plaster_wall)      # white_stucco (Poly Haven): concreto pintado de branco, como na foto
     "Laje_Pilotis":       ("fachada_concreto", 3.0, "#d8d6d0", neutro, .1),
-    "Peitoril_Vermelho":  ("fachada_concreto", 2.0, "#c81f3a", neutro, .1),
-    "Peitoril_Preto":     ("fachada_concreto", 2.0, "#2c2d2f", neutro, .1),
+    "Peitoril_Azul":      ("fachada_concreto", 2.0, "#3060c0", neutro, .1),
+    "Peitoril_Branco":    ("fachada_concreto", 2.0, "#e6e4de", neutro, .1),
     "Piso_Patio":         ("piso_patio", 3.0, "#888986", neutro, .2),            # concrete_wall_008: placas lisas e claras do patio
     "Piso_Corredor":      ("piso_corredor", 2.0, "#3c3e41", None, .2),     # concrete_floor_worn_001: corredor grafite (foto 1 do autor)
     "Piso_Pilotis":       ("piso_corredor", 2.5, "#7c7d7a", neutro, .2),
