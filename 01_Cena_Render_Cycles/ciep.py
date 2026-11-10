@@ -535,8 +535,8 @@ def muro(nome, a, b, h=MURO_H, gradil=0.0, sujeira=False):
             d = rnd.uniform(.3, L - .3); w = rnd.uniform(.25, .8); hh = rnd.uniform(.4, 1.3)
             for ld in (-1, 1): caixa(nome + "_Mancha", d - w / 2, d + w / 2, .004, h - hh, h - .02, M["mancha"], C_SOLTO, off=ld * .078)
 # frente: mureta de 0,9 m com gradil de 1,6 m (deixa ver o patio da rua, comum nas escolas publicas); laterais e fundos: muro cheio
-muro("Muro_Frente_O", (-56, -38), (PX - 3.0, -38), h=.9, gradil=1.6)
-muro("Muro_Frente_L", (PX + 3.0, -38), (56, -38), h=.9, gradil=1.6)
+muro("Muro_Frente_O", (-56, -38), (PX - 3.25, -38), h=.9, gradil=1.6)
+muro("Muro_Frente_L", (PX + 3.25, -38), (56, -38), h=.9, gradil=1.6)
 muro("Muro_Lateral_O", (-56, -38), (-56, 24), sujeira=False); muro("Muro_Lateral_L", (56, -38), (56, 24), sujeira=False)
 muro("Muro_Fundos", (-56, 24), (56, 24), sujeira=False)
 for sx in (-1, 1):
@@ -549,7 +549,7 @@ box("Placa_Escola_Faixa", (3.8, .055, .18), (0, 0, 1.79), M["texto_az"], C_SOLTO
 texto("Placa_Escola_Nome", "CIEP PRESIDENTE TANCREDO NEVES", .19, (0, -.03, 2.38), "-y", M["texto_az"], C_SOLTO, r)
 texto("Placa_Escola_Sub", "ESCOLA PÚBLICA", .13, (0, -.03, 2.1), "-y", M["texto_pr"], C_SOLTO, r)
 for sx in (-1, 1):
-    r = vazio("Portao_Folha", (PX + sx * 2.95, -37.85, FZ), C_PAT, sx * PI * .48 + (PI if sx < 0 else 0))
+    r = vazio("Portao_Folha", (PX + sx * 2.95, -37.6, FZ), C_PAT, .08 if sx > 0 else PI - .08)   # aberta, encostada no muro por dentro
     box("Portao_Quadro_Sup", (2.9, .05, .06), (1.45, 0, 2.2), M["grade"], C_SOLTO, r)
     box("Portao_Quadro_Inf", (2.9, .05, .06), (1.45, 0, .1), M["grade"], C_SOLTO, r)
     for k in range(15): box("Portao_Barra", (.025, .025, 2.1), (.1 + k * .19, 0, 1.15), M["grade"], C_SOLTO, r)
@@ -898,9 +898,21 @@ for x in (BX0, BX1):                                            # laterais do bl
     parede("Bloco_Lateral", (x, BY0), (x, BY1), M["parede"], C_TER, vaos=[(YC0 - BY0 + .4, YC1 - BY0 - .4, 0, 2.5)], t=.25)
     sx = 1 if x > 0 else -1                                       # portao de tela em duas folhas, aberto para fora (foto de corredor de CIEP)
     for yh, fech in ((YC0 + .4, PI / 2), (YC1 - .4, -PI / 2)):
-        aberto = fech - sx * (1 if fech > 0 else -1) * math.radians(160)
+        aberto = fech - sx * (1 if fech > 0 else -1) * math.radians(92)       # aberto a 90 graus, como na foto
         portao_tela("Corredor_Portao", (x + sx * .13, yh), aberto, (YC1 - YC0 - .8) / 2)
-    texto("Corredor_Porta_Placa", "SAÍDA" if x > 0 else "SAÍDA · PILOTIS", .09, (x - (.045 if x > 0 else -.045), (YC0 + YC1) / 2, FZ + 2.05), "-x" if x > 0 else "+x", M["texto_pr"], C_SOLTO)
+    # abertura em arco: preenche a parede acima da curva das folhas (sobe de 2,05 m nos lados a 2,45 m no meio)
+    ya, yb, ym = YC0 + .4, YC1 - .4, (YC0 + YC1) / 2
+    for y_borda in (ya, yb):
+        vs, fs, n_ = [], [], 10
+        for i in range(n_ + 1):
+            u = i / n_; yy = y_borda + (ym - y_borda) * u; zc = FZ + 2.05 + .4 * math.sin(u * PI / 2)
+            for xx in (x - .125, x + .125): vs += [(xx, yy, zc), (xx, yy, FZ + 2.5)]
+        for i in range(n_):
+            a, b = 4 * i, 4 * (i + 1)
+            fs += [(a, a + 1, b + 1, b), (a + 2, b + 2, b + 3, a + 3), (a, b, b + 2, a + 2)]
+        malha("Corredor_Arco_Portao", vs, fs, M["parede"], C_TER)
+    texto("Corredor_Porta_Placa", "SAÍDA" if x > 0 else "SAÍDA · PILOTIS", .09, (x - (.2 if x > 0 else -.2), (YC0 + YC1) / 2, FZ + 2.7), "-x" if x > 0 else "+x", M["texto_pr"], C_SOLTO)
+    box("Corredor_Porta_Placa_Fundo", (.012, 1.0 if x > 0 else 1.6, .22), (x - (.19 if x > 0 else -.19), (YC0 + YC1) / 2, FZ + 2.7), M["branco"], C_SOLTO)   # placa com fundo: de fora nao aparece espelhada
 BARRA = (M["barra_az"], (1,), 1.4)
 # corredor: parede da frente (y = 10) e dos fundos (y = 13), barra azul 1070 do lado do corredor
 parede("Corredor_Parede_Frente", (BX0, YC0), (BX1, YC0), M["parede"], C_TER, barra=(M["barra_az"], (1,), 1.4),
@@ -951,7 +963,6 @@ modelo_ph("Direcao_Estante", "wooden_bookshelf_worn", (5.6, 8.6, FZ), -PI / 2, C
 box("Direcao_Quadro_Avisos", (1.6, .03, 1.0), (2.4, YC0 - .14, FZ + 1.6), M["cortica"], C_TER)
 for k in range(5): box("Direcao_Quadro_Papel", (.3, .01, .38), (1.8 + k * .3, YC0 - .16, FZ + 1.55 + (k % 2) * .1), M[("papel", "papel_am")[k % 2]], C_SOLTO)
 modelo_ph("Direcao_Ventilador", "ceiling_fan", (2.0, 6.0, FZ + PD - .5), 0, C_SOLTO, alt=.5)
-modelo_ph("Direcao_Pasta", "binder_notebook", (1.85, 6.85, FZ + .77), .3, C_SOLTO, alt=.06)
 # ------------------------------------------------------------------ pecas no padrao das escolas publicas brasileiras
 # Modeladas aqui (desenho proprio), com o visual das pecas comuns no Brasil: carteira padrao FNDE (tubo de aco e
 # polipropileno), louca sanitaria nacional, divisorias de granito cinza, bebedouro industrial de inox, valvula de
@@ -1292,10 +1303,10 @@ for nome, x0, x1, y0, y1 in (("Laje_1_O", X0, HX0, 0, PROF), ("Laje_1_L", HX1, X
     box(nome, (x1 - x0, y1 - y0, .35), ((x0 + x1) / 2, (y0 + y1) / 2, Z1 - .175), M["pilotis"], C_FAC)
 # guarda-corpo em volta do vao (fica aberto onde o lanco B chega, x = 24,5, y 16,1 .. 19)
 ZB, ZT = Z1 - .35, P1Z + 1.1                                     # do fundo da laje ate 1,10 m acima do piso: cobre a borda e continua a parede da rampa
-for nome, tam, pos in (("Vao_Guarda_Corpo_Frente", (HX1 - HX0, T_GC, ZT - ZB), ((HX0 + HX1) / 2, HY0 + T_GC / 2, (ZB + ZT) / 2)),
-                       ("Vao_Guarda_Corpo_Fundos", (HX1 - HX0, T_GC, ZT - ZB), ((HX0 + HX1) / 2, HY1 - T_GC / 2, (ZB + ZT) / 2)),
+for nome, tam, pos in (("Vao_Guarda_Corpo_Frente", (HX1 - T_GC - HX0, T_GC, ZT - ZB), ((HX0 + HX1 - T_GC) / 2, HY0 + T_GC / 2, (ZB + ZT) / 2)),
+                       ("Vao_Guarda_Corpo_Fundos", (HX1 - T_GC - HX0, T_GC, ZT - ZB), ((HX0 + HX1 - T_GC) / 2, HY1 - T_GC / 2, (ZB + ZT) / 2)),
                        ("Vao_Guarda_Corpo_Leste", (T_GC, HY1 - HY0, ZT - ZB), (HX1 - T_GC / 2, (HY0 + HY1) / 2, (ZB + ZT) / 2)),
-                       ("Vao_Guarda_Corpo_Oeste", (T_GC, LB0 - T_GC - HY0, ZT - ZB), (HX0 + T_GC / 2, (HY0 + LB0 - T_GC) / 2, (ZB + ZT) / 2))):
+                       ("Vao_Guarda_Corpo_Oeste", (T_GC, LB0 - 2 * T_GC - HY0, ZT - ZB), (HX0 + T_GC / 2, (HY0 + T_GC + LB0 - T_GC) / 2, (ZB + ZT) / 2))):
     box(nome, tam, pos, M["parede_az"], C_PAV)
 # piso e forro do trecho acessivel (2 mm acima da laje: lightmap proprio)
 for nome, x0, x1, y0, y1 in (("Piso_Pav1_A", PX0, HX0, .17, PROF - .17), ("Piso_Pav1_B", HX1, PX1, .17, PROF - .17), ("Piso_Pav1_C", HX0, HX1, .17, HY0), ("Piso_Pav1_D", HX0, HX1, HY1, PROF - .17)):
@@ -1580,7 +1591,9 @@ for x in range(-45, 50, 10):
     for y in (1.5, PROF - 1.5): tubo("Luz_Pilotis_Borda", x, y, 45, col=C_GAL, desce=.45)
 for sx in (-1, 1):
     for k in range(6):
-        for y in (6.0, 16.0): tubo("Luz_Pilotis", sx * (22.5 + 5 * k), y, 60, col=C_GAL, desce=.45)
+        for y in (6.0, 16.0):
+            if 23.0 < sx * (22.5 + 5 * k) < 37.5 and y > 12: continue        # area da rampa
+            tubo("Luz_Pilotis", sx * (22.5 + 5 * k), y, 60, col=C_GAL, desce=.45)
 
 # ------------------------------------------------------------------ 9. pontos do treinamento (cena.json)
 ponto("Inicio", PX + 3.0, -41.5, (-.2, 1)); ponto("Parceiro", PX + 4.5, -41.0, (-.4, 1)); ponto("Inspetora", PX + 4.1, -35.6, (-.3, -1))
@@ -1619,6 +1632,64 @@ MEDIDAS_ESTIMADAS = {
     "recepcao_m": [8, 7], "direcao_m": [8, 7], "sala_104_m": [10, 6], "banheiro_m": [8, 6], "passarela_largura_m": PW, "muro_altura_m": MURO_H,
 }
 scene["medidas_estimadas"] = str(MEDIDAS_ESTIMADAS)
+# ------------------------------------------------------------------ alambrado da quadra (pontas, atras das tabelas)
+# Tela de arame galvanizado em losango, 4 m de altura, postes de tubo galvanizado a cada 2,5 m e travessa no topo,
+# como nas quadras escolares. Paineis por vao (a tela repete na escala certa).
+def _tela_cinza():
+    yy, xx = np.mgrid[0:512, 0:256]; u = xx / 256 * 14; v = yy / 512 * 28
+    d1 = np.abs(((u + v) % 1) - .5); d2 = np.abs(((u - v) % 1) - .5)
+    rgba = np.zeros((512, 256, 4), np.float32); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .62, .64, .66
+    rgba[..., 3] = ((d1 > .42) | (d2 > .42)).astype(np.float32)
+    return rgba
+M["tela_alambrado"] = bpy.data.materials.new("Img_Tela_Alambrado_alpha")
+_nt = M["tela_alambrado"].node_tree; _b = _nt.nodes.get("Principled BSDF"); _t = _nt.nodes.new("ShaderNodeTexImage")
+_im = bpy.data.images.new("tela_alambrado_alpha", 256, 512, alpha=True); _im.pixels.foreach_set(np.flipud(_tela_cinza()).ravel()); _im.pack(); _t.image = _im
+_nt.links.new(_t.outputs["Color"], _b.inputs["Base Color"]); _nt.links.new(_t.outputs["Alpha"], _b.inputs["Alpha"]); _b.inputs["Metallic"].default_value = .6
+for attr, val in (("surface_render_method", "BLENDED"), ("blend_method", "BLEND")):
+    try: setattr(M["tela_alambrado"], attr, val)
+    except Exception: pass
+M["galvanizado_tubo"] = mat("Tubo_Galvanizado", "#9da2a6", .4, .8)
+H_AL, VAO = 4.0, 2.5
+for ya in (GY0 + .35, GY1 - .35):
+    xs = [GX0 + .3 + k * VAO for k in range(int((51.5 - GX0 - .3) / VAO) + 1)]
+    for k, x in enumerate(xs):
+        cyl("Alambrado_Poste", .03, .03, H_AL, (x, ya, FZ + H_AL / 2), M["galvanizado_tubo"], C_SOLTO, seg=8)
+        if k + 1 < len(xs):
+            x2 = xs[k + 1]
+            adesivo("Alambrado_Tela", lambda u, v, x=x, x2=x2, ya=ya: Vector((x + (x2 - x) * u, ya, FZ + .1 + v * (H_AL - .15))), 1, 1, C_SOLTO, mat_=M["tela_alambrado"])
+    barra("Alambrado_Travessa", (xs[0], ya, FZ + H_AL), (xs[-1], ya, FZ + H_AL), .025, M["galvanizado_tubo"], C_SOLTO, seg=8)
+    barra("Alambrado_Travessa", (xs[0], ya, FZ + .1), (xs[-1], ya, FZ + .1), .02, M["galvanizado_tubo"], C_SOLTO, seg=8)
+
+# ------------------------------------------------------------------ mini horta escolar (patio, entre o jacaranda e a passarela)
+# Tres canteiros elevados de alvenaria com terra vermelha; fileiras de alface, couve e cebolinha; placa pintada e regador.
+M.update({"alface": mat("Folha_Alface", "#7bb243", .7), "couve": mat("Folha_Couve", "#2f6b34", .65),
+          "cebolinha": mat("Folha_Cebolinha", "#3f8f3a", .6), "regador": mat("Regador_Plastico", "#2e8b57", .5),
+          "placa_madeira": mat("Placa_Madeira_Pintada", "#f3efe2", .7)})
+HX_, HY_ = -15.0, -28.0                                          # centro da horta
+for k, dx in enumerate((-2.6, 0.0, 2.6)):
+    cx = HX_ + dx
+    box("Horta_Canteiro_%d" % k, (1.4, 3.2, .4), (cx, HY_, FZ + .2), M["muro"], C_PAT, bevel=.02)
+    box("Horta_Canteiro_%d_Terra" % k, (1.2, 3.0, .02), (cx, HY_, FZ + .4), M["terra"], C_PAT)
+    tipo = ("alface", "couve", "cebolinha")[k]
+    for i in range(2):
+        for j in range(6):
+            px, py = cx + (i - .5) * .55, HY_ - 1.25 + j * .5 + rnd.uniform(-.05, .05)
+            if tipo == "alface":
+                esfera("Horta_Alface", .13, (px, py, FZ + .47), M["alface"], C_SOLTO, sub=1, esc=(1, 1, .55))
+                esfera("Horta_Alface", .08, (px, py, FZ + .53), M["alface"], C_SOLTO, sub=1, esc=(1, 1, .7))
+            elif tipo == "couve":
+                cyl("Horta_Couve_Talo", .015, .02, .28, (px, py, FZ + .55), M["couve"], C_SOLTO, seg=6)
+                for a in range(5):
+                    ang = a * 2 * PI / 5 + rnd.uniform(0, .5)
+                    esfera("Horta_Couve_Folha", .11, (px + .09 * math.cos(ang), py + .09 * math.sin(ang), FZ + .62 + rnd.uniform(0, .12)), M["couve"], C_SOLTO, sub=1, esc=(1.2, 1.2, .25))
+            else:
+                for a in range(6):
+                    barra("Horta_Cebolinha", (px, py, FZ + .41), (px + rnd.uniform(-.05, .05), py + rnd.uniform(-.05, .05), FZ + .41 + rnd.uniform(.18, .3)), .006, M["cebolinha"], C_SOLTO, seg=4)
+box("Horta_Placa", (1.2, .04, .45), (HX_ - 4.4, HY_ - 1.2, FZ + 1.05), M["placa_madeira"], C_SOLTO, bevel=.01)
+for sx in (-1, 1): box("Horta_Placa_Pe", (.06, .06, .9), (HX_ - 4.4 + sx * .5, HY_ - 1.2, FZ + .45), M["mad_cl"], C_SOLTO)
+texto("Horta_Placa_Texto", "HORTA ESCOLAR", .1, (HX_ - 4.4, HY_ - 1.225, FZ + 1.1), "-y", M["texto_pr"], C_SOLTO)
+torno("Horta_Regador", [(0, 0), (.13, 0), (.14, .26), (.11, .28), (0, .28)], M["regador"], C_SOLTO, pos=(HX_ + 4.2, HY_ - 1.2, FZ), seg=14)
+barra("Horta_Regador_Bico", (HX_ + 4.3, HY_ - 1.2, FZ + .12), (HX_ + 4.55, HY_ - 1.2, FZ + .32), .015, M["regador"], C_SOLTO, seg=6)
 # ------------------------------------------------------------------ refeitorio e cozinha (ala oeste dos pilotis)
 # Todo CIEP tem refeitorio no terreo: mesas longas de formica com bancos, balcao termico de inox com passa-prato e a
 # cozinha industrial ao fundo (azulejo, fogao de 6 bocas com coifa, caldeiroes, bancada e pia de inox, geladeira industrial).

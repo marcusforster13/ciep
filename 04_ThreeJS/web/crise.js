@@ -75,6 +75,84 @@ export async function iniciarCrise(H, { papel, modo }) {
       }
     });
   }
+  // uniforme da rede municipal: camiseta branca com faixa azul-marinho no peito e filete azul-claro (sem logo oficial),
+  // bermuda/calca azul-marinho; o tenis fica com a cor original.
+  // Separa por altura de cada triangulo do corpo (pose de bind): pinta uma mascara no espaco UV e recolore a textura
+  // preservando o sombreado (dobras) e pulando a pele.
+  const cacheUniforme = {};
+  function uniformizar(n, chaveCache) {
+    n.userData.modelo?.traverse(o => {
+      if (!o.isMesh) return;
+      for (const m of [].concat(o.material)) {
+        const img = m.map?.image; if (!img || !/body/i.test(m.name + (m.map.name || ''))) continue;
+        let tex = cacheUniforme[chaveCache];
+        if (!tex) {
+          const W = img.width, Hh = img.height, g = o.geometry, pos = g.attributes.position, uv = g.attributes.uv, idx = g.index;
+          if (!uv) continue;
+          let y0 = 1e9, y1 = -1e9; for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+          const mk = document.createElement('canvas'); mk.width = W; mk.height = Hh; const mg = mk.getContext('2d');
+          const tri = idx ? idx.count / 3 : pos.count / 3, vy = v => m.map.flipY ? (1 - uv.getY(v)) * Hh : uv.getY(v) * Hh;
+          // altura h (0 = pe, 1 = pescoco) e posicao lateral xn (em alturas) interpoladas pixel a pixel: em cada triangulo
+          // sao afins no plano UV, entao um gradiente linear do canvas reproduz o valor exato (sem serrilhado).
+          const mkX = document.createElement('canvas'); mkX.width = W; mkX.height = Hh; const mx = mkX.getContext('2d');
+          const pintar = (ctx, P, val) => {
+            const ax = P[1][0] - P[0][0], ay = P[1][1] - P[0][1], bx = P[2][0] - P[0][0], by = P[2][1] - P[0][1], det = ax * by - ay * bx;
+            let fill = `rgb(${Math.round(val[0] * 255)},0,0)`;
+            if (Math.abs(det) > 1e-6) {
+              const d1 = val[1] - val[0], d2 = val[2] - val[0], ga = (d1 * by - d2 * ay) / det, gb = (ax * d2 - bx * d1) / det, g2 = ga * ga + gb * gb;
+              if (g2 > 1e-12) {
+                const k0 = -val[0] / g2, k1 = (1 - val[0]) / g2;
+                fill = ctx.createLinearGradient(P[0][0] + ga * k0, P[0][1] + gb * k0, P[0][0] + ga * k1, P[0][1] + gb * k1);
+                fill.addColorStop(0, 'rgb(0,0,0)'); fill.addColorStop(1, 'rgb(255,0,0)');
+              }
+            }
+            ctx.fillStyle = fill; ctx.strokeStyle = fill; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]); ctx.lineTo(P[1][0], P[1][1]); ctx.lineTo(P[2][0], P[2][1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+          };
+          const ALT = y1 - y0;
+          for (let t = 0; t < tri; t++) {
+            const vi = [0, 1, 2].map(j => idx ? idx.getX(3 * t + j) : 3 * t + j), P = vi.map(v => [uv.getX(v) * W, vy(v)]);
+            pintar(mg, P, vi.map(v => (pos.getY(v) - y0) / ALT));
+            pintar(mx, P, vi.map(v => Math.min(1, Math.max(0, pos.getX(v) / ALT / 1.2 + .5))));   // xn de -0,6 a +0,6
+          }
+          const mp = mg.getImageData(0, 0, W, Hh).data, mq = mx.getImageData(0, 0, W, Hh).data;
+          // tom de pele da propria crianca (media dos pixels de pele do rosto) para os antebracos da manga curta
+          let pr = 0, pg = 0, pb = 0, pn = 0;
+          n.traverse(q => { if (q.isMesh && /head/i.test([].concat(q.material)[0].name)) { const hi = [].concat(q.material)[0].map?.image; if (!hi) return;
+            const c2 = document.createElement('canvas'); c2.width = 128; c2.height = 128; const x2 = c2.getContext('2d'); x2.drawImage(hi, 0, 0, 128, 128);
+            const dd = x2.getImageData(32, 40, 64, 48).data;
+            for (let i = 0; i < dd.length; i += 4) { const r = dd[i], g2 = dd[i + 1], b2 = dd[i + 2]; if (r > g2 && g2 > b2 && r - b2 > 15) { pr += r; pg += g2; pb += b2; pn++; } } } });
+          const PELE = pn ? [pr / pn, pg / pn, pb / pn] : [190, 140, 110];
+          const cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const cg = cv.getContext('2d'); cg.drawImage(img, 0, 0);
+          const d = cg.getImageData(0, 0, W, Hh), p = d.data;
+          // sombreado suave do tecido (dobras) sem a estampa original: luminancia da textura borrada
+          const cb = document.createElement('canvas'); cb.width = W; cb.height = Hh; const bg = cb.getContext('2d'); bg.filter = 'blur(10px)'; bg.drawImage(img, 0, 0);
+          const pb_ = bg.getImageData(0, 0, W, Hh).data;
+          const BR = [244, 244, 240], AZ = [28, 40, 78], FAIXA = [22, 58, 112], FILETE = [70, 170, 225];
+          const TRONCO = .15, OMBRO = [.15, .86], MANGA = .13;                       // em fracoes da altura ate o pescoco
+          for (let i = 0; i < p.length; i += 4) {
+            if (mp[i + 3] < 40) continue;                                             // fora da malha
+            const r = p[i], gg = p[i + 1], bb = p[i + 2], h = mp[i] / 255, xn = Math.abs(mq[i] / 255 * 1.2 - .6);
+            const sat = r - bb, gr_ = gg / Math.max(1, r);
+            const noTronco = xn <= TRONCO && h >= .5 && h < .93;                      // tronco coberto pela camiseta: ali nao ha pele
+            const pele = !noTronco && r > 60 && r > gg && gg > bb && sat > 15 && sat < 140 && gr_ > .55 && gr_ < .92;
+            if (pele || h < .07) continue;                                            // pele e tenis ficam como estao
+            const l = (r * .3 + gg * .59 + bb * .11) / 255, lb = (pb_[i] * .3 + pb_[i + 1] * .59 + pb_[i + 2] * .11) / 255;
+            let alvo;
+            if (xn > TRONCO && h > .45) {                                             // braco: manga curta e antebraco de pele
+              if (Math.hypot(xn - OMBRO[0], h - OMBRO[1]) < MANGA) alvo = BR;
+              else { const f = .85 + .3 * (l - .5); p[i] = Math.min(255, PELE[0] * f); p[i + 1] = Math.min(255, PELE[1] * f); p[i + 2] = Math.min(255, PELE[2] * f); continue; }
+            } else if (h < .5) { if (xn > .2) continue; alvo = AZ; }                   // calca (maos ficam)
+            else alvo = (h > .82 && h < .875) ? FAIXA : (h > .805 && h <= .82) ? FILETE : BR;    // camiseta com faixa no peito
+            const f = alvo === AZ ? .45 + .9 * l : .8 + .3 * (lb - .5);                 // camiseta/faixa: so as dobras, sem a estampa
+            p[i] = Math.min(255, alvo[0] * f); p[i + 1] = Math.min(255, alvo[1] * f); p[i + 2] = Math.min(255, alvo[2] * f);
+          }
+          cg.putImageData(d, 0, 0); tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.flipY = m.map.flipY; cacheUniforme[chaveCache] = tex;
+        }
+        m.map = tex; m.needsUpdate = true;
+      }
+    });
+  }
   // Lucas e a turma na sala 201 (1o andar): ele perto do quadro; criancas no chao, junto a parede das janelas
   const lucas = npc('lucas', 'aluno', 'Lucas (aluno, 15 anos)', B1(11.4, 5.6), olharPara(1, -.3), 'j', 1.66);
   lucas.userData.base = v.arma === 'revolver' ? 'apontando' : 'irritado'; animar(lucas, lucas.userData.base, 1e6, 0); lucas.userData.semVirar = false;
@@ -89,7 +167,7 @@ export async function iniciarCrise(H, { papel, modo }) {
     const n = npc('refem_' + k, papelK, k === 8 ? 'Bia (aluna ferida)' : 'Aluno da 901', B1(x, y), olharPara(-.3 + Math.random() * .2, 1), /menina/.test(papelK) ? 'f' : 'j', 1.42 + Math.random() * .16);
     n.userData.base = 'agachado'; n.userData.semVirar = true; n.userData.fig = false; animar(n, 'agachado', 1e6, 0);
     if (n.userData.acoes?.agachado) n.userData.acoes.agachado.time = Math.random() * 2;
-    variarRoupa(n, CORES[k], papelK); kids.push(n);
+    uniformizar(n, papelK); kids.push(n);
   }
   const professora = npc('professora', 'professora', 'Professora Cláudia', B1(19.6, 1.4), olharPara(-1, .4), 'f', 1.64);
   professora.userData.base = 'agachado'; professora.userData.semVirar = true; animar(professora, 'agachado', 1e6, 0);
@@ -579,7 +657,7 @@ export async function iniciarCrise(H, { papel, modo }) {
   }
 
   /* ---------------- inicio ---------------- */
-  const api = { usar, menu: menuCrise, quadro, status, objetivos, relatorio, estado: C, _t: { contatoPorta, proximoTurno, briefing, bopeChega, tablet, forcarPorta, ataqueEmCurso, rendicao, liberar, isolarPortao, falarDiretora, foto: () => foto(camDrone, 'drone') } };
+  const api = { usar, menu: menuCrise, quadro, status, objetivos, relatorio, estado: C, _t: { kids, animar, B1, contatoPorta, proximoTurno, briefing, bopeChega, tablet, forcarPorta, ataqueEmCurso, rendicao, liberar, isolarPortao, falarDiretora, foto: () => foto(camDrone, 'drone') } };
   const intro = { interventor: 'Você é o primeiro interventor. Contenha, isole, proteja e faça o contato inicial sem concessões. Não negocie no lugar da equipe especializada.', negociador: 'Você é o negociador do BOPE. Escute, construa vínculo, troque pequenas concessões por reféns e conduza a rendição. O comandante decide as ações táticas.', completo: 'Você começa como primeiro interventor e, quando a equipe chegar, assume a negociação.' }[papel];
   menu.mostrar({ tag: 'Missão Sala 201 · ' + (treino ? 'treino' : 'avaliação'), titulo: 'Crise com reféns na escola', texto: CEN.aviso + '\n\n' + intro + '\n\nComputador: clique fala/usa · T menu (rádio, tablet) · Q arma. Quest: gatilho usa · Y/B menu · A arma.', longe: 1.3,
     botoes: [{ label: 'Começar', acao: () => { menu.esconder(); if (papel === 'negociador') iniciarFase2(); else iniciarFase1(); } }] });

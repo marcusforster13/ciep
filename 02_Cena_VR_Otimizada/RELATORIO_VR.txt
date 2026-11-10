@@ -1,32 +1,32 @@
 A MENSAGEM (CIEP) - VERSAO VR OTIMIZADA
 
-DEPOIS: 464345 tris | 44 malhas | 201 slots de material (~draw calls) | 93 luzes
+DEPOIS: 468601 tris | 44 malhas | 209 slots de material (~draw calls) | 91 luzes
 
 Triangulos por colecao:
-  12_Objetos_Soltos                    300806
+  12_Objetos_Soltos                    304510
   06_Moveis                            102387
   03_Predio_Fachada                     36696
   10_Viatura                             8394
-  02_Patio                               4340
+  02_Patio                               4700
   05_Passarela                           4212
-  07_Pilotis                             3024
+  07_Pilotis                             2976
+  04_Terreo_Interior                     1892
   08_Interativos                         1730
-  04_Terreo_Interior                     1652
   11_Pavimento_1                          756
   01_Rua                                  348
 
 Etapas:
   - Grama instanciada removida de 0 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
-  - Modificadores aplicados em 4049 objetos; textos e fios convertidos em malha.
+  - Modificadores aplicados em 4257 objetos; textos e fios convertidos em malha.
   - Bake de 0 materiais procedurais em texturas de imagem.
   - 22 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
-  - Colisao: 1039 caixas orientadas preparadas.
+  - Colisao: 1124 caixas orientadas preparadas.
   - 6 conjuntos interativos unidos (1 malha por conjunto).
-  - 4010 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
+  - 4218 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: ciep_VR.glb
   - Exportado: ciep_VR.fbx
-  - Colisao: 1039 caixas, 12468 tris -> colisao.glb / colisao.fbx
+  - Colisao: 1124 caixas, 13488 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps
