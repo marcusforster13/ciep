@@ -13,10 +13,10 @@ const CENARIOS = [path.join(RAIZ, '05_Treinamento', 'cenario_ms_01.json'), path.
 const API = 'https://api.elevenlabs.io/v1', MODELO = 'eleven_multilingual_v2';
 
 // rádio, parceiro e apoio: as mesmas vozes do Cassino clandestino (a equipe é a mesma na série)
-const FIXAS = { radio: 'FhdOWgf0bSw3HKWefhlq', parceiro: '9pDzHy2OpOgeXM8SeL0t', apoio: 'blPx0tvsvee8CuFd63lX',
+const FIXAS = { funcionario: 'y3X5crcIDtFawPx7bcNq', radio: 'FhdOWgf0bSw3HKWefhlq', parceiro: 'czvzJwIVS2asEKnthV40', apoio: 'blPx0tvsvee8CuFd63lX',
   // missao Sala 201 (crise com refens): todas vozes brasileiras da conta, com o tom de tensao de cada papel
   lucas: 'lvkgCBi6spByiTZMPJEK', diretora_crise: '7iqXtOF3wl3pomwXFY7G', mae: 'cyD08lEy76q03ER1jZ7y', pai: 'hwnuNyWkl9DjdTFykrN6',
-  negociador: 'bJrNspxJVFovUxNBQ0wh', comandante: 'TY3h8ANhQUsJaa0Bga5F', reporter: 'Qrdut83w0Cr152Yb4Xn3' };
+  negociador: 'bJrNspxJVFovUxNBQ0wh', comandante: 'Qrdut83w0Cr152Yb4Xn3', reporter: 'qPfM2laM0pRL4rrZtBGl' };
 const PERFIL = {
   radio:       { nome: 'Sala de operações (rádio)', genero: 'male', idade: ['middle_aged', 'middle aged'], estilo: { stability: .7, similarity_boost: .8, style: .05 } },
   parceiro:    { nome: 'Policial parceiro', genero: 'male', idade: ['young', 'middle_aged'], estilo: { stability: .6, similarity_boost: .8, style: .1 } },
