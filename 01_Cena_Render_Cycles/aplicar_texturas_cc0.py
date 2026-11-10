@@ -93,14 +93,34 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
     if not out.inputs["Surface"].is_linked:
         nt.links.new(b.outputs[0], out.inputs["Surface"])
     L = nt.links.new
-    tc = nt.nodes.new("ShaderNodeTexCoord")
+    tc = nt.nodes.new("ShaderNodeNewGeometry")                  # coordenadas do mundo: a textura corre continua entre pecas vizinhas (sem emenda)
     mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1 / tile,) * 3
-    L(tc.outputs["Object"], mp.inputs["Vector"])
+    L(tc.outputs["Position"], mp.inputs["Vector"])
+    # triplanar em coordenadas do mundo: tres projecoes (frente, lado, topo) misturadas pela direcao da face.
+    # Continua entre pecas vizinhas e nao estica em pecas giradas (a projecao BOX do Blender usa o eixo de cada objeto).
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ"); L(mp.outputs["Vector"], sep.inputs["Vector"])
+    nabs = nt.nodes.new("ShaderNodeVectorMath"); nabs.operation = "ABSOLUTE"; L(tc.outputs["Normal"], nabs.inputs[0])
+    npw = nt.nodes.new("ShaderNodeVectorMath"); npw.operation = "MULTIPLY"; L(nabs.outputs["Vector"], npw.inputs[0]); L(nabs.outputs["Vector"], npw.inputs[1])
+    npw2 = nt.nodes.new("ShaderNodeVectorMath"); npw2.operation = "MULTIPLY"; L(npw.outputs["Vector"], npw2.inputs[0]); L(npw.outputs["Vector"], npw2.inputs[1])
+    pesos = nt.nodes.new("ShaderNodeSeparateXYZ"); L(npw2.outputs["Vector"], pesos.inputs["Vector"])
+    soma = nt.nodes.new("ShaderNodeMath"); soma.operation = "ADD"; L(pesos.outputs["X"], soma.inputs[0]); L(pesos.outputs["Y"], soma.inputs[1])
+    soma2 = nt.nodes.new("ShaderNodeMath"); soma2.operation = "ADD"; L(soma.outputs[0], soma2.inputs[0]); L(pesos.outputs["Z"], soma2.inputs[1])
+    def plano(a1, a2):
+        c = nt.nodes.new("ShaderNodeCombineXYZ"); L(sep.outputs[a1], c.inputs["X"]); L(sep.outputs[a2], c.inputs["Y"]); return c
+    planos = (plano("Y", "Z"), plano("X", "Z"), plano("X", "Y"))         # projecao vista de X, de Y e de Z
     def tex(path, dados):
-        t = nt.nodes.new("ShaderNodeTexImage"); t.image = carregar(path, dados)
-        t.projection = "BOX"; t.projection_blend = .2
-        L(mp.outputs["Vector"], t.inputs["Vector"])
-        return t
+        img = carregar(path, dados); saidas = []
+        for c, eixo in zip(planos, ("X", "Y", "Z")):
+            t = nt.nodes.new("ShaderNodeTexImage"); t.image = img; L(c.outputs["Vector"], t.inputs["Vector"])
+            w = nt.nodes.new("ShaderNodeMath"); w.operation = "DIVIDE"; L(pesos.outputs[eixo], w.inputs[0]); L(soma2.outputs[0], w.inputs[1])
+            mul = nt.nodes.new("ShaderNodeVectorMath"); mul.operation = "SCALE"; L(t.outputs["Color"], mul.inputs[0]); L(w.outputs[0], mul.inputs["Scale"])
+            saidas.append(mul)
+        a1 = nt.nodes.new("ShaderNodeVectorMath"); a1.operation = "ADD"; L(saidas[0].outputs["Vector"], a1.inputs[0]); L(saidas[1].outputs["Vector"], a1.inputs[1])
+        a2 = nt.nodes.new("ShaderNodeVectorMath"); a2.operation = "ADD"; L(a1.outputs["Vector"], a2.inputs[0]); L(saidas[2].outputs["Vector"], a2.inputs[1])
+        class _Saida:                                                    # mesma interface do no de imagem (outputs["Color"])
+            pass
+        s_ = _Saida(); s_.outputs = {"Color": a2.outputs["Vector"]}; s_.image = img
+        return s_
     td = tex(diff, False)
     fator = [min(1.8, a / max(m, 1e-3)) for a, m in zip(alvo, media_linear(td.image))]
     mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"
@@ -123,10 +143,14 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
     mat["cc0_recolor"] = recolor.__name__ if recolor else ""
 
 # nome do material -> (pasta, tile em metros, cor alvo, recolor, forca do relevo)
+import json as _json
+try: _VIS = _json.load(open(os.path.join(AQUI or os.path.join(os.path.expanduser("~"), "Desktop", "novovr", "01_Cena_Render_Cycles"), "config_visual.json"), encoding="utf-8"))
+except Exception: _VIS = {}
+_FACH = ("fachada_gasta", 4.0, "#b3ab9e", neutro, .25) if _VIS.get("fachada") == "gasta" else ("fachada_concreto", 3.0, "#e9e8e3", neutro, .1)
 TABELA = {
     "Asfalto":            ("asfalto", 3.0, "#3a3a3c", None, .5),
     "Meio_Fio_Concreto":  ("concreto", 1.5, None, None, .35),
-    "Fachada_Branca":     ("fachada_concreto", 3.0, "#e9e8e3", neutro, .1),      # white_stucco (Poly Haven): concreto pintado de branco, como na foto
+    "Fachada_Branca":     _FACH,                                          # config_visual.json: concreto gasto (concrete_wall_006) ou branca (painted_plaster_wall)      # white_stucco (Poly Haven): concreto pintado de branco, como na foto
     "Laje_Pilotis":       ("fachada_concreto", 3.0, "#d8d6d0", neutro, .1),
     "Peitoril_Vermelho":  ("fachada_concreto", 2.0, "#c81f3a", neutro, .1),
     "Peitoril_Preto":     ("fachada_concreto", 2.0, "#2c2d2f", neutro, .1),

@@ -293,6 +293,10 @@ def camera(nome, pos, alvo, lente=22):
     ob.rotation_euler = (Vector(alvo) - Vector(pos)).to_track_quat("-Z", "Y").to_euler()
     return ob
 
+import json as _json
+try: VISUAL = _json.load(open(os.path.join(AQUI, "config_visual.json"), encoding="utf-8"))
+except Exception: VISUAL = {}
+FACHADA_GASTA = VISUAL.get("fachada", "branca") == "gasta"      # chave da fachada: config_visual.json
 PH_DIR = os.path.join(AQUI, "modelos", "polyhaven"); _ph = {}
 def modelo_ph(nome, asset, pos, rz=0.0, col=None, escala=1.0, max_tris=2000, alt=None, parent=None):
     """Modelo CC0 do Poly Haven (mesmo fluxo do Cassino e do Busca e Apreensao). Devolve None se o arquivo faltar."""
@@ -1085,8 +1089,8 @@ for y0 in range(-36, -2, 5):
         painel_simples("Passarela_Arco", 5.0, 4.6, 3.8, 3.9, 1.3, -.35, .45, (PX + sx * PW / 2, y0 + 2.5, FZ + 2.3), M["branco_fach"], C_PAS, fundo_aberto=True, rz=PI / 2)
 for y in range(-36, -1, 5):
     for sx in (-1, 1):
-        box("Passarela_Coluna", (.49, 1.18, 4.6), (PX + sx * PW / 2, y, FZ + 2.3), M["branco_fach"], C_PAS)
-box("Passarela_Cobertura", (PW + .5, 34, .3), (PX, -19.0, FZ + 4.75), M["branco_fach"], C_PAS)
+        box("Passarela_Coluna", (.43, 1.18, 4.6), (PX + sx * PW / 2, y, FZ + 2.3), M["branco_fach"], C_PAS)   # embutida no painel (.45): sem degrau na face
+box("Passarela_Cobertura", (PW + .45, 34, .3), (PX, -19.0, FZ + 4.75), M["branco_fach"], C_PAS)   # alinhada com a face dos paineis (sem aba)
 
 # ------------------------------------------------------------------ 6. interativos
 def porta(nome, dobradica, rz, m, larg=.88):
@@ -1412,6 +1416,8 @@ def tex_tom_placa(seed, W=320, H=214, janela=True):
         dx = np.abs(u - MOD / 2) - (JW / 2 - JR); dy = np.abs(v - (PISO / 2 - .05)) - (JH / 2 - JR)
         d = np.hypot(np.maximum(dx, 0), np.maximum(dy, 0)) + np.minimum(np.maximum(dx, dy), 0) - JR
         al *= np.clip((d - .02) / .05, 0, 1)
+    borda = np.minimum(np.minimum(u, MOD - u) / .5, np.minimum(v, PISO - v) / .4)        # some suave nas bordas (sem linha entre placas)
+    al *= np.clip(borda, 0, 1) ** 1.5
     rgba = np.zeros((H, W, 4), np.float32); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .34, .32, .28; rgba[..., 3] = np.clip(al, 0, .22)
     return rgba
 def _mat_alpha(nome, rgba):
@@ -1424,7 +1430,7 @@ def _mat_alpha(nome, rgba):
     return m
 TOM_PLACA = [_mat_alpha("tom_placa_alpha_%d" % k, tex_tom_placa(20 + k)) for k in range(4)]
 TOM_PLATIB = [_mat_alpha("tom_platibanda_alpha_%d" % k, tex_tom_placa(40 + k, janela=False)) for k in range(2)]
-for fy, vir in ((-.182, "-y"), (PROF + .182, "+y")):
+for fy, vir in (((-.182, "-y"), (PROF + .182, "+y")) if not FACHADA_GASTA else ()):   # na fachada gasta a textura ja tem as manchas
     for k in range(NM):
         xc = X0 + MOD * (k + .5)
         for z0 in (Z1, Z2):
