@@ -32,7 +32,7 @@ const PERFIL = {
   negociador:  { nome: 'Negociador (BOPE)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .7, similarity_boost: .8, style: .05 } },         // calmo, firme
   comandante:  { nome: 'Comandante da cena (BOPE)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .65, similarity_boost: .8, style: .15 } },
   reporter:    { nome: 'Repórter (TV)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .55, similarity_boost: .8, style: .2 } },
-  funcionario: { nome: 'Seu Jorge (inspetor de corredor)', genero: 'male', idade: ['old', 'middle_aged', 'middle aged'], estilo: { stability: .5, similarity_boost: .8, style: .25 } },
+  funcionario: { nome: 'Seu Jorge (inspetor de corredor)', genero: 'male', idade: ['old', 'middle_aged', 'middle aged'], estilo: { stability: .75, similarity_boost: .8, style: 0 } },   // calmo, contido
 };
 
 function falasDoCenario() {
