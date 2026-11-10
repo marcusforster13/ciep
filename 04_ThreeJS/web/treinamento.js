@@ -198,6 +198,14 @@ export async function iniciar(ctx) {
   const glP = new GLTFLoader();
   const carregarPapeis = filtro => manifesto.then(man => Promise.all(Object.entries(man).filter(([papel]) => filtro(papel) && !modelos[papel]).map(([papel, info]) => glP.loadAsync(HQ(info.arquivo)).then(g => { modelos[papel] = g; }).catch(() => { }))));
   const modelosProntos = carregarPapeis(p => !PAPEIS_CRISE.test(p));
+  // sombra suave sob os personagens (o chao tem luz pre-calculada, entao eles nao projetam sombra): mancha radial escura
+  const SOMBRA = (() => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+    const gr = g.createRadialGradient(64, 64, 4, 64, 64, 62); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(.55, 'rgba(0,0,0,0.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    return { geo: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), mat: new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) };
+  })();
   function personagem(papel, nome, cor, altura) {
     const base = modelos[papel];
     if (!base) return boneco(nome, cor, altura);
@@ -206,6 +214,7 @@ export async function iniciar(ctx) {
     m.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
     if (papel === 'aluno') m.scale.setScalar(altura / 1.78);      // sem avatar adolescente: o adulto mais jovem, um pouco menor
     g.add(m);
+    const sombra = new THREE.Mesh(SOMBRA.geo, SOMBRA.mat); sombra.scale.setScalar(.75 * altura / 1.75 + .25); sombra.position.y = .015; sombra.renderOrder = 1; g.add(sombra);
     const mixer = new THREE.AnimationMixer(m), acs = {};
     for (const clip of base.animations) acs[clip.name.replace(/\.\d+$/, '')] = mixer.clipAction(clip);
     const parada = acs.parada || Object.values(acs)[0];

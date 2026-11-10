@@ -1620,6 +1620,19 @@ world = bpy.data.worlds.get("World") or bpy.data.worlds.new("World"); scene.worl
 bg = world.node_tree.nodes.get("Background")
 if bg:
     bg.inputs["Color"].default_value = (*lin(hx("#9fbcd8")), 1); bg.inputs["Strength"].default_value = 1.0
+# ILUMINACAO DO CEU: True = o bake usa o mesmo HDRI do ceu visivel no site (luz de ceu real, sombras com tom do ceu).
+# False volta exatamente ao ceu de cor unica da versao "antes-da-iluminacao".
+BAKE_COM_HDRI = True
+HDRI_CEU = os.path.normpath(os.path.join(AQUI, "..", "04_ThreeJS", "hdri", "kloofendal_48d_partly_cloudy_puresky_2k.hdr"))
+if bg and BAKE_COM_HDRI and os.path.exists(HDRI_CEU):
+    nt = world.node_tree
+    tc = nt.nodes.new("ShaderNodeTexCoord"); mp = nt.nodes.new("ShaderNodeMapping"); env = nt.nodes.new("ShaderNodeTexEnvironment")
+    env.image = bpy.data.images.load(HDRI_CEU, check_existing=True)
+    mp.inputs["Rotation"].default_value = (0, 0, math.radians(17))      # sol do HDRI na mesma direcao do Sol da cena
+    lim = nt.nodes.new("ShaderNodeVectorMath"); lim.operation = "MINIMUM"; lim.inputs[1].default_value = (3.0, 3.0, 3.0)   # tira o disco do sol (o Sol da cena ja faz a sombra)
+    nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"]); nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
+    nt.links.new(env.outputs["Color"], lim.inputs[0]); nt.links.new(lim.outputs["Vector"], bg.inputs["Color"])
+    bg.inputs["Strength"].default_value = 0.8
 scene.unit_settings.system = "METRIC"
 scene.render.resolution_x, scene.render.resolution_y = 1920, 1080
 scene.render.engine = "CYCLES"; scene.cycles.samples = 128; scene.cycles.use_denoising = True

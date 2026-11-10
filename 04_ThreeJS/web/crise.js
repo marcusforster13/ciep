@@ -129,13 +129,14 @@ export async function iniciarCrise(H, { papel, modo }) {
           const cb = document.createElement('canvas'); cb.width = W; cb.height = Hh; const bg = cb.getContext('2d'); bg.filter = 'blur(10px)'; bg.drawImage(img, 0, 0);
           const pb_ = bg.getImageData(0, 0, W, Hh).data;
           const BR = [244, 244, 240], AZ = [28, 40, 78], FAIXA = [22, 58, 112], FILETE = [70, 170, 225];
-          const TRONCO = .15, OMBRO = [.15, .86], MANGA = .13;                       // em fracoes da altura ate o pescoco
+          const TRONCO = .15, OMBRO = [.15, .86], MANGA = .13, FX = chaveCache === 'aluno' ? [.74, .79] : [.82, .875];   // faixa: adulto tem o peito mais baixo                       // em fracoes da altura ate o pescoco
           for (let i = 0; i < p.length; i += 4) {
             if (mp[i + 3] < 40) continue;                                             // fora da malha
             const r = p[i], gg = p[i + 1], bb = p[i + 2], h = mp[i] / 255, xn = Math.abs(mq[i] / 255 * 1.2 - .6);
             const sat = r - bb, gr_ = gg / Math.max(1, r);
             const noTronco = xn <= TRONCO && h >= .5 && h < .93;                      // tronco coberto pela camiseta: ali nao ha pele
-            const pele = !noTronco && r > 60 && r > gg && gg > bb && sat > 15 && sat < 140 && gr_ > .55 && gr_ < .92;
+            const naCoxa = xn <= .2 && h >= .3 && h < .5;                                 // coxa coberta pela bermuda: tambem nao
+            const pele = !noTronco && !naCoxa && r > 60 && r > gg && gg > bb && sat > 15 && sat < 140 && gr_ > .55 && gr_ < .92;
             if (pele || h < .07) continue;                                            // pele e tenis ficam como estao
             const l = (r * .3 + gg * .59 + bb * .11) / 255, lb = (pb_[i] * .3 + pb_[i + 1] * .59 + pb_[i + 2] * .11) / 255;
             let alvo;
@@ -143,7 +144,7 @@ export async function iniciarCrise(H, { papel, modo }) {
               if (Math.hypot(xn - OMBRO[0], h - OMBRO[1]) < MANGA) alvo = BR;
               else { const f = .85 + .3 * (l - .5); p[i] = Math.min(255, PELE[0] * f); p[i + 1] = Math.min(255, PELE[1] * f); p[i + 2] = Math.min(255, PELE[2] * f); continue; }
             } else if (h < .5) { if (xn > .2) continue; alvo = AZ; }                   // calca (maos ficam)
-            else alvo = (h > .82 && h < .875) ? FAIXA : (h > .805 && h <= .82) ? FILETE : BR;    // camiseta com faixa no peito
+            else alvo = (h > FX[0] && h < FX[1]) ? FAIXA : (h > FX[0] - .015 && h <= FX[0]) ? FILETE : BR;   // camiseta com faixa no peito
             const f = alvo === AZ ? .45 + .9 * l : .8 + .3 * (lb - .5);                 // camiseta/faixa: so as dobras, sem a estampa
             p[i] = Math.min(255, alvo[0] * f); p[i + 1] = Math.min(255, alvo[1] * f); p[i + 2] = Math.min(255, alvo[2] * f);
           }
@@ -153,9 +154,53 @@ export async function iniciarCrise(H, { papel, modo }) {
       }
     });
   }
-  // Lucas e a turma na sala 201 (1o andar): ele perto do quadro; criancas no chao, junto a parede das janelas
-  const lucas = npc('lucas', 'aluno', 'Lucas (aluno, 15 anos)', B1(11.4, 5.6), olharPara(1, -.3), 'j', 1.66);
-  lucas.userData.base = v.arma === 'revolver' ? 'apontando' : 'irritado'; animar(lucas, lucas.userData.base, 1e6, 0); lucas.userData.semVirar = false;
+  // cabelo: o pacote so tem uma menina sem hijab; cada uma ganha um tom de cabelo (pinta a regiao do cabelo na textura da cabeca:
+  // triangulos do alto e da parte de tras da cabeca; a testa e o rosto, virados para a frente, ficam de fora)
+  function cabeloCor(n, cor, chave) {
+    n.userData.modelo?.traverse(o => {
+      if (!o.isMesh) return;
+      const m0 = [].concat(o.material)[0]; if (!/head/i.test(m0.name) || !m0.map?.image) return;
+      const k = chave + '|' + cor; let tex = cacheUniforme[k];
+      if (!tex) {
+        const img = m0.map.image, W = img.width, Hh = img.height, g = o.geometry, pos = g.attributes.position, nor = g.attributes.normal, uv = g.attributes.uv, idx = g.index;
+        let y0 = 1e9, y1 = -1e9; for (let i = 0; i < pos.count; i++) { y0 = Math.min(y0, pos.getY(i)); y1 = Math.max(y1, pos.getY(i)); }
+        const mk = document.createElement('canvas'); mk.width = W; mk.height = Hh; const mg = mk.getContext('2d'); mg.fillStyle = '#fff';
+        const vy = v => m0.map.flipY ? (1 - uv.getY(v)) * Hh : uv.getY(v) * Hh, tri = idx ? idx.count / 3 : pos.count / 3;
+        for (let t = 0; t < tri; t++) {
+          const vi = [0, 1, 2].map(j => idx ? idx.getX(3 * t + j) : 3 * t + j);
+          const h = vi.reduce((a, v) => a + (pos.getY(v) - y0) / (y1 - y0), 0) / 3, nz = vi.reduce((a, v) => a + nor.getZ(v), 0) / 3;
+          if (!(h > .8 || (nz < .35 && h > .3))) continue;                  // alto da cabeca, ou laterais/nuca
+          mg.beginPath(); vi.forEach((v, j) => j ? mg.lineTo(uv.getX(v) * W, vy(v)) : mg.moveTo(uv.getX(v) * W, vy(v))); mg.closePath(); mg.fill();
+        }
+        const mp = mg.getImageData(0, 0, W, Hh).data, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const cg = cv.getContext('2d'); cg.drawImage(img, 0, 0);
+        const d = cg.getImageData(0, 0, W, Hh), p = d.data, alvo = new THREE.Color(cor);
+        for (let i = 0; i < p.length; i += 4) {
+          if (mp[i + 3] < 128) continue;
+          if (p[i] > 140 && p[i + 2] / p[i] > .62) continue;                    // pele clara (orelha, bochecha) fica
+          const l = (p[i] * .3 + p[i + 1] * .59 + p[i + 2] * .11) / 255, f = .35 + 1.3 * l;
+          p[i] = Math.min(255, alvo.r * 255 * f); p[i + 1] = Math.min(255, alvo.g * 255 * f); p[i + 2] = Math.min(255, alvo.b * 255 * f);
+        }
+        cg.putImageData(d, 0, 0); tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.flipY = m0.map.flipY; cacheUniforme[k] = tex;
+      }
+      const m = m0.clone(); m.map = tex; if (Array.isArray(o.material)) { o.material = o.material.slice(); o.material[0] = m; } else o.material = m;
+    });
+  }
+  // Sala 201: a professora sentada a frente do quadro, sob a ameaca do Lucas (revolver apontado para a cabeca dela, ou faca
+  // na mao, atras dela, sem encostar); a turma agachada no canto da frente, visivel da porta por cima das carteiras.
+  const PROF = [11.75, 4.4], FR = [1, .15], FL = Math.hypot(...FR), fx = FR[0] / FL, fy = FR[1] / FL;   // para onde ela olha (a sala)
+  const cadeiraProf = (() => {
+    const gC = new THREE.Group(), mv = new THREE.MeshStandardMaterial({ color: 0x2f8a4f, roughness: .55 }), me = new THREE.MeshStandardMaterial({ color: 0x1f5a34, roughness: .5, metalness: .2 });
+    const bx = (w, h, d, x, y, z, m) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); gC.add(o); };
+    bx(.42, .035, .4, 0, .44, 0, mv); bx(.4, .26, .03, 0, .72, -.2, mv);
+    for (const sx of [-.19, .19]) for (const sz of [-.17, .17]) bx(.022, .44, .022, sx, .22, sz, me);
+    for (const sx of [-.19, .19]) bx(.022, .44, .022, sx, .66, -.2, me);
+    gC.position.copy(B1(...PROF)); gC.rotation.y = olharPara(fx, fy); scene.add(gC); return gC;
+  })();
+  const posLucas = [PROF[0] - fx * .2 - fy * .78, PROF[1] - fy * .2 + fx * .78];                             // ao lado dela, um pouco atras
+  const lucas = npc('lucas', 'aluno', 'Lucas (aluno, 15 anos)', B1(...posLucas), olharPara(PROF[0] - posLucas[0] + fx * .05, PROF[1] - posLucas[1] + fy * .05), 'j', 1.66);
+  // revolver ou faca apontados para a cabeca dela (sem gestos de ocioso)
+  lucas.userData.base = 'apontando'; lucas.userData.fig = false; animar(lucas, lucas.userData.base, 1e6, 0); lucas.userData.semVirar = true;
+  uniformizar(lucas, 'aluno');                                                     // ele tambem e aluno da 901: de uniforme
   const faca = new THREE.Mesh(new THREE.BoxGeometry(.025, .22, .012), new THREE.MeshStandardMaterial({ color: 0xc9ccd0, metalness: .5, roughness: .3 }));
   faca.visible = v.arma === 'faca'; scene.add(faca);
   if (v.arma === 'revolver') { H.armaNPC.visible = true; lucas.userData.arma = H.armaNPC; }
@@ -163,14 +208,19 @@ export async function iniciarCrise(H, { papel, modo }) {
   const CORES = ['#f2f2ee', '#f2f2ee', '#2f5f9e', '#f2f2ee', '#7a7f86', '#f2f2ee', '#3d7a4a', '#f2f2ee', '#8a2a2a', '#f2f2ee'];
   const kids = [];
   for (let k = 0; k < 10; k++) {
-    const papelK = PAPEIS_KIDS[k % 4], x = 11.3 + k * .85 + (k % 2 ? .1 : -.05), y = 1.05 + (k % 3) * .18;
-    const n = npc('refem_' + k, papelK, k === 8 ? 'Bia (aluna ferida)' : 'Aluno da 901', B1(x, y), olharPara(-.3 + Math.random() * .2, 1), /menina/.test(papelK) ? 'f' : 'j', 1.42 + Math.random() * .16);
+    const papelK = PAPEIS_KIDS[k % 4], x = 10.75 + (k % 2) * .75 + (Math.random() - .5) * .08, y = .95 + Math.floor(k / 2) * .58;
+    const n = npc('refem_' + k, papelK, k === 8 ? 'Bia (aluna ferida)' : 'Aluno da 901', B1(x, y), olharPara(1, .35 + Math.random() * .2), /menina/.test(papelK) ? 'f' : 'j', 1.42 + Math.random() * .16);
     n.userData.base = 'agachado'; n.userData.semVirar = true; n.userData.fig = false; animar(n, 'agachado', 1e6, 0);
     if (n.userData.acoes?.agachado) n.userData.acoes.agachado.time = Math.random() * 2;
-    uniformizar(n, papelK); kids.push(n);
+    uniformizar(n, papelK);
+    if (/menina/.test(papelK)) { const tons = ['#2b1d14', '#141010', '#5a3b22', '#7a5634', null], tom = tons[(k >> 1) % tons.length]; if (tom) cabeloCor(n, tom, papelK); }
+    kids.push(n);
   }
-  const professora = npc('professora', 'professora', 'Professora Cláudia', B1(19.6, 1.4), olharPara(-1, .4), 'f', 1.64);
-  professora.userData.base = 'agachado'; professora.userData.semVirar = true; animar(professora, 'agachado', 1e6, 0);
+  const professora = npc('professora', 'professora', 'Professora Cláudia', B1(...PROF), olharPara(fx, fy), 'f', 1.64);
+  const poseProf = professora.userData.acoes?.sentada_nervosa ? 'sentada_nervosa' : professora.userData.acoes?.sentado_parado ? 'sentado_parado' : 'agachado';
+  professora.userData.base = poseProf; professora.userData.semVirar = true; animar(professora, poseProf, 1e6, 0);
+  if (poseProf !== 'agachado') { professora.position.y += .46 - .925 * (1.64 / 1.78); professora.userData.sentado = true; }   // assento da cadeira (mesma regra do aluno sentado)
+  lucas.rotation.order = 'YXZ'; lucas.rotation.x = .14;                                        // inclinado para a frente: a arma na altura da cabeca dela
   const diretora = npc('diretora', 'diretora', 'Diretora', B(PX(1.5), -35.8), olharPara(0, -1), 'f', 1.66);
   const parceiro = npc('parceiro', 'pm_parceiro', 'Policial parceiro', B(7.0, -41.0), olharPara(-.3, 1), 'm', 1.8);
   const pai = npc('pai', 'responsavel', v.pressao === 'pai' ? 'Pai de aluna' : 'Pai de aluno', B(PX(-1.2), -36.4), olharPara(0, 1), 'm', 1.78);
@@ -278,7 +328,7 @@ export async function iniciarCrise(H, { papel, modo }) {
     const b = [{ label: 'Dossiê do alerta (Discord)', acao: () => { registrar('ler_dossie'); fato('dossie'); dialogo.mostrar({ tag: 'Tablet', titulo: 'Dossiê do alerta', texto: CEN.dossie.join('\n'), img: telaDossie(), botoes: [{ label: 'Voltar', acao: tablet }] }); } },
       { label: 'Câmera do corredor (1º andar)', acao: () => { usouTec(); dialogo.mostrar({ tag: 'Tablet', titulo: 'Câmera do corredor', img: foto(camCorredor, 'cam'), texto: 'Imagem de agora. A porta da 201 está fechada.', botoes: [{ label: 'Atualizar', acao: () => menuTabletItem('cam') }, { label: 'Voltar', acao: tablet }] }); } }];
     if (C.droneNoAr) b.push({ label: 'Drone (pela janela da 201)', acao: () => menuTabletItem('drone') });
-    b.push({ label: `Mensagens da professora (${C.mensagens.length})`, acao: () => { usouTec(); if (C.mensagens.length) fato('mensagens'); dialogo.mostrar({ tag: 'Tablet', titulo: 'Mensagens de dentro da sala', img: telaMensagens(), botoes: [{ label: 'Voltar', acao: tablet }] }); } });
+    b.push({ label: `Mensagens de uma aluna (${C.mensagens.length})`, acao: () => { usouTec(); if (C.mensagens.length) fato('mensagens'); dialogo.mostrar({ tag: 'Tablet', titulo: 'Mensagens de dentro da sala', img: telaMensagens(), botoes: [{ label: 'Voltar', acao: tablet }] }); } });
     if (v.motivo === 'notoriedade' || C.liveVista) b.push({ label: 'Transmissão ao vivo dele', acao: () => { usouTec(); C.liveVista = true; dialogo.mostrar({ tag: 'Tablet', titulo: 'Live no Discord', img: telaLive(), botoes: [...(C.live ? [{ label: 'Pedir à sala de operações que a plataforma derrube a transmissão', acao: derrubarLive }] : []), { label: 'Voltar', acao: tablet }] }); } });
     b.push({ label: 'Fechar', acao: () => dialogo.esconder() });
     dialogo.mostrar({ tag: 'Tablet tático', titulo: 'Informações da crise', texto: resumoFatos(), botoes: b });
@@ -358,7 +408,7 @@ export async function iniciarCrise(H, { papel, modo }) {
     const linhas = NG.aberturas_lucas[v.motivo];
     // eventos com o passar dos turnos
     if (C.turno === 2 && !C.exig) C.exig = v.virada === 'prazo' ? 'prazo' : v.motivo === 'notoriedade' ? 'live' : v.motivo === 'vinganca' ? 'rafa' : null;
-    if (C.turno === 3 && !C.msgBia) { C.msgBia = true; C.mensagens.push(F.professora_mensagem); fato('ferida'); legenda('Tablet', 'Nova mensagem da professora de dentro da sala.', 4); }
+    if (C.turno === 3 && !C.msgBia) { C.msgBia = true; C.mensagens.push(F.professora_mensagem); fato('ferida'); legenda('Tablet', 'Nova mensagem de uma aluna, de dentro da sala.', 4); }
     if (C.turno === 4 && !C.pressaoFeita) { C.pressaoFeita = true; pressaoExterna(); }
     if (v.virada === 'ataque' && C.turno >= 5 && C.vinculo < 70 && !C.ataque) return ataqueEmCurso();
     const fala = C.exig && !C.exigRespondida ? NG.exigencias[C.exig].lucas : linhas[(C.turno - 1) % linhas.length];
@@ -428,7 +478,7 @@ export async function iniciarCrise(H, { papel, modo }) {
   function rendicao() {
     if (C.fim || C.saindo) return; registrar('rendicao'); registrar('vinculo'); C.saindo = true;
     setTimeout(() => { lucasDiz(F.lucas_rendicao); faca.visible = false; H.armaNPC.visible = false; abrirPorta(1);
-      const u = lucas.userData; u.base = 'rendido'; u.rota = [B1(14.95, 8.0), B1(14.95, 10.6)].map(p => p.clone()); u.destino = null; u.vel = 1.0; u.aoChegar = () => { animar(lucas, 'rendido', 1e6, .3); };
+      lucas.rotation.x = 0; const u = lucas.userData; u.semVirar = false; u.base = 'rendido'; u.rota = [B1(14.95, 8.0), B1(14.95, 10.6)].map(p => p.clone()); u.destino = null; u.vel = 1.0; u.aoChegar = () => { animar(lucas, 'rendido', 1e6, .3); };
       animar(lucas, 'andando', 1e6, .2);
       setTimeout(() => liberar(99), 5000);
       setTimeout(() => apreensao(), 9000);
@@ -587,7 +637,7 @@ export async function iniciarCrise(H, { papel, modo }) {
     // variacao "ataque" na fase 1: o ataque acontece antes da equipe chegar
     if (papel !== 'negociador' && v.virada === 'ataque' && C.contatoT && !C.ataque && !emNegociacao() && agora - C.contatoT > 70000 && (C.tensao > 30 || C.vinculo < 60)) ataqueEmCurso();
     // mensagens de dentro da sala (fase 1)
-    if (C.contatoT && !C.msgBia && agora - C.contatoT > 30000) { C.msgBia = true; C.mensagens.push(F.professora_mensagem); legenda('Tablet', 'Mensagem da professora, de dentro da sala.', 4); }
+    if (C.contatoT && !C.msgBia && agora - C.contatoT > 30000) { C.msgBia = true; C.mensagens.push(F.professora_mensagem); legenda('Tablet', 'Mensagem de uma aluna, de dentro da sala.', 4); }
     status();
   }
   function objetivos() {

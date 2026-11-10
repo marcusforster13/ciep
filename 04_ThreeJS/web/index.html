@@ -85,7 +85,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1110-1122';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1110-1303';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -105,7 +105,9 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+// CONTRASTE: AgX (o mesmo das previas do Blender). Para comparar com o antigo, abra o site com ?tm=aces no endereco.
+const TONS = new URLSearchParams(location.search).get('tm') || 'agx';
+renderer.toneMapping = TONS === 'aces' ? THREE.ACESFilmicToneMapping : THREE.AgXToneMapping;
 renderer.toneMappingExposure = CFG.exposicao ?? .9;
 renderer.xr.enabled = true;
 document.body.appendChild(renderer.domElement);

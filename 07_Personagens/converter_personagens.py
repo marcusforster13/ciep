@@ -38,9 +38,9 @@ PAPEIS = {
     # missao "Sala 201" (crise com refens): criancas refens, professora, mae do aluno e negociador do BOPE
     "refem_menino_a": ("Male_Child_01", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca"}),
     "refem_menino_b": ("Male_Child_02", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca"}),
-    "refem_menina_a": ("Female_Child_02", {"parada": "f_idle_neutral_01", "nervoso": "f_idle_nervous_01", "agachado": "f_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "chorando": "f_gestic_talk_sad_01"}),
+    "refem_menina_a": ("Female_Child_01", {"parada": "f_idle_neutral_01", "nervoso": "f_idle_nervous_01", "agachado": "f_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "chorando": "f_gestic_talk_sad_01"}),
     "refem_menina_b": ("Female_Child_01", {"parada": "f_idle_neutral_01", "nervoso": "f_idle_nervous_01", "agachado": "f_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "chorando": "f_gestic_talk_sad_01"}),
-    "professora": ("Female_Adult_02", _civil("f", {"agachado": "f_crouch_idle", "estressada": "f_gestic_talk_femalestressed_01"})),
+    "professora": ("Female_Adult_02", _civil("f", {"agachado": "f_crouch_idle", "estressada": "f_gestic_talk_femalestressed_01", "sentado_parado": "f_idle_neutral_01+sentado_parado", "sentada_nervosa": "f_idle_nervous_01+sentado_parado"})),
     "mae": ("Female_Adult_05", _civil("f", {"triste": "f_gestic_talk_sad_01", "estressada": "f_gestic_talk_femalestressed_01"})),
     "negociador": ("Police_Male_06", {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01"}),
 }

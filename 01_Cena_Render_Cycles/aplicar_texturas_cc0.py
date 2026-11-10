@@ -134,6 +134,9 @@ TABELA = {
     "Piso_Corredor":      ("piso_corredor", 2.0, "#3c3e41", None, .2),     # concrete_floor_worn_001: corredor grafite (foto 1 do autor)
     "Piso_Pilotis":       ("piso_corredor", 2.5, "#7c7d7a", neutro, .2),
     "Terra_Canteiro":     ("terra", 1.2, "#6b4a35", None, .4),            # brown_mud_leaves_01: terra vermelha com mato rasteiro
+    "Concreto_Aparente":  ("concreto", 1.5, "#9c9c98", neutro, .3),            # arquibancada, bases: concreto aparente
+    "Chapim_Concreto":    ("concreto", 1.5, "#a8a59e", neutro, .3),
+    "Aco_Galvanizado":    ("metal_pintado", 1.0, "#9da2a6", neutro, .1),      # poste, mastro, alambrado: aco galvanizado com marcas de tempo
     "Grama":              ("grama", 1.5, "#56693a", None, .3),                 # leafy_grass
     "Piso_Granilite":     ("granilite", 2.4, "#b9b7b1", None, .1),             # granite_tile: placas de granilite
     "Azulejo_Branco":     ("azulejo", 1.0, "#e8e6df", None, .15),              # long_white_tiles
@@ -148,7 +151,7 @@ TABELA = {
     "Porta_Ferro":        ("metal_pintado", 1.0, "#5b6066", grafite, .15),
     "Grade_Metal":        ("metal_pintado", 1.0, "#2f3a46", grafite, .1),
 }
-METAL = {}
+METAL = {"Aco_Galvanizado": .6}
 feitos = []
 for nome, (pasta, tile, tint, rec, relevo) in TABELA.items():
     m = bpy.data.materials.get(nome)
