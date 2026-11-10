@@ -1243,11 +1243,7 @@ for y, divs in ((BY0, (-10.0, -2.0, 6.0)), (BY1, (-12.0, -6.0, 2.0, 12.0))):
         for k in range(int((v1 - v0) / .15) + 1):
             box("Janela_Gradil_Barra", (.016, .016, zt - zb), (xa + k * .15, y + off, FZ + (zb + zt) / 2), M["grade"], C_SOLTO)
         for z in (zb + .05, zt - .05): box("Janela_Gradil_Tubo", (v1 - v0, .03, .03), (xa + (v1 - v0) / 2, y + off, FZ + z), M["grade"], C_SOLTO)
-# tubos de descida de agua na fachada e manchas de escorrimento (foto do Tancredo Neves em 2025)
-for k in (2, 6, 10, 14, 18):
-    for fy, sgy in ((0.0, -1), (PROF, 1)):
-        x = X0 + MOD * k + .45
-        cyl("Tubo_Descida", .05, .05, Z3 + PL_H - .3 - FZ, (x, fy + sgy * .36, (FZ + Z3 + PL_H - .3) / 2), M["pvc"], C_SOLTO, seg=10)
+# (tubos de descida de agua na fachada removidos a pedido do autor)
 
 # ------------------------------------------------------------------ 4b. rampa e 1o pavimento (acessivel)
 # Rampa em zigue-zague nos pilotis (marca dos CIEPs): dois lancos de 10 m e patamar, inclinacao ~17% (adaptada para VR;
@@ -1477,7 +1473,7 @@ MATERIAS = (("PORTUGUÊS", "Interpretação de texto", "1) Leia o texto da pág.
             ("MATEMÁTICA", "Frações equivalentes", "1/2 = 2/4 = 4/8", "Exercícios pág. 58"),
             ("CIÊNCIAS", "O ciclo da água", "evaporação · condensação", "precipitação"),
             ("HISTÓRIA", "Brasil Colônia", "Trabalho: entregar sexta", "Ler cap. 3"))
-def vida_sala(nome, x0, x1, y0, y1, idx):
+def vida_sala(nome, x0, x1, y0, y1, idx, frente_y):
     qx = x0 + .14; yc = (y0 + y1) / 2; zq = P1Z + 1.5
     t1, t2, t3, t4 = MATERIAS[idx % len(MATERIAS)]
     texto(nome + "_Quadro_Texto", "Rio, 10 de novembro", .09, (qx + .025, yc - 1.0, zq + .46), "+x", M["texto_az"], C_SOLTO)
@@ -1491,6 +1487,7 @@ def vida_sala(nome, x0, x1, y0, y1, idx):
     box(nome + "_Relogio_Ponteiro", (.01, .008, .1), (.026, 0, .04), M["preto"], C_SOLTO, r)
     box(nome + "_Relogio_Ponteiro", (.01, .07, .008), (.026, .03, 0), M["preto"], C_SOLTO, r)
     ys = [y0 + 1.6 + k * 1.25 for k in range(int((y1 - y0 - 2.4) / 1.25) + 1)]
+    ys = ys[:-1] if abs(frente_y - y1) < abs(frente_y - y0) else ys[1:]      # mesma fileira livre junto a porta de sala_aula
     for x in [x0 + 2.8 + k * 1.5 for k in range(5)]:
         for y in ys:
             if rnd.random() < .6:                                   # caderno aberto ou fechado sobre o tampo
@@ -1500,8 +1497,8 @@ def vida_sala(nome, x0, x1, y0, y1, idx):
                     cyl(nome + "_Lapis", .004, .004, .17, (x + .1, y + rnd.uniform(-.1, .1), P1Z + .737), M["lapis"], C_SOLTO, rot=(PI / 2, 0, rnd.uniform(0, PI)), seg=6)
             if rnd.random() < .45:                                  # mochila no chao, ao lado da cadeira
                 box(nome + "_Mochila_Chao", (.3, .17, .38), (x + .48 + rnd.uniform(-.05, .05), y + .34, P1Z + .19), M["moc_%d" % rnd.randrange(6)], C_SOLTO, rot=(rnd.uniform(-.2, .2), 0, rnd.uniform(-.4, .4)), bevel=.05)
-for k, (nome, x0, x1, y0, y1) in enumerate((("Sala_201", 10.0, 20.0, .5, PC0), ("Sala_202", 20.0, 30.0, .5, PC0), ("Sala_203", 30.0, 40.0, .5, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5))):
-    vida_sala(nome, x0, x1, y0, y1, k)
+for k, (nome, x0, x1, y0, y1, fy) in enumerate((("Sala_201", 10.0, 20.0, .5, PC0, PC0 - .4), ("Sala_202", 20.0, 30.0, .5, PC0, PC0 - .4), ("Sala_203", 30.0, 40.0, .5, PC0, PC0 - .4), ("Sala_204", 10.0, 20.0, PC1, PROF - .5, PC1 + .4))):
+    vida_sala(nome, x0, x1, y0, y1, k, fy)
 # --- ginasio coberto (o segundo volume dos CIEPs): cobertura em arco sobre pilares e quadra poliesportiva escolar
 # Padrao das quadras de escola publica (memoriais FNDE / prefeituras): piso de concreto com pintura acrilica ou epoxi,
 # area de jogo verde e faixa externa vermelho-oxido; linhas de 5 cm por modalidade (futsal branco, basquete amarelo,

@@ -340,6 +340,8 @@ if os.path.isdir(aud_src):
     say("%d sons copiados para web/audio/ (%s)" % (len(sons), ", ".join(sons)))
 cfg = {"gerado_em": time.strftime("%Y-%m-%d %H:%M"), "qualidade": "rapida" if RAPIDO else ("alta" if ALTA else "padrao"),
        "lightmaps": lm_json, "lightmap_ganho": round(math.pi, 5), "exposicao": 1.0,
+       # tamanho do cena.glb: a tela de carregamento calcula a porcentagem (o Vercel manda o arquivo comprimido, sem o total)
+       "glb_bytes": os.path.getsize(os.path.join(WEB, "cena.glb")),
        "env": env_arq, "env_intensidade": .35, "cameras": cams, "giroflex": giro,
        "luz_dinamica": 1.0, "pontos": pontos, "maquinas": int(scene.get("cs_maquinas", 0))}
 with open(os.path.join(WEB, "cena.json"), "w", encoding="utf-8") as f:

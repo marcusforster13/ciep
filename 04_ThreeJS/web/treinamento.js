@@ -891,6 +891,62 @@ export async function iniciar(ctx) {
     else encerrar();
   }
 
+  /* ================= tutorial de 1 minuto no portao ================= */
+  // 4 passos: olhar ao redor, andar ate o circulo laranja, falar com o parceiro e abrir o menu (que ja leva ao menu principal)
+  let TUT = null;
+  const marcaTut = (() => {
+    const g = new THREE.Group(), cor = 0xf0a340;
+    const anel = new THREE.Mesh(new THREE.RingGeometry(.45, .6, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: cor, transparent: true, opacity: .9, toneMapped: false, depthWrite: false }));
+    anel.position.y = .03; g.add(anel);
+    const feixe = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, 2.4, 24, 1, true), new THREE.MeshBasicMaterial({ color: cor, transparent: true, opacity: .14, side: THREE.DoubleSide, toneMapped: false, depthWrite: false }));
+    feixe.position.y = 1.2; g.add(feixe);
+    g.position.copy(B(4.0, -36.6)); g.visible = false; scene.add(g); return g;
+  })();
+  const TUT_PASSOS = [
+    vr => ['Olhe ao redor', vr ? 'Vire a cabeça para olhar a escola e a rua.' : 'Arraste o mouse (ou use as setas) para olhar ao redor.'],
+    vr => ['Ande até o círculo laranja', vr ? 'Aponte o controle direito para o círculo no chão e aperte o gatilho para ir até lá (ou ande com o analógico).' : 'Use W A S D para andar até o círculo laranja no portão (Shift corre).'],
+    vr => ['Fale com o seu parceiro', vr ? 'Aponte o controle para o policial ao seu lado e aperte o gatilho.' : 'Clique no policial ao seu lado para falar com ele.'],
+    vr => ['Abra o menu', vr ? 'Aperte o botão Y ou B do controle. No menu você escolhe a ocorrência ou a missão.' : 'Aperte a tecla T. No menu você escolhe a ocorrência ou a missão.']
+  ];
+  function tutorial() {
+    fecharPaineis(); if (S.ativo || S.crise) return;
+    rig.position.copy(B(5.5, -41.5)); ctx.setYaw(Math.PI + .1);
+    if (npcs.parceiro) { npcs.parceiro.position.copy(B(7.0, -41.0)); npcs.parceiro.rotation.y = npcs.parceiro.userData.giroBase; }
+    TUT = { passo: -1, giro: 0, dir: null };
+    passoTut(0);
+  }
+  function passoTut(k) {
+    TUT.passo = k; marcaTut.visible = k === 1;
+    const [t, x] = TUT_PASSOS[k](renderer.xr.isPresenting);
+    legenda('Tutorial · ' + (k + 1) + ' de 4 · ' + t, x, 600);
+  }
+  function fimTut(concluiu) {
+    if (!TUT) return; TUT = null; marcaTut.visible = false;
+    legenda('Tutorial', concluiu ? 'Pronto! Escolha agora como quer treinar.' : 'Tutorial encerrado.', concluiu ? 5 : 2);
+  }
+  function eventoTut(e) {
+    if (!TUT) return false;
+    if (e === 'parceiro' && TUT.passo === 2) { setTimeout(() => TUT && passoTut(3), 2500); return false; }
+    if (e === 'menu') {
+      if (TUT.passo === 3) { fimTut(true); return false; }               // segue para o menu principal (aviso)
+      menu.mostrar({ tag: 'Tutorial', titulo: 'Tutorial em andamento', texto: 'Passo ' + (TUT.passo + 1) + ' de 4.', botoes: [
+        { label: 'Continuar o tutorial', acao: () => { menu.esconder(); passoTut(TUT.passo); } },
+        { label: 'Sair do tutorial e ir ao menu', acao: () => { fimTut(false); aviso(); } }] });
+      return true;
+    }
+    return false;
+  }
+  const TV = new THREE.Vector3(), TD = new THREE.Vector3();
+  function quadroTut(dt) {
+    if (!TUT) return;
+    marcaTut.children[0].material.opacity = .6 + .3 * Math.sin(performance.now() / 250);
+    camera.getWorldDirection(TD); const ang = Math.atan2(TD.x, TD.z);
+    if (TUT.dir != null) { let d = ang - TUT.dir; d = Math.atan2(Math.sin(d), Math.cos(d)); TUT.giro += Math.abs(d); }
+    TUT.dir = ang;
+    if (TUT.passo === 0 && TUT.giro > 1.4) passoTut(1);
+    else if (TUT.passo === 1) { camera.getWorldPosition(TV); TV.y = marcaTut.position.y; if (TV.distanceTo(marcaTut.position) < .9) passoTut(2); }
+  }
+
   /* ================= inicio, menu e relatorio ================= */
   function aviso() {
     fecharPaineis();
@@ -901,6 +957,7 @@ export async function iniciar(ctx) {
         'Computador: clique fala/usa · T menu · Q saca ou guarda a arma (com ela na mão, o clique dispara) · R recarrega · K checklist.\n' +
         'Quest: gatilho usa/clica · A saca a arma · Y ou B abre o menu · grip liga a lanterna.',
       botoes: [
+        { label: 'Tutorial rápido (1 minuto, no portão): como olhar, andar, falar e abrir o menu', cor: 'rgba(90,170,255,.25)', acao: tutorial },
         { label: 'Modo história (4 ocorrências guiadas)', acao: () => comecar('historia') },
         { label: 'Modo treino (objetivos e dicas na tela)', acao: () => comecar('treino') },
         { label: 'Modo avaliação (sem dicas, variação sorteada)', acao: () => comecar('avaliacao') },
@@ -912,7 +969,7 @@ export async function iniciar(ctx) {
     });
   }
   async function comecar(modo) {
-    fecharPaineis();
+    fecharPaineis(); fimTut(false);
     let carregou = false; modelosProntos.then(() => { carregou = true; });
     await new Promise(r => setTimeout(r, 0));
     if (!carregou) { menu.mostrar({ tag: 'Treinamento', titulo: 'Carregando personagens…', texto: 'Aguarde alguns segundos.', botoes: [] }); await Promise.race([modelosProntos, new Promise(r => setTimeout(r, 30000))]); menu.esconder(); }
@@ -937,6 +994,7 @@ export async function iniciar(ctx) {
   }
   function abrirMenu() {
     if (S.crise) return S.crise.menu();
+    if (eventoTut('menu')) return;
     if (!S.ativo) return aviso();
     fecharPaineis();
     const b = [];
@@ -1017,7 +1075,7 @@ export async function iniciar(ctx) {
       ] });
   }
   async function iniciarCrise(papel, modo) {
-    fecharPaineis(); menu.mostrar({ tag: 'Missão Sala 201', titulo: 'Carregando a missão…', texto: 'Personagens e equipamentos.', botoes: [] });
+    fecharPaineis(); fimTut(false); menu.mostrar({ tag: 'Missão Sala 201', titulo: 'Carregando a missão…', texto: 'Personagens e equipamentos.', botoes: [] });
     await Promise.all([modelosProntos, carregarPapeis(p => PAPEIS_CRISE.test(p))]);
     const m = await import('./' + HQ('crise.js'));
     menu.esconder();
@@ -1036,6 +1094,7 @@ export async function iniciar(ctx) {
     const hn = ray.intersectObjects(Object.values(npcs).filter(n => n.visible).map(n => n.userData.hit), false)[0];
     if (hn && hn.distance < 6 && (!hi || hn.distance < hi.distance)) {
       const n = Object.values(npcs).find(p => p.userData.hit === hn.object), k = n.userData.chave;
+      if (k === 'parceiro') eventoTut('parceiro');
       diz(n, k === 'parceiro' ? CEN.equipe.pm_parceiro : k === 'apoio' ? CEN.equipe.pm_apoio : CEN.exploracao[k] || '...', n.userData.sentado ? null : 'falando'); return true;
     }
     if (hi && hi.distance < 4.5) {
@@ -1126,6 +1185,7 @@ export async function iniciar(ctx) {
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
     confronto();
     if (S.crise) S.crise.quadro(dt);
+    quadroTut(dt);
     if (vida) {                                                    // na missao, crise.js controla o patio (criseInicio/disparo/evacuar)
       if (!S.crise) { vida.normal(); vida.mostrar(!(A && A.ameacaAtiva)); } else if (!vida.emCrise()) vida.mostrar(false);
       vida.quadro(dt);
@@ -1196,7 +1256,7 @@ export async function iniciar(ctx) {
     clique: ray => usar(ray), gatilho: (ray, c) => usar(ray, c), botao, recarregar, soltar: () => { },
     apontar, painelAberto: () => paineis.some(p => p.mesh.visible),
     menu: abrirMenu, quadro, estado: S, relatorio,
-    _t: { comecar, encerrar, objetivos, sortear, derivar, novaOcorrencia, npcs, portas, moverPorta, itens, usarItem, sacar, disparar, falarRadio, menuInspetora, menuResponsavel, menuDiretora, menuAluno, menuFuncionario,
+    _t: { tutorial, tut: () => TUT, comecar, encerrar, objetivos, sortear, derivar, novaOcorrencia, npcs, portas, moverPorta, itens, usarItem, sacar, disparar, falarRadio, menuInspetora, menuResponsavel, menuDiretora, menuAluno, menuFuncionario,
       decidirFinal, finalizar, escalar, ordemVerbal, usar, armaNPC, armaSolta, B, zona, irAte, caminho, noProximo, imagemPrint, imagemCameras, abrigamento, chamarAluno, pedirSocorro,
       ocorrencia: () => A, historico: HIST, botoes: () => (dialogo.mesh.visible ? dialogo : menu).botoes, painel: () => (dialogo.mesh.visible ? dialogo : menu.mesh.visible ? menu : null) }
   };
