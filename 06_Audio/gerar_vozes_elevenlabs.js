@@ -13,7 +13,7 @@ const CENARIOS = [path.join(RAIZ, '05_Treinamento', 'cenario_ms_01.json'), path.
 const API = 'https://api.elevenlabs.io/v1', MODELO = 'eleven_multilingual_v2';
 
 // rádio, parceiro e apoio: as mesmas vozes do Cassino clandestino (a equipe é a mesma na série)
-const FIXAS = { funcionario: 'TY3h8ANhQUsJaa0Bga5F', radio: 'FhdOWgf0bSw3HKWefhlq', parceiro: 'czvzJwIVS2asEKnthV40', apoio: 'blPx0tvsvee8CuFd63lX',
+const FIXAS = { funcionario: 'bJrNspxJVFovUxNBQ0wh', radio: 'FhdOWgf0bSw3HKWefhlq', parceiro: 'czvzJwIVS2asEKnthV40', apoio: 'blPx0tvsvee8CuFd63lX',
   // missao Sala 201 (crise com refens): todas vozes brasileiras da conta, com o tom de tensao de cada papel
   lucas: 'lvkgCBi6spByiTZMPJEK', diretora_crise: '7iqXtOF3wl3pomwXFY7G', mae: 'cyD08lEy76q03ER1jZ7y', pai: 'hwnuNyWkl9DjdTFykrN6',
   negociador: 'bJrNspxJVFovUxNBQ0wh', comandante: 'Qrdut83w0Cr152Yb4Xn3', reporter: 'qPfM2laM0pRL4rrZtBGl' };
@@ -32,7 +32,7 @@ const PERFIL = {
   negociador:  { nome: 'Negociador (BOPE)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .7, similarity_boost: .8, style: .05 } },         // calmo, firme
   comandante:  { nome: 'Comandante da cena (BOPE)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .65, similarity_boost: .8, style: .15 } },
   reporter:    { nome: 'Repórter (TV)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .55, similarity_boost: .8, style: .2 } },
-  funcionario: { nome: 'Seu Jorge (inspetor de corredor)', genero: 'male', idade: ['old', 'middle_aged', 'middle aged'], estilo: { stability: .75, similarity_boost: .8, style: 0 } },   // calmo, contido
+  funcionario: { nome: 'Seu Jorge (inspetor de corredor)', genero: 'male', idade: ['old', 'middle_aged', 'middle aged'], estilo: { stability: .6, similarity_boost: .75, style: .05 } },   // natural, conversa de corredor (so no modo historia; a mesma voz do negociador, que so aparece na crise)
 };
 
 function falasDoCenario() {
