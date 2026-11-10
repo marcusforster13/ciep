@@ -1579,7 +1579,7 @@ else:
     say("aviso: modelos/carros/perua.glb nao encontrado; cena sem viatura")
 
 # ------------------------------------------------------------------ 8. luzes
-sol = luz("Sol", "SUN", 3.6, "#fff2dc", (0, 0, 40), C_LUZ, angle=math.radians(2.0))
+sol = luz("Sol", "SUN", 4.5, "#fff2dc", (0, 0, 40), C_LUZ, angle=math.radians(2.0))   # sol forte de manha (antes 3,6)
 sol.rotation_euler = (math.radians(48), 0, math.radians(-35))
 def tubo(nome, x, y, watts, comp=1.2, col=C_TER, desce=0.0):
     box(nome + "_Tubo", (comp, .1, .04), (x, y, FZ + PD - .05 - desce), M["lamp_f"], col)
@@ -1638,7 +1638,7 @@ if bg and BAKE_COM_HDRI and os.path.exists(HDRI_CEU):
     lim = nt.nodes.new("ShaderNodeVectorMath"); lim.operation = "MINIMUM"; lim.inputs[1].default_value = (3.0, 3.0, 3.0)   # tira o disco do sol (o Sol da cena ja faz a sombra)
     nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"]); nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
     nt.links.new(env.outputs["Color"], lim.inputs[0]); nt.links.new(lim.outputs["Vector"], bg.inputs["Color"])
-    bg.inputs["Strength"].default_value = 0.8
+    bg.inputs["Strength"].default_value = 0.55                      # luz de ceu mais baixa: sombras mais marcadas (antes 0,8)
 scene.unit_settings.system = "METRIC"
 scene.render.resolution_x, scene.render.resolution_y = 1920, 1080
 scene.render.engine = "CYCLES"; scene.cycles.samples = 128; scene.cycles.use_denoising = True

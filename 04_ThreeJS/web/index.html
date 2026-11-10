@@ -85,7 +85,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1110-1358';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1110-1523';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -105,8 +105,8 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-// CONTRASTE: AgX (o mesmo das previas do Blender). Para comparar com o antigo, abra o site com ?tm=aces no endereco.
-const TONS = new URLSearchParams(location.search).get('tm') || 'agx';
+// CONTRASTE: ACES (cores vivas, contraste de dia de sol). Para comparar, abra o site com ?tm=agx no endereco.
+const TONS = new URLSearchParams(location.search).get('tm') || 'aces';
 renderer.toneMapping = TONS === 'aces' ? THREE.ACESFilmicToneMapping : THREE.AgXToneMapping;
 renderer.toneMappingExposure = CFG.exposicao ?? .9;
 renderer.xr.enabled = true;
@@ -183,6 +183,9 @@ await Promise.all([...new Set(Object.values(CFG.lightmaps).map(v => v.lm))].map(
   tl.loadAsync(H(f)).then(t => { t.flipY = false; t.channel = 1; t.colorSpace = THREE.SRGBColorSpace; lmTex[f] = t; })));
 
 const lmMats = [], lentes = [], colisores = [];
+// LUZ DENTRO DA ESCOLA: salas e corredores um pouco mais escuros que o patio ao sol (so lampadas e janelas).
+// 1 = igual ao lado de fora; para comparar, abra o site com ?li=1 no endereco.
+const LUZ_INTERNA = +(new URLSearchParams(location.search).get('li') || .75);
 // objetos que se movem (carro abordado, equipamentos, personagens) nao tem lightmap: recebem uma luz ambiente
 // uniforme, na intensidade da area iluminada pelas torres (um "lightmap" branco de 1 pixel)
 const lmBranco = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); lmBranco.needsUpdate = true; lmBranco.channel = 0;
@@ -191,7 +194,8 @@ const iluminar = m => { if (m.metalness > .25) m.metalness = .25;      // metal 
 gltf.scene.traverse(o => {
   if (!o.isMesh) return;
   let p = o, lm = null, estatico = false, escuro = false, cofre = false;
-  while (p) { lm = lm || CFG.lightmaps[p.name]; estatico = estatico || /_Estatico/.test(p.name); p = p.parent; }
+  let lmNome = '';
+  while (p) { if (!lm && CFG.lightmaps[p.name]) { lm = CFG.lightmaps[p.name]; lmNome = p.name; } estatico = estatico || /_Estatico/.test(p.name); p = p.parent; }
   const conv = m0 => {
     const m = m0.clone();
     if (/Vidro_Janela/.test(m.name)) { m.transparent = true; m.opacity = .45; m.depthWrite = false; m.roughness = .05; }      // vidro das janelas do terreo
@@ -201,7 +205,7 @@ gltf.scene.traverse(o => {
     if (m.transmission > 0) { m.transmission = 0; m.transparent = true; m.opacity = 0.45; m.roughness = 0.05; }
     m.envMapIntensity = CFG.env_intensidade ?? 0.35;
     if (lm && o.geometry.attributes.uv1) {
-      m.lightMap = lmTex[lm.lm]; m.userData.lmBase = lm.max * CFG.lightmap_ganho;
+      m.lightMap = lmTex[lm.lm]; m.userData.lmBase = lm.max * CFG.lightmap_ganho * (/^(04_Terreo_Interior|11_Pavimento_1|06_Moveis)/.test(lmNome) ? LUZ_INTERNA : 1);
       m.lightMapIntensity = m.userData.lmBase; lmMats.push(m);
     } else if (!lm) iluminar(m);
     return m;

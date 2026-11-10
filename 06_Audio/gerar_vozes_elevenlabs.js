@@ -13,7 +13,10 @@ const CENARIOS = [path.join(RAIZ, '05_Treinamento', 'cenario_ms_01.json'), path.
 const API = 'https://api.elevenlabs.io/v1', MODELO = 'eleven_multilingual_v2';
 
 // rádio, parceiro e apoio: as mesmas vozes do Cassino clandestino (a equipe é a mesma na série)
-const FIXAS = { radio: 'FhdOWgf0bSw3HKWefhlq', parceiro: '9pDzHy2OpOgeXM8SeL0t', apoio: 'blPx0tvsvee8CuFd63lX' };
+const FIXAS = { radio: 'FhdOWgf0bSw3HKWefhlq', parceiro: '9pDzHy2OpOgeXM8SeL0t', apoio: 'blPx0tvsvee8CuFd63lX',
+  // missao Sala 201 (crise com refens): todas vozes brasileiras da conta, com o tom de tensao de cada papel
+  lucas: 'lvkgCBi6spByiTZMPJEK', diretora_crise: '7iqXtOF3wl3pomwXFY7G', mae: 'cyD08lEy76q03ER1jZ7y', pai: 'hwnuNyWkl9DjdTFykrN6',
+  negociador: 'bJrNspxJVFovUxNBQ0wh', comandante: 'TY3h8ANhQUsJaa0Bga5F', reporter: 'Qrdut83w0Cr152Yb4Xn3' };
 const PERFIL = {
   radio:       { nome: 'Sala de operações (rádio)', genero: 'male', idade: ['middle_aged', 'middle aged'], estilo: { stability: .7, similarity_boost: .8, style: .05 } },
   parceiro:    { nome: 'Policial parceiro', genero: 'male', idade: ['young', 'middle_aged'], estilo: { stability: .6, similarity_boost: .8, style: .1 } },
@@ -22,6 +25,13 @@ const PERFIL = {
   diretora:    { nome: 'Diretora', genero: 'female', idade: ['middle_aged', 'middle aged'], estilo: { stability: .5, similarity_boost: .8, style: .25 } },
   responsavel: { nome: 'Responsável (pai de aluna)', genero: 'male', idade: ['middle_aged', 'middle aged'], estilo: { stability: .35, similarity_boost: .8, style: .5 } },
   aluno:       { nome: 'Lucas (aluno)', genero: 'male', idade: ['young'], estilo: { stability: .4, similarity_boost: .8, style: .4 } },
+  lucas:       { nome: 'Lucas (aluno, 15 anos)', genero: 'male', idade: ['young'], estilo: { stability: .3, similarity_boost: .8, style: .55 } },          // agitado, instavel
+  diretora_crise: { nome: 'Diretora', genero: 'female', idade: ['middle_aged'], estilo: { stability: .35, similarity_boost: .8, style: .45 } },        // aflita
+  mae:         { nome: 'Mãe do Lucas', genero: 'female', idade: ['middle_aged'], estilo: { stability: .3, similarity_boost: .8, style: .55 } },            // desesperada
+  pai:         { nome: 'Pai de aluna', genero: 'male', idade: ['middle_aged'], estilo: { stability: .3, similarity_boost: .8, style: .55 } },              // nervoso
+  negociador:  { nome: 'Negociador (BOPE)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .7, similarity_boost: .8, style: .05 } },         // calmo, firme
+  comandante:  { nome: 'Comandante da cena (BOPE)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .65, similarity_boost: .8, style: .15 } },
+  reporter:    { nome: 'Repórter (TV)', genero: 'male', idade: ['middle_aged'], estilo: { stability: .55, similarity_boost: .8, style: .2 } },
   funcionario: { nome: 'Seu Jorge (inspetor de corredor)', genero: 'male', idade: ['old', 'middle_aged', 'middle aged'], estilo: { stability: .5, similarity_boost: .8, style: .25 } },
 };
 
@@ -35,6 +45,15 @@ function falasDoCenario() {
   for (const k of ['inspetora', 'diretora', 'responsavel', 'aluno', 'funcionario']) { add(k, E[k], 'Modo livre'); todos(k, F[k], k); }
   add('diretora', 'Certo. Vou fazer o comunicado e ligar para o Conselho Tutelar.', 'Orientação à escola');      // frases fixas do motor
   add('aluno', 'Ninguém nunca perguntou... Tá bom. Eu vou com o senhor.', 'Acolhimento');
+  // missao Sala 201: so falas de personagens (as do participante sao dele, sem voz gravada)
+  const cr = JSON.parse(fs.readFileSync(path.join(RAIZ, '05_Treinamento', 'cenario_crise_01.json'), 'utf8')), FC = cr.falas;
+  for (const [k, t] of Object.entries(cr.radio)) add('radio', t, 'Crise · rádio: ' + k);
+  const quem = { diretora: 'diretora_crise', parceiro: 'parceiro', pai: 'pai', comandante: 'comandante', negociador: 'negociador', mae: 'mae', imprensa: 'reporter', lucas: 'lucas', bope: 'comandante' };
+  for (const [k, t] of Object.entries(FC)) { const pre = k.split('_')[0]; if (quem[pre]) add(quem[pre], t, 'Crise · ' + k); }
+  for (const t of Object.values(cr.respostas_porta || {})) add('lucas', t, 'Crise · porta');
+  for (const l of Object.values(cr.negociacao.aberturas_lucas)) l.forEach(t => add('lucas', t, 'Crise · negociação'));
+  for (const e of Object.values(cr.negociacao.exigencias)) add('lucas', e.lucas, 'Crise · exigência');
+  add('diretora_crise', 'Policial! Aqui! É na 201!', 'Crise · chegada');
   return lista;
 }
 function montarFalas() {

@@ -855,6 +855,576 @@
         "personagem": "Policial parceiro",
         "quando": "Conversa",
         "texto": "Tô contigo. Vamos ouvir todo mundo antes de concluir qualquer coisa."
+      },
+      {
+        "arquivo": "fala_parceiro_02",
+        "personagem": "Policial parceiro",
+        "quando": "Parceiro",
+        "texto": "Antes de concluir, vamos ver o print, onde está o aluno e o que as câmeras mostram."
+      },
+      {
+        "arquivo": "fala_parceiro_03",
+        "personagem": "Policial parceiro",
+        "quando": "Parceiro",
+        "texto": "Disparo no corredor! Tô contigo, vamos!"
+      },
+      {
+        "arquivo": "fala_parceiro_04",
+        "personagem": "Policial parceiro",
+        "quando": "Parceiro",
+        "texto": "Te cubro. Fala com ele."
+      },
+      {
+        "arquivo": "fala_apoio_01",
+        "personagem": "Policial de apoio",
+        "quando": "Conversa",
+        "texto": "Apoio no local. Estamos cobrindo o pátio e o portão."
+      },
+      {
+        "arquivo": "fala_inspetora_01",
+        "personagem": "Funcionária da portaria",
+        "quando": "Modo livre",
+        "texto": "Bom dia. Eu cuido da portaria. Hoje está uma confusão por causa de um print."
+      },
+      {
+        "arquivo": "fala_inspetora_02",
+        "personagem": "Funcionária da portaria",
+        "quando": "inspetora",
+        "texto": "Bom dia. A diretora recebeu um print hoje cedo dizendo que vai ter um ataque aqui. Os pais estão mandando mensagem sem parar."
+      },
+      {
+        "arquivo": "fala_inspetora_03",
+        "personagem": "Funcionária da portaria",
+        "quando": "inspetora",
+        "texto": "O Lucas, do nono ano? Entrou normal, com a turma dele. Tem mãe dizendo que é ele, mas eu não sei de onde tiraram isso."
+      },
+      {
+        "arquivo": "fala_inspetora_04",
+        "personagem": "Funcionária da portaria",
+        "quando": "inspetora",
+        "texto": "O Lucas entrou rindo com os amigos, normal. Foi direto pra sala."
+      },
+      {
+        "arquivo": "fala_inspetora_05",
+        "personagem": "Funcionária da portaria",
+        "quando": "inspetora",
+        "texto": "O Lucas entrou quietinho, de cabeça baixa. Uns meninos da turma vivem implicando com ele."
+      },
+      {
+        "arquivo": "fala_inspetora_06",
+        "personagem": "Funcionária da portaria",
+        "quando": "inspetora",
+        "texto": "O Lucas chegou atrasado, sozinho, com uma mochila que parecia pesada. Nem me deu bom dia."
+      },
+      {
+        "arquivo": "fala_inspetora_07",
+        "personagem": "Funcionária da portaria",
+        "quando": "inspetora",
+        "texto": "A direção fica no prédio, depois da passarela. Entra pela recepção."
+      },
+      {
+        "arquivo": "fala_inspetora_08",
+        "personagem": "Funcionária da portaria",
+        "quando": "inspetora",
+        "texto": "Tá certo. Vou pedir pro pessoal parar de repassar."
+      },
+      {
+        "arquivo": "fala_diretora_01",
+        "personagem": "Diretora",
+        "quando": "Modo livre",
+        "texto": "Bom dia. Sou a diretora. Estou preocupada com essa mensagem."
+      },
+      {
+        "arquivo": "fala_diretora_02",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "Recebi esse print às sete e dez, encaminhado pela mãe de uma aluna do sétimo ano. Não sei quem escreveu primeiro. Está aqui no meu celular."
+      },
+      {
+        "arquivo": "fala_diretora_03",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "O nome que estão falando é Lucas, da turma 901. Ele deveria estar na sala 104, no corredor central. A frequência fica na recepção."
+      },
+      {
+        "arquivo": "fala_diretora_04",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "Tem coisa registrada no livro de ocorrências, aqui na mesa. Pode olhar."
+      },
+      {
+        "arquivo": "fala_diretora_05",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "Não vou apagar nada. O celular fica comigo, guardado."
+      },
+      {
+        "arquivo": "fala_diretora_06",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "Vou avisar os professores pelo telefone interno para trancar as salas e manter os alunos dentro."
+      },
+      {
+        "arquivo": "fala_diretora_07",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "Vou pedir ao seu Jorge para trazer o Lucas aqui, e ligo para a mãe dele."
+      },
+      {
+        "arquivo": "fala_diretora_08",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "Vou pedir ao seu Jorge para trazer o Lucas aqui, e ligo para o pai dele."
+      },
+      {
+        "arquivo": "fala_diretora_09",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "O seu Jorge disse que o Lucas está trancado no banheiro masculino e não quer sair. Vou ligar para a avó dele, que é a responsável."
+      },
+      {
+        "arquivo": "fala_diretora_10",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "O Lucas não está na sala. O seu Jorge vai procurar no corredor."
+      },
+      {
+        "arquivo": "fala_diretora_11",
+        "personagem": "Diretora",
+        "quando": "diretora",
+        "texto": "Vou mandar um comunicado pedindo que ninguém repasse."
+      },
+      {
+        "arquivo": "fala_responsavel_01",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "Modo livre",
+        "texto": "Eu quero saber o que a polícia vai fazer!"
+      },
+      {
+        "arquivo": "fala_responsavel_02",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Finalmente! Tem um moleque querendo matar todo mundo nessa escola e ninguém faz nada! Minha filha está lá dentro!"
+      },
+      {
+        "arquivo": "fala_responsavel_03",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Tá... desculpa. É que no grupo dos pais disseram que é o Lucas, do nono ano. Que ele anda com arma na mochila. Eu quero tirar minha filha daqui."
+      },
+      {
+        "arquivo": "fala_responsavel_04",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Prender quem? Eu sou pai! Vou filmar tudo isso, todo mundo vai ver!"
+      },
+      {
+        "arquivo": "fala_responsavel_05",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Tá bom. Vou esperar no pátio. Mas eu quero minha filha comigo."
+      },
+      {
+        "arquivo": "fala_responsavel_06",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Eu vou filmar tudo. Todo mundo tem que ver o que está acontecendo nessa escola!"
+      },
+      {
+        "arquivo": "fala_responsavel_07",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Tá, tá... só estou filmando o senhor."
+      },
+      {
+        "arquivo": "fala_responsavel_08",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Não vou dar nada! Isso é abuso!"
+      },
+      {
+        "arquivo": "fala_responsavel_09",
+        "personagem": "Responsável (pai de aluna)",
+        "quando": "responsavel",
+        "texto": "Tá. Não vou mandar mais nada no grupo."
+      },
+      {
+        "arquivo": "fala_aluno_01",
+        "personagem": "Lucas (aluno)",
+        "quando": "Modo livre",
+        "texto": "Oi... aconteceu alguma coisa?"
+      },
+      {
+        "arquivo": "fala_aluno_02",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Eu? Mas eu não fiz nada... o que aconteceu?"
+      },
+      {
+        "arquivo": "fala_aluno_03",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Ih... é sobre o grupo, né?"
+      },
+      {
+        "arquivo": "fala_aluno_04",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Sai daqui! ... Eu não fiz nada com ninguém..."
+      },
+      {
+        "arquivo": "fala_aluno_05",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Isso aí? Minha prima recebeu igualzinho em São Paulo, ano passado. Não fui eu, juro."
+      },
+      {
+        "arquivo": "fala_aluno_06",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Foi zoeira, no grupo da turma. Eu não tenho arma nenhuma, era só pra assustar o Rafa."
+      },
+      {
+        "arquivo": "fala_aluno_07",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Eu mandei pro Rafa ontem... Eu só queria que eles parassem. Todo dia eles me zoam e ninguém faz nada. Eu não ia fazer nada."
+      },
+      {
+        "arquivo": "fala_aluno_08",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Pode ver, ó. Não tem nada meu nisso aí."
+      },
+      {
+        "arquivo": "fala_aluno_09",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Tá... tá aqui. Eu não apaguei."
+      },
+      {
+        "arquivo": "fala_aluno_10",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Não... eu não quero mostrar."
+      },
+      {
+        "arquivo": "fala_aluno_11",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Tá bom... pode olhar."
+      },
+      {
+        "arquivo": "fala_aluno_12",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Calma! Eu não fiz nada!"
+      },
+      {
+        "arquivo": "fala_aluno_13",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Tá bom. Eu vou."
+      },
+      {
+        "arquivo": "fala_aluno_14",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Tá bom! Tá bom! Não atira!"
+      },
+      {
+        "arquivo": "fala_aluno_15",
+        "personagem": "Lucas (aluno)",
+        "quando": "aluno",
+        "texto": "Sai daqui! Vocês não sabem de nada!"
+      },
+      {
+        "arquivo": "fala_funcionario_01",
+        "personagem": "Seu Jorge (inspetor de corredor)",
+        "quando": "Modo livre",
+        "texto": "Bom dia, policial. Sou inspetor do corredor."
+      },
+      {
+        "arquivo": "fala_funcionario_02",
+        "personagem": "Seu Jorge (inspetor de corredor)",
+        "quando": "funcionario",
+        "texto": "Ele atirou... pegou na minha perna. Os alunos estão trancados nas salas."
+      },
+      {
+        "arquivo": "fala_funcionario_03",
+        "personagem": "Seu Jorge (inspetor de corredor)",
+        "quando": "funcionario",
+        "texto": "Obrigado... tá doendo muito."
+      },
+      {
+        "arquivo": "fala_funcionario_04",
+        "personagem": "Seu Jorge (inspetor de corredor)",
+        "quando": "funcionario",
+        "texto": "Pode deixar, eu trago ele."
+      },
+      {
+        "arquivo": "fala_diretora_12",
+        "personagem": "Diretora",
+        "quando": "Orientação à escola",
+        "texto": "Certo. Vou fazer o comunicado e ligar para o Conselho Tutelar."
+      },
+      {
+        "arquivo": "fala_aluno_16",
+        "personagem": "Lucas (aluno)",
+        "quando": "Acolhimento",
+        "texto": "Ninguém nunca perguntou... Tá bom. Eu vou com o senhor."
+      },
+      {
+        "arquivo": "fala_radio_08",
+        "personagem": "Sala de operações (rádio)",
+        "quando": "Crise · rádio: inicio",
+        "texto": "Viatura, urgente: o núcleo de inteligência detectou num grupo de Discord uma ameaça de ataque hoje ao CIEP Tancredo Neves, sala 201, com foto de arma. Deslocar com prioridade. O dossiê está no tablet."
+      },
+      {
+        "arquivo": "fala_radio_09",
+        "personagem": "Sala de operações (rádio)",
+        "quando": "Crise · rádio: chegada",
+        "texto": "Ciente. Confirme a situação no local."
+      },
+      {
+        "arquivo": "fala_radio_10",
+        "personagem": "Sala de operações (rádio)",
+        "quando": "Crise · rádio: acionamento",
+        "texto": "Ciente: crise com reféns. BOPE e equipe de negociação acionados, SAMU e apoio a caminho. Mantenha a contenção e não entre. Tempo estimado: cinco minutos."
+      },
+      {
+        "arquivo": "fala_radio_11",
+        "personagem": "Sala de operações (rádio)",
+        "quando": "Crise · rádio: bope_chegou",
+        "texto": "Viatura, o BOPE chegou ao portão. O comandante da cena vai assumir no posto de comando, no pátio."
+      },
+      {
+        "arquivo": "fala_radio_12",
+        "personagem": "Sala de operações (rádio)",
+        "quando": "Crise · rádio: live_derrubada",
+        "texto": "Sala de operações: a plataforma derrubou a transmissão ao vivo. Seguimos monitorando."
+      },
+      {
+        "arquivo": "fala_radio_13",
+        "personagem": "Sala de operações (rádio)",
+        "quando": "Crise · rádio: drone",
+        "texto": "Drone no ar. A imagem já está no seu tablet."
+      },
+      {
+        "arquivo": "fala_radio_14",
+        "personagem": "Sala de operações (rádio)",
+        "quando": "Crise · rádio: final",
+        "texto": "Ciente, crise encerrada. Bom serviço."
+      },
+      {
+        "arquivo": "fala_diretora_crise_01",
+        "personagem": "Diretora",
+        "quando": "Crise · diretora_chegada",
+        "texto": "Graças a Deus vocês chegaram! O Lucas entrou na 201 com a turma e trancou a porta. Ouvimos gritos. São uns dezoito alunos e a professora Cláudia."
+      },
+      {
+        "arquivo": "fala_diretora_crise_02",
+        "personagem": "Diretora",
+        "quando": "Crise · diretora_info",
+        "texto": "As outras turmas do primeiro andar estão nas salas. O térreo e o pátio ainda têm aluno. Os pais estão chegando no portão."
+      },
+      {
+        "arquivo": "fala_diretora_crise_03",
+        "personagem": "Diretora",
+        "quando": "Crise · diretora_abrigo",
+        "texto": "Vou avisar pelo telefone interno: trancar as portas e todo mundo longe das janelas e da porta."
+      },
+      {
+        "arquivo": "fala_diretora_crise_04",
+        "personagem": "Diretora",
+        "quando": "Crise · diretora_evacua",
+        "texto": "Vou tirar os alunos do térreo e do pátio pelo portão dos fundos, longe da rampa."
+      },
+      {
+        "arquivo": "fala_parceiro_05",
+        "personagem": "Policial parceiro",
+        "quando": "Crise · parceiro_fila",
+        "texto": "Fico na outra ponta do corredor, abrigado. Ninguém passa."
+      },
+      {
+        "arquivo": "fala_pai_01",
+        "personagem": "Pai de aluna",
+        "quando": "Crise · pai_portao",
+        "texto": "Minha filha está lá dentro! Me deixa passar!"
+      },
+      {
+        "arquivo": "fala_pai_02",
+        "personagem": "Pai de aluna",
+        "quando": "Crise · pai_afastado",
+        "texto": "Tá... tá bom. Eu espero aqui."
+      },
+      {
+        "arquivo": "fala_comandante_01",
+        "personagem": "Comandante da cena (BOPE)",
+        "quando": "Crise · comandante_chegada",
+        "texto": "Sou o comandante da cena. Me passa tudo o que você levantou."
+      },
+      {
+        "arquivo": "fala_comandante_02",
+        "personagem": "Comandante da cena (BOPE)",
+        "quando": "Crise · comandante_assume",
+        "texto": "Assumo daqui. Negociador, com você. Primeiro interventor, mantenha o perímetro interno."
+      },
+      {
+        "arquivo": "fala_negociador_01",
+        "personagem": "Negociador (BOPE)",
+        "quando": "Crise · negociador_chegada",
+        "texto": "Negociador da equipe. A partir de agora o contato é só comigo."
+      },
+      {
+        "arquivo": "fala_mae_01",
+        "personagem": "Mãe do Lucas",
+        "quando": "Crise · mae_chegada",
+        "texto": "Eu sou a mãe do Lucas! Deixa eu falar com ele, por favor, ele vai me ouvir!"
+      },
+      {
+        "arquivo": "fala_mae_02",
+        "personagem": "Mãe do Lucas",
+        "quando": "Crise · mae_info",
+        "texto": "Ele não sai do computador... diz que lá ninguém zoa ele. Na escola apanhava. O pai foi embora. Ele gosta de desenhar e do cachorro dele, o Thor."
+      },
+      {
+        "arquivo": "fala_reporter_01",
+        "personagem": "Repórter (TV)",
+        "quando": "Crise · imprensa",
+        "texto": "Estamos ao vivo do CIEP Tancredo Neves, onde um aluno mantém colegas reféns..."
+      },
+      {
+        "arquivo": "fala_lucas_01",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · lucas_rendicao",
+        "texto": "Tá bom... eu vou sair. Não atira."
+      },
+      {
+        "arquivo": "fala_comandante_03",
+        "personagem": "Comandante da cena (BOPE)",
+        "quando": "Crise · bope_ataque",
+        "texto": "Agressão em curso! Entrada imediata!"
+      },
+      {
+        "arquivo": "fala_lucas_02",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · porta",
+        "texto": "Vai embora! Ninguém aqui liga pra mim mesmo."
+      },
+      {
+        "arquivo": "fala_lucas_03",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · porta",
+        "texto": "Se alguém entrar, eu juro que faço!"
+      },
+      {
+        "arquivo": "fala_lucas_04",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · porta",
+        "texto": "Mentira. Vocês sempre mentem."
+      },
+      {
+        "arquivo": "fala_lucas_05",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · porta",
+        "texto": "Todo dia eles me zoavam. Todo dia. E a professora fingia que não via."
+      },
+      {
+        "arquivo": "fala_lucas_06",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · porta",
+        "texto": "Uma menina cortou o braço na janela. É pouco. Ninguém mais."
+      },
+      {
+        "arquivo": "fala_lucas_07",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · porta",
+        "texto": "Quero que todo mundo veja. A live tem que continuar."
+      },
+      {
+        "arquivo": "fala_lucas_08",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · porta",
+        "texto": "Então vem! Eu não tenho nada a perder!"
+      },
+      {
+        "arquivo": "fala_lucas_09",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Tá todo mundo vendo agora. Mil pessoas na live. Ninguém nunca me via."
+      },
+      {
+        "arquivo": "fala_lucas_10",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Vão lembrar do meu nome. Igual lembram dos outros."
+      },
+      {
+        "arquivo": "fala_lucas_11",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Se cair a live, acabou a conversa."
+      },
+      {
+        "arquivo": "fala_lucas_12",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "O Rafa e os amigos dele me batiam no banheiro. Todo mundo sabia."
+      },
+      {
+        "arquivo": "fala_lucas_13",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Eu falei pra diretora. Falei pro meu pai. Ninguém fez nada."
+      },
+      {
+        "arquivo": "fala_lucas_14",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Agora eles têm medo de mim. Agora eles sabem como é."
+      },
+      {
+        "arquivo": "fala_lucas_15",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Eu não vou sair daqui vivo. Pode mandar entrar."
+      },
+      {
+        "arquivo": "fala_lucas_16",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Ninguém vai sentir falta. Nem minha mãe."
+      },
+      {
+        "arquivo": "fala_lucas_17",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · negociação",
+        "texto": "Eu só quero que acabe. Tudo."
+      },
+      {
+        "arquivo": "fala_lucas_18",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · exigência",
+        "texto": "Eu quero que a live continue. Se cair, acabou."
+      },
+      {
+        "arquivo": "fala_lucas_19",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · exigência",
+        "texto": "Traz o Rafa aqui. Quero que ele peça desculpa na frente de todo mundo."
+      },
+      {
+        "arquivo": "fala_lucas_20",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · exigência",
+        "texto": "Vocês têm dez minutos. Depois disso eu faço."
+      },
+      {
+        "arquivo": "fala_diretora_crise_05",
+        "personagem": "Diretora",
+        "quando": "Crise · chegada",
+        "texto": "Policial! Aqui! É na 201!"
       }
     ]
   }

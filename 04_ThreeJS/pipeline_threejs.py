@@ -16,7 +16,7 @@ Etapas:
   3. HDRI noturno -> .hdr leve para o ceu e reflexos
   4. Exporta cena.glb (Draco) + cena.json (lightmaps, cameras, giroflex)
 """
-import bpy, os, sys, json, math, re, time
+import bpy, bmesh, os, sys, json, math, re, time
 import numpy as np
 from mathutils import Vector
 
@@ -213,6 +213,13 @@ for col in bpy.data.collections:
         lm = me.uv_layers.get("Lightmap") or me.uv_layers.new(name="Lightmap")
         me.uv_layers["UVMap"].active_render = True
         me.uv_layers.active = lm
+    # solda vertices que se tocam (modulos vizinhos da fachada, paineis, lajes): cada superficie continua vira uma
+    # ilha so no lightmap, sem a linha de luz entre pecas vizinhas. Nao muda a forma (distancia de 2 mm).
+    for o in objs:
+        bmw = bmesh.new(); bmw.from_mesh(o.data)
+        antes = len(bmw.verts); bmesh.ops.remove_doubles(bmw, verts=bmw.verts, dist=.002)
+        if len(bmw.verts) < antes: bmw.to_mesh(o.data)
+        bmw.free()
     for o in scene.objects:
         o.select_set(False)
     for o in objs:
