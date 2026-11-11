@@ -150,6 +150,19 @@
           "texto": "Orientou a não repassar a mensagem nem o nome do aluno",
           "pontos": 3,
           "base": "ECA arts. 17, 18 e 143"
+        },
+        {
+          "id": "evidencia_banheiro",
+          "texto": "Vistoriou o banheiro e registrou o que estava escrito na cabine",
+          "pontos": 3,
+          "base": "Verificação: buscar elementos que confirmem ou afastem a ameaça"
+        },
+        {
+          "id": "preservar_evidencia",
+          "texto": "Preservou a evidência escondida na lixeira da cabine (isolou o local e acionou a perícia)",
+          "pontos": 4,
+          "base": "Preservação do local do crime (CPP, art. 6º, I)",
+          "condicao": "variacao.origem == 'ameaca_real'"
         }
       ],
       "erros": [
@@ -163,6 +176,11 @@
           "id": "concluir_sem_verificar",
           "texto": "Encerrou a ocorrência sem verificar a mensagem nem localizar o aluno citado",
           "pontos": -6
+        },
+        {
+          "id": "contaminou_evidencia",
+          "texto": "Mexeu na caixa escondida na lixeira da cabine sem preservar para a perícia",
+          "pontos": -4
         }
       ]
     },
@@ -1463,5 +1481,23 @@
         "texto": "Tá com medo dela, é?"
       }
     ]
+  },
+  "pichacao": {
+    "corrente_antiga": {
+      "parede": "DIA 12 NINGUÉM\nVEM PRA ESCOLA\n— 2019",
+      "texto": "Na divisória da cabine, a corretivo e já desbotado, com data de 2019: \"dia 12 ninguém vem pra escola\". É a mesma frase da mensagem que voltou a circular: indica que ela é antiga."
+    },
+    "brincadeira": {
+      "parede": "ATAQUE ZUMBI\nNA 9ª  KKKKK",
+      "texto": "Na divisória da cabine, um zumbi desenhado e a frase \"ataque zumbi na 9ª, kkkkk\", com letras de vários alunos. Parece brincadeira da turma."
+    },
+    "conflito": {
+      "parede": "LUCAS X9\nLUCAS OTÁRIO",
+      "texto": "Na divisória da cabine, \"LUCAS X9\" e \"LUCAS OTÁRIO\" escritos várias vezes, um por cima do outro. Sinal de que o Lucas vem sendo perseguido pelos colegas."
+    },
+    "ameaca_real": {
+      "parede": "HOJE VOCÊS\nVÃO VER",
+      "texto": "Na divisória da cabine, a caneta branca e recente: \"HOJE VOCÊS VÃO VER\". A tinta ainda está forte. E na lixeirinha ao lado do vaso tem algo além de papel."
+    }
   }
 }

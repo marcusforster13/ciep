@@ -379,6 +379,46 @@ export async function iniciar(ctx) {
     o.getWorldPosition(h.position); h.position.y += k === 'cameras' ? .25 : k === 'mochila' ? .2 : .04; h.userData.item = k; scene.add(h); h.updateMatrixWorld(true);
     itens[k] = { o, h }; hitsItem.push(h);
   }
+  // evidencias do banheiro masculino (ultima cabine): pichacao na parede, que muda com a origem da ameaca, e na ameaca
+  // real uma placa do forro deslocada com uma caixa escondida (o policial decide: preservar para a pericia ou mexer)
+  const picha = (() => {
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 320; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+    const o = new THREE.Mesh(new THREE.PlaneGeometry(.72, .45), ctx.iluminar(new THREE.MeshStandardMaterial({ map: tx, transparent: true, roughness: .8 })));
+    o.position.copy(B(-12.635, 18.1)).setY(1.45); o.rotation.y = -Math.PI / 2; scene.add(o);      // na divisoria da ultima cabine, virada para dentro dela
+    const h = new THREE.Mesh(new THREE.SphereGeometry(.3, 10, 8), invisivel()); h.position.copy(o.position); h.userData.item = 'picha'; scene.add(h); h.updateMatrixWorld(true);
+    itens.picha = { o, h }; hitsItem.push(h);
+    return { cv, tx };
+  })();
+  const forro = (() => {                                       // lixeirinha ao lado do vaso da ultima cabine, com a caixa no meio do papel
+    const g = new THREE.Group(); g.position.copy(B(-12.8, 18.62)); scene.add(g);
+    const mb = ctx.iluminar(new THREE.MeshStandardMaterial({ color: 0xe8e8e4, roughness: .5 }));
+    const corpo = new THREE.Mesh(new THREE.CylinderGeometry(.115, .1, .3, 18, 1, true), mb); corpo.position.y = .15; corpo.material.side = THREE.DoubleSide; g.add(corpo);
+    const fundo = new THREE.Mesh(new THREE.CircleGeometry(.1, 18), mb); fundo.rotation.x = -Math.PI / 2; fundo.position.y = .01; g.add(fundo);
+    const tampa = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, .015, 18), mb);     // tampa de pedal entreaberta
+    tampa.position.set(0, .34, .08); tampa.rotation.x = -.75; g.add(tampa);
+    const papel = ctx.iluminar(new THREE.MeshStandardMaterial({ color: 0xf2f0ea, roughness: .95 }));
+    for (const [x, y, z, r] of [[-.04, .25, .03, .05], [.05, .26, -.02, .045], [0, .27, -.05, .04], [.03, .24, .05, .04]]) {
+      const p = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), papel); p.position.set(x, y, z); p.rotation.set(x * 20, y * 9, z * 15); g.add(p);
+    }
+    const caixa = new THREE.Mesh(new THREE.BoxGeometry(.12, .06, .08), ctx.iluminar(new THREE.MeshStandardMaterial({ color: 0x8a6a3e, roughness: .85 })));
+    caixa.position.set(-.01, .27, -.01); caixa.rotation.set(.35, .5, .2); g.add(caixa);      // a ponta da caixa aparece entre os papeis
+    const h = new THREE.Mesh(new THREE.SphereGeometry(.3, 10, 8), invisivel()); h.position.copy(g.position).setY(.4); h.userData.item = 'forro'; scene.add(h); h.updateMatrixWorld(true);
+    itens.forro = { o: g, h }; hitsItem.push(h);
+    return g;
+  })();
+  function evidencias(v) {
+    const P = CEN.pichacao?.[v?.origem]; const g = picha.cv.getContext('2d'); g.clearRect(0, 0, 512, 320);
+    if (P) {
+      const velha = v.origem === 'corrente_antiga';
+      g.fillStyle = velha ? 'rgba(225,225,215,.38)' : v.origem === 'ameaca_real' ? 'rgba(245,245,240,.95)' : 'rgba(235,235,228,.82)';      // corretivo/caneta clara na divisoria escura
+      g.font = (velha ? '600 ' : '700 ') + '54px "Comic Sans MS", "Segoe Print", cursive'; g.textAlign = 'center';
+      P.parede.split('\n').forEach((l, i, L) => { g.save(); g.translate(256, 160 + (i - (L.length - 1) / 2) * 70); g.rotate((i % 2 ? .04 : -.05)); g.fillText(l, 0, 18); g.restore(); });
+      if (v.origem === 'brincadeira') { g.strokeStyle = 'rgba(235,235,228,.82)'; g.lineWidth = 5; g.beginPath(); g.arc(70, 230, 34, 0, 7); g.moveTo(58, 222); g.lineTo(64, 222); g.moveTo(78, 222); g.lineTo(84, 222); g.moveTo(56, 245); g.lineTo(86, 248); g.stroke(); }
+      if (v.origem === 'conflito') { g.strokeStyle = 'rgba(230,90,80,.8)'; g.lineWidth = 4; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(90 + k * 20, 100 + k * 30); g.lineTo(420 - k * 15, 120 + k * 32); g.stroke(); } }
+    }
+    picha.tx.needsUpdate = true; itens.picha.o.visible = itens.picha.h.visible = !!P;
+    forro.visible = itens.forro.h.visible = v?.origem === 'ameaca_real';
+  }
 
   /* ================= caminhos (os personagens nao colidem: andam por uma rede de pontos livres) ================= */
   const NOS = {
@@ -650,7 +690,7 @@ export async function iniciar(ctx) {
   function novaOcorrencia(v, cap) {
     S.variacao = v; S.feitos = new Map(); S.vida = 3; S.municao = CARREGADOR; S.recarregando = false;
     A = { n: HIST.length + 1, fase: 'chegada', titulo: cap?.titulo || `Ocorrência ${HIST.length + 1}`, fatos: [], feridos: new Set(), t0: performance.now() };
-    criarNPCs(v); sacar(false);
+    criarNPCs(v); sacar(false); evidencias(v);
     moverPorta('direcao', 1, .1); moverPorta('banheiro', 0, .1); moverPorta('sala', 0, .1);
     for (const m of marcas) scene.remove(m); marcas.length = 0;
     rig.position.copy(B(5.5, -41.5)); ctx.setYaw(Math.PI + .1);
@@ -834,6 +874,13 @@ export async function iniciar(ctx) {
     if (k === 'frequencia') { registrar('consultar_frequencia'); fato('Frequência: ' + CEN.frequencia[v.origem]); return painelOpc('Recepção', 'Frequência de hoje', [], null, CEN.frequencia[v.origem]); }
     if (k === 'livro') { registrar('consultar_livro'); fato('Livro de ocorrências: ' + CEN.livro[v.origem]); return painelOpc('Direção', 'Livro de ocorrências da escola', [], null, CEN.livro[v.origem]); }
     if (k === 'telefone') return legenda('Recepção', 'Telefone interno: a direção usa para falar com as salas e com a portaria.', 4);
+    if (k === 'picha') { const P = CEN.pichacao?.[v.origem]; if (!P) return; registrar('evidencia_banheiro'); fato('Banheiro: ' + P.texto); return painelOpc('Banheiro masculino', 'Escrito na divisória da cabine', [], null, P.texto); }
+    if (k === 'forro') return painelOpc('Banheiro masculino', 'Lixeira da cabine', [
+      { id: 'preservar', fala: 'Não tocar: isolar o banheiro e acionar a perícia' }, { id: 'pegar', fala: 'Tirar a caixa da lixeira para ver o que tem dentro' }
+    ], op => {
+      if (op.id === 'preservar') { registrar('preservar_evidencia'); fato('Banheiro: caixa pequena escondida na lixeira da última cabine, sob o papel (pelo rótulo, munição). Local isolado e preservado para a perícia.'); legenda('Banheiro', 'Local isolado. A perícia foi acionada pelo rádio.', 5); }
+      else { registrar('contaminou_evidencia'); fato('Banheiro: caixa de munição escondida na lixeira da cabine (manuseada, sem preservação).'); legenda('Instrutor', 'A evidência deveria ser preservada para a perícia: isolar o local e não tocar.', 6); }
+    }, 'Na lixeirinha ao lado do vaso da última cabine, no meio do papel amassado, aparece a ponta de uma caixa pequena de papelão.');
     if (k === 'mochila') return painelOpc('Banheiro', 'Mochila no chão da cabine', [
       { id: 'pedir', fala: 'Pedir ao aluno que mostre o que tem na mochila' }, { id: 'revistar', fala: 'Abrir e revistar a mochila' }
     ], op => { if (op.id === 'pedir') { const al = npcs.aluno; if (al.visible && !real()) { diz(al, F.aluno.revista, null); legenda('Mochila', CEN.mochila[v.origem] || CEN.mochila.outra, 6); fato('Mochila (mostrada pelo aluno): ' + (CEN.mochila[v.origem] || CEN.mochila.outra)); } } else revista('mochila'); });
@@ -1085,7 +1132,7 @@ export async function iniciar(ctx) {
 
   /* ================= modo livre (antes de iniciar): cena montada, personagens respondem ================= */
   function cenaExploracao() {
-    S.variacao = derivar({ ...CEN.historia[0].variacao }); criarNPCs(S.variacao); S.vida = 3; S.municao = CARREGADOR;
+    S.variacao = derivar({ ...CEN.historia[0].variacao }); criarNPCs(S.variacao); evidencias(S.variacao); S.vida = 3; S.municao = CARREGADOR;
     moverPorta('direcao', 1, .1); moverPorta('banheiro', 0, .1); moverPorta('sala', 0, .1);
     npcs.parceiro.position.copy(B(7.0, -41.0));
   }
@@ -1100,7 +1147,7 @@ export async function iniciar(ctx) {
     if (hi && hi.distance < 4.5) {
       const u = hi.object.userData;
       if (u.porta) moverPorta(u.porta, portas[u.porta].frac > .5 ? 0 : 1);
-      else legenda('Escola', { celular: 'Celular da diretora.', cameras: 'Monitor das câmeras da escola.', frequencia: 'Pasta com a frequência das turmas.', livro: 'Livro de ocorrências da escola.', mochila: 'Uma mochila.', telefone: 'Telefone interno.' }[u.item] || '', 4);
+      else legenda('Escola', { picha: 'Algo escrito na divisória da cabine.', forro: 'Uma lixeirinha ao lado do vaso.', celular: 'Celular da diretora.', cameras: 'Monitor das câmeras da escola.', frequencia: 'Pasta com a frequência das turmas.', livro: 'Livro de ocorrências da escola.', mochila: 'Uma mochila.', telefone: 'Telefone interno.' }[u.item] || '', 4);
       return true;
     }
     return false;

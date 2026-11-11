@@ -96,7 +96,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1111-1140';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1111-1259';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -210,6 +210,7 @@ const lmMats = [], lentes = [], colisores = [];
 // LUZ DENTRO DA ESCOLA: salas e corredores um pouco mais escuros que o patio ao sol (so lampadas e janelas).
 // 1 = igual ao lado de fora; para comparar, abra o site com ?li=1 no endereco.
 const LUZ_INTERNA = +(new URLSearchParams(location.search).get('li') || .75);
+const PILOTIS = +(new URLSearchParams(location.search).get('lp') || .82);      // luz dos pilotis (1 = como antes; ?lp=1 compara)
 // objetos que se movem (carro abordado, equipamentos, personagens) nao tem lightmap: recebem uma luz ambiente
 // uniforme, na intensidade da area iluminada pelas torres (um "lightmap" branco de 1 pixel)
 const lmBranco = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); lmBranco.needsUpdate = true; lmBranco.channel = 0;
@@ -235,9 +236,12 @@ gltf.scene.traverse(o => {
       if (m.map) m.map.anisotropy = 8;
     }
     if (m.transmission > 0) { m.transmission = 0; m.transparent = true; m.opacity = 0.45; m.roughness = 0.05; }
+    // decalques (sombras de canto, marcas de mao, sujeira, infiltracao): sempre por cima da superficie, sem piscar no Quest
+    if (/sombra_|marca_mao|sujeira_rodape|infiltracao/i.test(m.name)) { m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -4; m.depthWrite = false; }
     m.envMapIntensity = CFG.env_intensidade ?? 0.35;
     if (lm && o.geometry.attributes.uv1) {
-      m.lightMap = lmTex[lm.lm]; m.userData.lmBase = lm.max * CFG.lightmap_ganho * (/^(04_Terreo_Interior|11_Pavimento_1|06_Moveis)/.test(lmNome) ? LUZ_INTERNA : 1);
+      // pilotis (embaixo do predio) um pouco mais escuros que o patio ao sol: mais contraste, como na realidade
+      m.lightMap = lmTex[lm.lm]; m.userData.lmBase = lm.max * CFG.lightmap_ganho * (/^(04_Terreo_Interior|11_Pavimento_1|06_Moveis)/.test(lmNome) ? LUZ_INTERNA : /^07_Pilotis/.test(lmNome) ? PILOTIS : 1);
       m.lightMapIntensity = m.userData.lmBase; lmMats.push(m);
     } else if (!lm) iluminar(m);
     return m;
@@ -247,6 +251,26 @@ gltf.scene.traverse(o => {
   if (estatico) { o.geometry.computeBoundsTree(); colisores.push(o); }
 });
 scene.add(gltf.scene);
+
+/* ---------- piso encerado: reflexo leve das janelas e lampadas no granilite e no piso dos corredores ----------
+   Um "retrato" do ambiente e tirado uma vez (cubo de 128 px) no corredor do terreo e no do 1o andar, logo depois de
+   montar a cena, e usado como reflexo nesses pisos (roda so uma vez: nao pesa no Quest). */
+{
+  const pisos = [];
+  gltf.scene.traverse(o => { if (o.isMesh && [].concat(o.material).some(m => /Piso_Granilite|Piso_Corredor/.test(m.name))) pisos.push(o); });
+  if (pisos.length) {
+    const retrato = pos => { const rt = new THREE.WebGLCubeRenderTarget(128, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+      const cc = new THREE.CubeCamera(.1, 60, rt); cc.position.copy(pos); scene.add(cc); cc.update(renderer, scene); scene.remove(cc); return rt.texture; };
+    const env0 = retrato(new THREE.Vector3(0, 1.2, -11.5)), env1 = retrato(new THREE.Vector3(25, 4.7, -11.0));
+    const BB = new THREE.Box3();
+    for (const o of pisos) {
+      const andar1 = BB.setFromObject(o).getCenter(new THREE.Vector3()).y > 2.5;
+      for (const m of [].concat(o.material)) if (/Piso_Granilite|Piso_Corredor/.test(m.name)) {
+        m.envMap = andar1 ? env1 : env0; m.envMapIntensity = 1.1; m.roughness = .16; m.metalness = 0; m.needsUpdate = true;      // valores conferidos no navegador: brilho de cera, sem parecer molhado
+      }
+    }
+  }
+}
 
 /* ---------- colisao: malha simplificada (uma caixa por parede/movel/carro), invisivel ---------- */
 let alvosCol = colisores, colisaoAtiva = true;

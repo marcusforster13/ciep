@@ -1955,6 +1955,124 @@ for k, (x, y, z, t) in enumerate(((-12.0, 11.6, FZ + PD - .006, 1.3), (7.5, 11.2
 lixeira("Corredor_Lixeira_Cheia", 10.6, YC0 + .38, 0, M["lix_azul"], col=C_SOLTO)
 for k in range(5): esfera("Corredor_Papel_Amassado", .045, (10.6 + rv.uniform(-.1, .1), YC0 + .38 + rv.uniform(-.1, .1), FZ + .76 + rv.uniform(0, .06)), M["papel"], C_SOLTO, sub=1)
 esfera("Corredor_Papel_Amassado", .045, (10.95, YC0 + .62, FZ + .045), M["papel"], C_SOLTO, sub=1)
+# ------------------------------------------------------------------ acabamento dos interiores (pedido do autor, 11/11)
+# 1) sombra de contato nos cantos: faixa escura que some, no piso junto as paredes, no teto junto as paredes e embaixo das
+#    carteiras (tira o aspecto de maquete; o lightmap sozinho nao tem resolucao para esse escurecimento fino)
+def tex_canto(W=64, H=32, forca=.5):
+    v = (np.mgrid[0:H, 0:W][0] / (H - 1))[::-1]                     # v = 0 na parede (linha de baixo da imagem)
+    rgba = np.zeros((H, W, 4)); rgba[..., :3] = (.06, .055, .05); rgba[..., 3] = forca * (1 - v) ** 2.2
+    return rgba
+def tex_blob(S=64, forca=.42):
+    yy, xx = (np.mgrid[0:S, 0:S] - (S - 1) / 2) / ((S - 1) / 2); d = np.clip(np.hypot(xx, yy), 0, 1)
+    rgba = np.zeros((S, S, 4)); rgba[..., :3] = (.05, .045, .04); rgba[..., 3] = forca * (1 - d) ** 1.6
+    return rgba
+M_CANTO = _mat_img("sombra_canto_alpha", tex_canto(), True)
+M_CANTO_TETO = _mat_img("sombra_canto_teto_alpha", tex_canto(forca=.3), True)
+M_BLOB = _mat_img("sombra_blob_alpha", tex_blob(), True)
+def faixa_canto(nome, a, b, eixo, linha, s, z, larg=.42, m=None):
+    """Faixa horizontal ao longo de uma parede: eixo 'x' (parede em y = linha) ou 'y' (parede em x = linha); s = lado da sala."""
+    if eixo == "x": f = lambda u, v: Vector((a + (b - a) * u, linha + s * v * larg, z))
+    else: f = lambda u, v: Vector((linha + s * v * larg, a + (b - a) * u, z))
+    adesivo(nome, f, 1, 1, C_SOLTO, mat_=m or M_CANTO)
+def cantos_sala(nome, x0, x1, y0, y1, zp, zt, rec=.1):
+    for z, m, d in ((zp + .004, M_CANTO, "Piso"), (zt - .004, M_CANTO_TETO, "Teto")):
+        faixa_canto("Sujeira_Canto_%s_%s_S" % (nome, d), x0 + rec, x1 - rec, "x", y0 + rec, 1, z, m=m)
+        faixa_canto("Sujeira_Canto_%s_%s_N" % (nome, d), x0 + rec, x1 - rec, "x", y1 - rec, -1, z, m=m)
+        faixa_canto("Sujeira_Canto_%s_%s_O" % (nome, d), y0 + rec, y1 - rec, "y", x0 + rec, 1, z, m=m)
+        faixa_canto("Sujeira_Canto_%s_%s_L" % (nome, d), y0 + rec, y1 - rec, "y", x1 - rec, -1, z, m=m)
+for nome, x0, x1, y0, y1 in (("Sala_201", 10.0, 20.0, .5, PC0), ("Sala_202", 20.0, 30.0, .5, PC0), ("Sala_203", 30.0, 40.0, .5, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5)):
+    cantos_sala(nome, x0, x1, y0, y1, P1Z + .022, P1Z + PD1 - .03)
+    ys = [y0 + 1.6 + k * 1.25 for k in range(int((y1 - y0 - 2.4) / 1.25) + 1)]
+    fyp = PC0 - .4 if y1 <= PC0 else PC1 + .4
+    ys = ys[:-1] if abs(fyp - y1) < abs(fyp - y0) else ys[1:]
+    for x in [x0 + 2.8 + k * 1.5 for k in range(5)]:
+        for y in ys:                                                # sombra embaixo da carteira e da cadeira
+            adesivo(nome + "_Sujeira_Sombra_Carteira", lambda u, v, x=x, y=y: Vector((x + .2 + (u - .5) * 1.25, y + (v - .5) * .75, P1Z + .025)), 1, 1, C_SOLTO, mat_=M_BLOB)
+cantos_sala("Sala_104", 2.0, 12.0, YC1, BY1, FZ + .004, FZ + PD - .03)
+cantos_sala("Recepcao", -10.0, -2.0, BY0, YC0, FZ + .004, FZ + PD)
+cantos_sala("Direcao", -2.0, 6.0, BY0, YC0, FZ + .004, FZ + PD)
+cantos_sala("Corredor_Terreo", -20.0, 20.0, YC0, YC1, FZ + .006, FZ + PD)
+for y, s_ in ((PC0, 1), (PC1, -1)):                                 # corredor do 1o andar (o fundo so ate o hall da rampa)
+    b_ = 40.0 if s_ == 1 else 20.0
+    faixa_canto("Sujeira_Canto_Pav1_Piso_%d" % s_, 10.1, b_ - .1, "x", y + s_ * .1, s_, P1Z + .026)
+    faixa_canto("Sujeira_Canto_Pav1_Teto_%d" % s_, 10.1, b_ - .1, "x", y + s_ * .1, s_, Z2 - .4, m=M_CANTO_TETO)
+
+# 2) janelas basculantes de vidro com caixilho de aluminio (salas do 1o andar acessiveis), por dentro, na frente da persiana
+M.update({"aluminio_jan": mat("Caixilho_Aluminio", "#b8bcc0", .35, .6), "vidro_basc": mat("Vidro_Basculante", "#d3e0e4", .06, alpha=.32)})
+def basculante(nome, xc, y_in, zc, W, H, s):
+    """Caixilho com 3 vaos e travessa no meio; em cada meio-vao, 3 laminas de vidro basculantes (abertas ~14 graus)."""
+    A = M["aluminio_jan"]
+    for dz in (-H / 2, H / 2, 0): box(nome + "_Caixilho", (W, .05, .045), (xc, y_in, zc + dz), A, C_SOLTO)
+    for dx in (-W / 2, -W / 6, W / 6, W / 2): box(nome + "_Caixilho", (.045, .05, H), (xc + dx, y_in, zc), A, C_SOLTO)
+    bw = W / 3 - .05; hh = (H / 2 - .05) / 3
+    for i in range(3):
+        cx = xc - W / 3 + i * W / 3
+        for meio in (-1, 1):
+            for k in range(3):
+                zl = zc + meio * (H / 4) + (k - 1) * hh
+                box(nome + "_Lamina", (bw, .006, hh * .96), (cx, y_in + s * .03, zl), M["vidro_basc"], C_SOLTO, rot=(s * .25, 0, 0))
+                box(nome + "_Lamina_Perfil", (bw, .012, .012), (cx, y_in + s * .03, zl - hh * .47), A, C_SOLTO)
+        box(nome + "_Alavanca", (.02, .03, .12), (cx + bw / 2 - .06, y_in + s * .045, zc - H / 4), A, C_SOLTO, bevel=.004)
+for fy, lado in ((0.0, -1), (PROF, 1)):
+    zc_ = Z1 + PISO / 2; zb_ = zc_ - .05 - JH / 2; Hj = JH - .92
+    for k in range(NM):
+        xc = X0 + MOD * (k + .5)
+        if PX0 < xc < PX1 and (fy == 0.0 or xc < 20.0):
+            basculante("Sala_Janela_Basculante_%d_%d" % (k, lado), xc, fy - lado * .16, zb_ + .92 + Hj / 2, JW - .14, Hj - .04, -lado)
+
+# 3) portas das salas do 1o andar: batente de madeira pintada; folhas abertas (202, 203, 204) com macaneta e marca de mao
+M.update({"batente": mat("Batente_Madeira_Pintada", "#e8e4d8", .55)})
+tex_mao = tex_blob(32, forca=.28)
+M_MAO = _mat_img("marca_mao_alpha", tex_mao, True)
+for (a, b), y, s_, folha in (((14.5, 15.4), PC0, -1, False), ((24.5, 25.4), PC0, -1, True), ((34.5, 35.4), PC0, -1, True), ((14.5, 15.4), PC1, 1, True)):
+    for x in (a - .03, b + .03): box("Pav1_Porta_Batente", (.06, .26, 2.13), (x, y, P1Z + 1.065), M["batente"], C_PAV)
+    box("Pav1_Porta_Batente", (b - a + .12, .26, .06), ((a + b) / 2, y, P1Z + 2.13), M["batente"], C_PAV)
+    if folha:                                                        # folha aberta para dentro da sala, encostada a parede
+        yf = y + s_ * (.13 + .45)
+        box("Pav1_Porta_Folha", (.04, .9, 2.08), (a + .03, yf, P1Z + 1.05), M["porta_amarela"], C_MOV)
+        for sx in (-1, 1):
+            box("Pav1_Porta_Macaneta", (.016, .12, .018), (a + .03 + sx * .045, yf + s_ * .33, P1Z + 1.02), M["metal"], C_SOLTO, bevel=.005)
+            cyl("Pav1_Porta_Roseta", .028, .028, .012, (a + .03 + sx * .026, yf + s_ * .4, P1Z + 1.02), M["metal"], C_SOLTO, rot=(0, PI / 2, 0), seg=12)
+            adesivo("Pav1_Porta_Sujeira_Mao", lambda u, v, sx=sx, yf=yf, s_=s_: Vector((a + .03 + sx * .0215, yf + s_ * .36 + (u - .5) * .3, P1Z + 1.02 + (v - .5) * .4)), 1, 1, C_SOLTO, mat_=M_MAO)
+
+# 4) teto: eletrodutos aparentes, caixas de passagem e detectores de fumaca (corredores e salas)
+M.update({"detector": mat("Detector_Fumaca", "#f1f1ec", .4), "caixa_luz": mat("Caixa_Passagem", "#9a9d9f", .5, .3)})
+def teto_instalacoes(nome, x0, x1, y_tubo, z, detectores):
+    cyl(nome + "_Eletroduto_Teto", .016, .016, x1 - x0, ((x0 + x1) / 2, y_tubo, z - .02), M["pvc"], C_SOLTO, rot=(0, PI / 2, 0), seg=8)
+    x = x0 + 2.5
+    while x < x1 - 1:
+        box(nome + "_Caixa_Passagem", (.11, .11, .05), (x, y_tubo, z - .028), M["caixa_luz"], C_SOLTO, bevel=.006); x += 5.0
+    for xd, yd in detectores:
+        cyl(nome + "_Detector_Fumaca", .065, .06, .035, (xd, yd, z - .02), M["detector"], C_SOLTO, seg=20)
+        esfera(nome + "_Detector_Led", .006, (xd + .03, yd, z - .04), M["giro_verm"], C_SOLTO, sub=1)
+teto_instalacoes("Corredor_Terreo", -19.6, 19.6, YC0 + .18, FZ + PD, [(x, (YC0 + YC1) / 2) for x in (-14.5, -4.5, 5.5, 15.5)])
+teto_instalacoes("Pav1_Corredor", 10.2, 39.8, PC0 + .18, Z2 - .39, [(x, (PC0 + PC1) / 2) for x in (14.5, 24.5, 34.5)])
+for nome, x0, x1, y0, y1 in (("Sala_201", 10.0, 20.0, .5, PC0), ("Sala_202", 20.0, 30.0, .5, PC0), ("Sala_203", 30.0, 40.0, .5, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5)):
+    cyl(nome + "_Detector_Fumaca", .065, .06, .035, ((x0 + x1) / 2, (y0 + y1) / 2, P1Z + PD1 - .05), M["detector"], C_SOLTO, seg=20)
+
+# 5) banheiro masculino: papeleira de papel higienico em cada cabine e dispenser de alcool gel na entrada
+for k in range(3):
+    x = -15.6 + k * 1.2
+    box("Banheiro_Papeleira_Higienica", (.12, .26, .26), (x - .52, 18.15, FZ + .72), M["branco"], C_SOLTO, bevel=.02)
+box("Banheiro_Alcool_Gel", (.1, .06, .2), (-17.4, YC1 + .14, FZ + 1.3), M["branco"], C_SOLTO, bevel=.01)
+box("Banheiro_Alcool_Gel_Visor", (.05, .005, .06), (-17.4, YC1 + .171, FZ + 1.3), M["lix_azul"], C_SOLTO)
+
+# 6) patio: bebedouro externo, contentores de lixo com rodas (240 L) perto do refeitorio e mural de avisos na entrada
+por("Bebedouro_Patio", "bebedouro", _bebedouro, 15.0, -.75, FZ, 0, C_MOV)
+for k, cor in enumerate(("#2e7d32", "#1f5fb0", "#6b6f72")):
+    x = -27.5 + k * .75; m_ = mat("Contentor_%d" % k, cor, .55)
+    box("Contentor_Lixo_Corpo", (.58, .72, .95), (x, -1.0, FZ + .06 + .475), m_, C_SOLTO, bevel=.03)
+    box("Contentor_Lixo_Tampa", (.62, .78, .05), (x, -1.03, FZ + 1.06), m_, C_SOLTO, bevel=.015)
+    for sx in (-1, 1): cyl("Contentor_Lixo_Roda", .1, .1, .05, (x + sx * .26, -.62, FZ + .1), M["preto"], C_SOLTO, rot=(0, PI / 2, 0), seg=12)
+r = vazio("Mural_Entrada", (-6.0, -33.6, FZ), C_SOLTO, 0)         # de frente para quem entra pelo portao (avisos no lado -y)
+for sx in (-1, 1): cyl("Mural_Entrada_Poste", .04, .04, 2.2, (sx * .85, 0, 1.1), M["galvanizado"], C_SOLTO, r, seg=10)
+box("Mural_Entrada_Quadro", (1.8, .04, 1.0), (0, 0, 1.55), M["cortica"], C_SOLTO, r)
+box("Mural_Entrada_Moldura", (1.86, .05, .06), (0, 0, 2.08), M["metal"], C_SOLTO, r)
+box("Mural_Entrada_Moldura", (1.86, .05, .06), (0, 0, 1.02), M["metal"], C_SOLTO, r)
+for k in range(7):
+    box("Mural_Entrada_Aviso", (rv.uniform(.22, .34), .006, rv.uniform(.26, .38)), (-.7 + k * .23 + rv.uniform(-.03, .03), -.026, 1.55 + rv.uniform(-.22, .22)), M[("papel", "papel_am", "papel_az")[k % 3]], C_SOLTO, r)
+texto("Mural_Entrada_Texto", "AVISOS · CIEP", .1, (0, -.03, 2.0), "-y", M["texto_az"], C_SOLTO, r)
+
 bpy.data.collections.remove(C_TMP)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(AQUI, "ciep.blend"))
 tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in scene.objects if o.type == "MESH")
