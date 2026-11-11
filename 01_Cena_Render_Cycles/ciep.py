@@ -819,10 +819,7 @@ for x in (X0 - .1, X1 + .1):
     box("Platibanda_Lateral", (.3, PROF + .3, PL_H), (x, PROF / 2, Z3 + PL_H / 2 - .2), M["branco_fach"], C_FAC)
     box("Empena", (.3, PROF + .2, Z3 - Z1), (x, PROF / 2, (Z1 + Z3) / 2), M["branco_fach"], C_FAC)
 # juntas da fachada (linhas finas da foto): horizontal na altura da cobertura e verticais na platibanda, a cada modulo
-for y, ld in ((-.175, -1), (PROF + .175, 1)):
-    box("Junta_Horizontal", (X1 - X0, .01, .025), ((X0 + X1) / 2, y, Z3 - .1), M["junta"], C_SOLTO)
-    for k in range(NM + 1):
-        box("Junta_Vertical", (.02, .01, PL_H - .1), (X0 + MOD * k, y, Z3 + PL_H / 2 - .2), M["junta"], C_SOLTO)
+# (juntas decorativas retiradas a pedido do autor: no site pareciam listras)
 # fachadas dos pavimentos superiores: uma janela arredondada por modulo; peitoril vermelho ou preto, de dois em dois
 for fy, rz, lado in ((0.0, 0.0, -1), (PROF, PI, 1)):
     for a, z0 in enumerate((Z1, Z2)):
@@ -848,7 +845,7 @@ for fy0, rz in ((0.0, 0.0), (PROF, PI)):
     for k in range(NM + 1):
         box("Arcada_Coluna", (MOD - AW - .04, .53, PD), (X0 + MOD * k, fy, FZ + PD / 2), M["branco_fach"], C_FAC)      # por dentro da parede dos arcos: a face fica lisa, sem ressalto nem linha (a parede ja tem o trecho entre os arcos)
 # nome da escola na faixa lisa do topo da fachada, em letras-caixa de metal escovado (como nas fotos dos CIEPs repintados)
-M["letra_metal"] = mat("Letra_Metal_Escovado", "#2c2f33", .35, .55)      # metal escuro: le bem contra a fachada cinza
+M["letra_metal"] = mat("Letra_Metal_Escovado", "#8a6a3c", .35, .7)       # bronze: le bem contra a fachada cinza
 def letreiro_metal(nome, conteudo, tam, pos, prof=.03):
     cu = bpy.data.curves.new("_let", "FONT"); cu.body = conteudo; cu.size = tam; cu.align_x = "CENTER"; cu.align_y = "CENTER"
     cu.resolution_u = 2; cu.extrude = prof / 2; cu.bevel_depth = .002; cu.space_character = 1.05
