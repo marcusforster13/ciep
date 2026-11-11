@@ -86,31 +86,46 @@ export function uniformizar(n, chaveCache) {
     }
   });
 }
-// cabelo: o pacote so tem uma menina sem hijab; cada uma ganha um tom de cabelo (pinta a regiao do cabelo na textura da cabeca:
-// triangulos do alto e da parte de tras da cabeca; a testa e o rosto, virados para a frente, ficam de fora)
+// cabelo: o pacote so tem uma menina sem hijab (loira); cada uma ganha um tom de cabelo. O cabelo e escolhido PELA COR
+// do pixel na textura da cabeca (o dourado do cabelo tem matiz ~32-55 graus; a pele e rosada, matiz < ~28), com
+// transicao suave entre os dois: pega tambem o rabo de cavalo e nao vaza para o rosto (antes era pela posicao na
+// cabeca e ficava serrilhado na lateral do rosto). Mantem os fios e o sombreado (so troca a cor).
 export function cabeloCor(n, cor, chave) {
   n.userData.modelo?.traverse(o => {
     if (!o.isMesh) return;
     const m0 = [].concat(o.material)[0]; if (!/head/i.test(m0.name) || !m0.map?.image) return;
     const k = chave + '|' + cor; let tex = cacheUniforme[k];
     if (!tex) {
-      const img = m0.map.image, W = img.width, Hh = img.height, g = o.geometry, pos = g.attributes.position, nor = g.attributes.normal, uv = g.attributes.uv, idx = g.index;
-      let y0 = 1e9, y1 = -1e9; for (let i = 0; i < pos.count; i++) { y0 = Math.min(y0, pos.getY(i)); y1 = Math.max(y1, pos.getY(i)); }
-      const mk = document.createElement('canvas'); mk.width = W; mk.height = Hh; const mg = mk.getContext('2d'); mg.fillStyle = '#fff';
-      const vy = v => m0.map.flipY ? (1 - uv.getY(v)) * Hh : uv.getY(v) * Hh, tri = idx ? idx.count / 3 : pos.count / 3;
-      for (let t = 0; t < tri; t++) {
-        const vi = [0, 1, 2].map(j => idx ? idx.getX(3 * t + j) : 3 * t + j);
-        const h = vi.reduce((a, v) => a + (pos.getY(v) - y0) / (y1 - y0), 0) / 3, nz = vi.reduce((a, v) => a + nor.getZ(v), 0) / 3;
-        if (!(h > .8 || (nz < .35 && h > .3))) continue;                  // alto da cabeca, ou laterais/nuca
-        mg.beginPath(); vi.forEach((v, j) => j ? mg.lineTo(uv.getX(v) * W, vy(v)) : mg.moveTo(uv.getX(v) * W, vy(v))); mg.closePath(); mg.fill();
+      const img = m0.map.image, W = img.width, Hh = img.height;
+      const cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const cg = cv.getContext('2d'); cg.drawImage(img, 0, 0);
+      const d = cg.getImageData(0, 0, W, Hh), p = d.data, N = W * Hh, hx = parseInt(cor.slice(1), 16), alvo = { r: (hx >> 16 & 255) / 255, g: (hx >> 8 & 255) / 255, b: (hx & 255) / 255 };   // sRGB, como a textura
+      const passo = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+      // 1) peso pela cor: dourado do cabelo (matiz ~27-62 graus); pele rosada fica de fora
+      const w0 = new Float32Array(N), pele = new Uint8Array(N), lum = new Float32Array(N);
+      for (let q = 0, i = 0; q < N; q++, i += 4) {
+        const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), c = mx - mn;
+        lum[q] = r * .3 + g * .59 + b * .11;
+        if (mx < .08) continue;
+        let h = c < 1e-4 ? 0 : mx === r ? ((g - b) / c) % 6 : mx === g ? (b - r) / c + 2 : (r - g) / c + 4; h *= 60; if (h < 0) h += 360;
+        const sat = c / mx;
+        if ((h < 25 || h > 340) && sat > .18 && lum[q] > .35) { pele[q] = 1; continue; }
+        w0[q] = passo(25, 31, h) * (1 - passo(60, 70, h)) * passo(.06, .16, sat);
       }
-      const mp = mg.getImageData(0, 0, W, Hh).data, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; const cg = cv.getContext('2d'); cg.drawImage(img, 0, 0);
-      const d = cg.getImageData(0, 0, W, Hh), p = d.data, alvo = new THREE.Color(cor);
-      for (let i = 0; i < p.length; i += 4) {
-        if (mp[i + 3] < 128) continue;
-        if (p[i] > 140 && p[i + 2] / p[i] > .62) continue;                    // pele clara (orelha, bochecha) fica
-        const l = (p[i] * .3 + p[i + 1] * .59 + p[i + 2] * .11) / 255, f = .35 + 1.3 * l;
-        p[i] = Math.min(255, alvo.r * 255 * f); p[i + 1] = Math.min(255, alvo.g * 255 * f); p[i + 2] = Math.min(255, alvo.b * 255 * f);
+      // 2) espalha a marcacao (borrao de 7 px): as mechas claras e pouco saturadas no meio do cabelo tambem entram
+      const tmp = new Float32Array(N), bl = new Float32Array(N), R = 7;
+      for (let y = 0; y < Hh; y++) { let acc = 0; for (let x = -R; x < W; x++) { if (x + R < W) acc += w0[y * W + x + R]; if (x - R - 1 >= 0) acc -= w0[y * W + x - R - 1]; if (x >= 0) tmp[y * W + x] = acc / (2 * R + 1); } }
+      for (let x = 0; x < W; x++) { let acc = 0; for (let y = -R; y < Hh; y++) { if (y + R < Hh) acc += tmp[(y + R) * W + x]; if (y - R - 1 >= 0) acc -= tmp[(y - R - 1) * W + x]; if (y >= 0) bl[y * W + x] = acc / (2 * R + 1); } }
+      // 3) recolore: mantem os fios, com menos contraste (cabelo escuro nao tem fios quase brancos)
+      for (let q = 0, i = 0; q < N; q++, i += 4) {
+        if (p[i] + p[i + 1] + p[i + 2] < 20) continue;
+        // faixa de cima do atlas (acima da testa, com a risca e o couro cabeludo claro) e toda cabelo
+        const yq = Math.floor(q / W), topo = 1 - passo(Hh * .17, Hh * .21, yq);
+        const w = Math.max(topo, pele[q] ? passo(.55, .8, bl[q]) : Math.max(w0[q], passo(.35, .6, bl[q])));      // pele cercada de cabelo (couro cabeludo entre os fios) tambem
+        if (w < .01) continue;
+        const f = Math.min(1.25, Math.max(.35, .75 + .9 * (lum[q] - .5)));
+        const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255;
+        const nr = Math.min(1, alvo.r * f), ng = Math.min(1, alvo.g * f), nb = Math.min(1, alvo.b * f);
+        p[i] = (r + (nr - r) * w) * 255; p[i + 1] = (g + (ng - g) * w) * 255; p[i + 2] = (b + (nb - b) * w) * 255;
       }
       cg.putImageData(d, 0, 0); tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.flipY = m0.map.flipY; cacheUniforme[k] = tex;
     }
@@ -237,7 +252,12 @@ export async function iniciarCrise(H, { papel, modo }) {
   const caixa = (tam, pos, m, pai = grupo) => { const o = new THREE.Mesh(new THREE.BoxGeometry(...tam), m); o.position.copy(pos); pai.add(o); return o; };
   // porta da sala 201, trancada, com visor de vidro; e a barricada de carteiras por dentro
   const porta = new THREE.Group(); porta.position.copy(B1(14.5, 9.5)); grupo.add(porta);
-  caixa([.9, 2.08, .045], new THREE.Vector3(.45, 1.04, 0), matB(0xe6b31e, .45), porta);
+  // folha com o vao do visor aberto de verdade (antes o vidro ficava colado numa porta inteira e nao dava para ver dentro)
+  const mPorta = matB(0xe6b31e, .45);
+  caixa([.51, 2.08, .045], new THREE.Vector3(.255, 1.04, 0), mPorta, porta);           // esquerda do visor
+  caixa([.17, 2.08, .045], new THREE.Vector3(.815, 1.04, 0), mPorta, porta);           // direita
+  caixa([.22, 1.2, .045], new THREE.Vector3(.62, .6, 0), mPorta, porta);               // embaixo
+  caixa([.22, .38, .045], new THREE.Vector3(.62, 1.89, 0), mPorta, porta);             // em cima
   const visor = caixa([.22, .5, .05], new THREE.Vector3(.62, 1.45, 0), new THREE.MeshStandardMaterial({ color: 0x9fb5bd, transparent: true, opacity: .25, roughness: .05 }), porta);
   const colPorta = new THREE.Mesh(new THREE.BoxGeometry(.95, 2.1, .2), new THREE.MeshBasicMaterial({ visible: false })); colPorta.position.copy(B1(14.95, 9.5)).add(new THREE.Vector3(0, 1.05, 0));
   colPorta.geometry.computeBoundsTree?.(); scene.add(colPorta); colPorta.updateMatrixWorld(true); ctx.colisao().push(colPorta);
@@ -612,11 +632,50 @@ export async function iniciarCrise(H, { papel, modo }) {
     return false;
   }
   let ultimoS = 0;
+  /* ---------------- olhar importa ----------------
+     O Quest sabe para onde a cabeca do policial aponta. Olhar no rosto do Lucas por ~2,5 s (contato visual) acalma um
+     pouco e aproxima; ficar encarando a arma por ~2 s faz a tensao subir e ele reage. So conta quando ele esta a vista:
+     dentro da sala ou pelo visor da porta (de fora, a linha de visao precisa passar pelo vidro). */
+  const OLHO = { rosto: 0, arma: 0, ultRosto: 0, ultArma: 0, explicou: false };
+  const GV = new THREE.Vector3(), GD = new THREE.Vector3(), GC = new THREE.Vector3(), GA = new THREE.Vector3();
+  const VISOR = { x0: 15.0, x1: 15.24, y0: 4.69, y1: 5.21, z: -9.5 };          // vidro da porta (cena web)
+  function aVista(olho, alvo) {
+    if (olho.z > -9.45) return true;                                        // dentro da sala
+    if (alvo.z < -9.45) return true;
+    const k = (VISOR.z - olho.z) / (alvo.z - olho.z), x = olho.x + (alvo.x - olho.x) * k, y = olho.y + (alvo.y - olho.y) * k;
+    return x > VISOR.x0 && x < VISOR.x1 && y > VISOR.y0 && y < VISOR.y1;
+  }
+  const angulo = (olho, dir, alvo) => dir.angleTo(GV.copy(alvo).sub(olho));
+  function olharDoPolicial(dt, agora) {
+    if (C.fim || !C.contato || !lucas.visible || C.saindo) { OLHO.rosto = OLHO.arma = 0; return; }
+    camera.getWorldPosition(GC); camera.getWorldDirection(GD);
+    const cab = lucas.userData.olhar?.cabeca || lucas.userData.modelo?.getObjectByName('Bip01_Head'); if (!cab) return;
+    cab.getWorldPosition(GA); const rosto = GA.clone();
+    const objArma = H.armaNPC.visible ? H.armaNPC : faca.visible ? faca : null;
+    const arma = objArma ? objArma.getWorldPosition(GA).clone() : null;
+    const aRosto = aVista(GC, rosto) ? angulo(GC, GD, rosto) : 9, aArma = arma && aVista(GC, arma) ? angulo(GC, GD, arma) : 9;
+    const noRosto = aRosto < .16 && aRosto <= aArma, naArma = aArma < .14 && aArma < aRosto;
+    OLHO.rosto = noRosto ? OLHO.rosto + dt : Math.max(0, OLHO.rosto - dt * 2);
+    OLHO.arma = naArma ? OLHO.arma + dt : Math.max(0, OLHO.arma - dt * 2);
+    if (OLHO.rosto > 2.5 && agora - OLHO.ultRosto > 20000) {
+      OLHO.ultRosto = agora; OLHO.rosto = 0; ajusta([-3, 4]);
+      if (emNegociacao()) registrar('contato_visual');
+      lucasDiz(C.tensao > 70 ? 'Para de me olhar assim... tá.' : C.tensao > 40 ? '...você tá me ouvindo mesmo, né?' : 'Tá... eu tô te vendo.');
+      if (!OLHO.explicou) { OLHO.explicou = true; dica('Contato visual: olhar no rosto dele (não na arma) ajuda a construir o vínculo.', 6); }
+    }
+    if (OLHO.arma > 2 && agora - OLHO.ultArma > 15000) {
+      OLHO.ultArma = agora; OLHO.arma = 0; ajusta([6, -2]);
+      if (emNegociacao()) registrar('encarou_arma');
+      lucasDiz(['Tá olhando o quê? Olha pra mim!', 'Para de olhar pra arma! Fala comigo!', 'Tá com medo dela, é?'][Math.floor(agora / 1000) % 3]);
+      legenda('Instrutor', 'Encarar a arma aumenta a tensão do causador.', 4);
+    }
+  }
   function quadro(dt) {
     const agora = performance.now();
     // faca na mao do Lucas
     if (faca.visible) { const mao = lucas.userData.modelo?.getObjectByName('Bip01_R_Hand'); if (mao) { mao.getWorldPosition(faca.position); faca.position.y -= .1; } }
     if (H.armaNPC.visible) { const mao = lucas.userData.modelo?.getObjectByName('Bip01_R_Hand'); if (mao) { mao.getWorldPosition(H.armaNPC.position); H.armaNPC.lookAt(B1(14.95, 9.5).add(new THREE.Vector3(0, 1.4, 0))); H.armaNPC.rotateY(Math.PI); } }
+    olharDoPolicial(dt, agora);
     // drones pairando
     const t = agora / 1000;
     if (drone.visible) drone.position.copy(B1(15.5, -2.5)).add(new THREE.Vector3(Math.sin(t * .7) * .3, 2.4 + Math.sin(t * 1.3) * .15, 0));

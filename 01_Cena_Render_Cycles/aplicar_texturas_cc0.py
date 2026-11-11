@@ -160,12 +160,14 @@ TABELA = {
     "Terra_Canteiro":     ("terra", 1.2, "#6b4a35", None, .4),            # brown_mud_leaves_01: terra vermelha com mato rasteiro
     "Concreto_Aparente":  ("concreto", 1.5, "#9c9c98", neutro, .3),            # arquibancada, bases: concreto aparente
     "Chapim_Concreto":    ("concreto", 1.5, "#a8a59e", neutro, .3),
+    "Armario_Aco_Cinza":  ("metal_pintado", 1.0, "#8a8f94", neutro, .15),
     "Aco_Galvanizado":    ("metal_pintado", 1.0, "#9da2a6", neutro, .1),      # poste, mastro, alambrado: aco galvanizado com marcas de tempo
     "Grama":              ("grama", 1.5, "#56693a", None, .3),                 # leafy_grass
     "Piso_Granilite":     ("granilite", 2.4, "#b9b7b1", None, .1),             # granite_tile: placas de granilite
     "Azulejo_Branco":     ("azulejo", 1.0, "#e8e6df", None, .15),              # long_white_tiles
-    "Reboco_Interno":     ("fachada_branca", 2.5, "#ebe8e0", None, .08),
-    "Barra_Azul":         ("fachada_branca", 2.5, "#4f74a8", None, .06),       # barra azul 1070 (PRO192-ALB-254.02), tom estimado
+    # paredes internas: reboco pintado (painted_plaster_wall) com ondulacao e marcas de rolo, em vez do estuque liso
+    "Reboco_Interno":     ("fachada_concreto", 1.6, "#e4e1d9", neutro, .3),
+    "Barra_Azul":         ("fachada_concreto", 1.6, "#4a6fa3", neutro, .25),   # barra azul 1070 (PRO192-ALB-254.02), tom estimado
     "Muro_Reboco":        ("reboco", 2.0, "#dcd9d2", None, .3),
     "Laje_Teto":          ("fachada_branca", 2.5, "#eeece6", None, .05),
     "Porta_Madeira":      ("madeira_escura", 1.4, "#6b4a30", None, .15),
@@ -175,7 +177,7 @@ TABELA = {
     "Porta_Ferro":        ("metal_pintado", 1.0, "#5b6066", grafite, .15),
     "Grade_Metal":        ("metal_pintado", 1.0, "#2f3a46", grafite, .1),
 }
-METAL = {"Aco_Galvanizado": .6}
+METAL = {"Aco_Galvanizado": .6, "Armario_Aco_Cinza": .3}
 feitos = []
 for nome, (pasta, tile, tint, rec, relevo) in TABELA.items():
     m = bpy.data.materials.get(nome)

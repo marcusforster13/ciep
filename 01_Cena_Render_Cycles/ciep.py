@@ -962,7 +962,26 @@ box("Direcao_Mesa_Gaveteiro", (.45, .75, .7), (.6, 0, .37), M["mad_cl"], C_MOV, 
 box("Direcao_Mesa_Painel", (1.6, .03, .55), (0, .38, .45), M["mad_cl"], C_MOV, r)
 modelo_ph("Direcao_Cadeira_Diretora", "plastic_monobloc_chair_01", (2.4, 7.85, FZ), PI, C_SOLTO, max_tris=3000)
 for x in (1.8, 3.0): modelo_ph("Direcao_Cadeira_Visita", "plastic_monobloc_chair_01", (x, 6.1, FZ), 0, C_SOLTO, max_tris=3000)
-modelo_ph("Direcao_Armario", "painted_wooden_cabinet", (5.55, 4.2, FZ), -PI / 2, C_MOV, alt=1.9)
+# armario de aco cinza de 2 portas (o de escola publica / almoxarifado), no lugar do armario de madeira pintada
+M.update({"aco_cinza": mat("Armario_Aco_Cinza", "#8a8f94", .45, .3), "aco_cinza_esc": mat("Armario_Aco_Frisos", "#5e6267", .5, .3)})
+def armario_aco(nome, x, y, rz, larg=.9, prof=.45, alt=1.98):
+    r = vazio(nome, (x, y, FZ), C_MOV, rz)                      # frente para -y (local)
+    box(nome + "_Corpo", (larg, prof, alt - .06), (0, 0, .06 + (alt - .06) / 2), M["aco_cinza"], C_MOV, r, bevel=.008)
+    for sx in (-1, 1):
+        box(nome + "_Pe", (.04, prof - .04, .06), (sx * (larg / 2 - .04), 0, .03), M["aco_cinza_esc"], C_MOV, r)
+        # portas: leve recuo, frisos e venezianas de ventilacao em cima e embaixo
+        xc = sx * larg / 4
+        box(nome + "_Porta", (larg / 2 - .02, .012, alt - .16), (xc, -prof / 2 - .004, .06 + (alt - .06) / 2), M["aco_cinza"], C_MOV, r, bevel=.004)
+        for zv in (.32, alt - .3):
+            for k in range(5):
+                box(nome + "_Veneziana", (larg / 2 - .16, .006, .012), (xc, -prof / 2 - .011, zv + k * .03), M["aco_cinza_esc"], C_SOLTO, r)
+    box(nome + "_Friso_Central", (.008, .006, alt - .16), (0, -prof / 2 - .011, .06 + (alt - .06) / 2), M["aco_cinza_esc"], C_SOLTO, r)
+    box(nome + "_Puxador", (.025, .03, .14), (.05, -prof / 2 - .025, 1.05), M["aco_cinza_esc"], C_SOLTO, r, bevel=.006)
+    cyl(nome + "_Fechadura", .012, .012, .012, (-.05, -prof / 2 - .016, 1.05), M["metal"], C_SOLTO, r, rot=(PI / 2, 0, 0), seg=10)
+    # caixas de arquivo em cima (comum nos armarios das escolas)
+    box(nome + "_Caixa_Arquivo", (.36, .26, .26), (-.18, .02, alt + .13), M["papel_az"], C_SOLTO, r, rot=(0, 0, .08))
+    box(nome + "_Caixa_Arquivo", (.36, .26, .22), (.22, 0, alt + .11), M["papel_am"], C_SOLTO, r, rot=(0, 0, -.05))
+armario_aco("Direcao_Armario", 5.55, 4.2, -PI / 2)
 modelo_ph("Direcao_Estante", "wooden_bookshelf_worn", (5.6, 8.6, FZ), -PI / 2, C_MOV, alt=1.8)
 box("Direcao_Quadro_Avisos", (1.6, .03, 1.0), (2.4, YC0 - .14, FZ + 1.6), M["cortica"], C_TER)
 for k in range(5): box("Direcao_Quadro_Papel", (.3, .01, .38), (1.8 + k * .3, YC0 - .16, FZ + 1.55 + (k % 2) * .1), M[("papel", "papel_am")[k % 2]], C_SOLTO)
@@ -1332,6 +1351,19 @@ for (a, b), nome in zip(portas_f, ("SALA 201", "SALA 202", "SALA 203")):
     texto("Pav1_Placa_Texto", nome, .09, ((a + b) / 2, PC0 + .122, P1Z + 2.3), "+y", M["texto_pr"], C_SOLTO)
 box("Pav1_Placa", (.8, .02, .2), (14.95, PC1 - .11, P1Z + 2.3), M["branco"], C_SOLTO)
 texto("Pav1_Placa_Texto", "SALA 204", .09, (14.95, PC1 - .122, P1Z + 2.3), "-y", M["texto_pr"], C_SOLTO)
+# luminaria regua LED de sobrepor (como a do bar no cassino): corpo fino de aluminio, difusor branco aceso embaixo
+# e tampas cinza nas pontas. ztopo = altura do teto/forro; ao_longo_x = comprimento no eixo X.
+M.update({"lum_corpo": mat("Luminaria_Corpo_Aluminio", "#b9bdc2", .35, .6), "lum_tampa": mat("Luminaria_Tampa_Cinza", "#8d9196", .45, .3)})
+def luminaria(nome, x, y, ztopo, col, comp=1.25, ao_longo_x=True):
+    if ao_longo_x:
+        box(nome + "_Luz_Corpo", (comp, .055, .03), (x, y, ztopo - .015), M["lum_corpo"], col, bevel=.004)
+        cyl(nome + "_Luz_Difusor", .022, .022, comp - .04, (x, y, ztopo - .034), M["lamp_f"], col, rot=(0, PI / 2, 0), seg=10)
+        for sx in (-1, 1): box(nome + "_Luz_Tampa", (.03, .066, .05), (x + sx * (comp / 2 - .005), y, ztopo - .025), M["lum_tampa"], col, bevel=.005)
+    else:
+        box(nome + "_Luz_Corpo", (.055, comp, .03), (x, y, ztopo - .015), M["lum_corpo"], col, bevel=.004)
+        cyl(nome + "_Luz_Difusor", .022, .022, comp - .04, (x, y, ztopo - .034), M["lamp_f"], col, rot=(PI / 2, 0, 0), seg=10)
+        for sy in (-1, 1): box(nome + "_Luz_Tampa", (.066, .03, .05), (x, y + sy * (comp / 2 - .005), ztopo - .025), M["lum_tampa"], col, bevel=.005)
+
 # salas: carteiras viradas para o quadro (parede lateral), mesa do professor, ventiladores, quadro branco
 def sala_aula(nome, x0, x1, y0, y1, frente_y):
     """Sala com quadro na parede x0 e carteiras viradas para ele."""
@@ -1347,14 +1379,14 @@ def sala_aula(nome, x0, x1, y0, y1, frente_y):
     # ventiladores de parede (detalhes_sala), como na foto do Tancredo
     for x in (x0 + 3.3, x0 + 6.7):
         for y in (y0 + 2.2, y1 - 2.2):
-            box(nome + "_Luz_Tubo", (1.2, .1, .04), (x, y, P1Z + PD1 - .05), M["lamp_f"], C_PAV)
+            luminaria(nome, x, y, P1Z + PD1, C_PAV)
             luz(nome + "_Luz", "POINT", 38, "#eaf2ff", (x, y, P1Z + PD1 - .4), C_LUZ, shadow_soft_size=.3)
 sala_aula("Sala_201", 10.0, 20.0, .5, PC0, PC0 - .4)
 sala_aula("Sala_202", 20.0, 30.0, .5, PC0, PC0 - .4)
 sala_aula("Sala_203", 30.0, 40.0, .5, PC0, PC0 - .4)
 sala_aula("Sala_204", 10.0, 20.0, PC1, PROF - .5, PC1 + .4)
 for x in range(12, 40, 5):
-    box("Pav1_Corredor_Luz_Tubo", (1.2, .1, .04), (x, (PC0 + PC1) / 2, P1Z + PD1 - .05), M["lamp_f"], C_PAV)
+    luminaria("Pav1_Corredor_%d" % x, x, (PC0 + PC1) / 2, P1Z + PD1, C_PAV)
     luz("Pav1_Corredor_Luz", "POINT", 30, "#eaf2ff", (x, (PC0 + PC1) / 2, P1Z + PD1 - .4), C_LUZ, shadow_soft_size=.3)
 extintor("Extintor_Pav1", 22.0, PC0 + .13, "+y", z0=P1Z)
 # volume fechado do restante dos pavimentos superiores (fora do trecho acessivel)
@@ -1564,9 +1596,19 @@ for s, yl in ((1, qy0), (-1, qy1)):
     for dx in (-.28, .28): box("Ginasio_Basquete_Quadro", (.03, .045, .48), (QX + dx, yp + s * 1.1, ZQ + 3.39), M["preto"], C_SOLTO)
     torno("Ginasio_Basquete_Aro", [(.225, 3.05), (.245, 3.05), (.245, 3.07), (.225, 3.07), (.225, 3.05)], M["aro"], C_SOLTO, pos=(QX, yp + s * 1.1 + s * .26, ZQ), seg=20)
 # arquibancada de concreto (4 degraus de 0,45 x 0,80) ao longo do lado leste, com escada lateral e guarda-corpo
-for k in range(4):
-    box("Ginasio_Arquibancada", (.8, 18.0, .45 * (k + 1)), (51.7 + .8 * k + .4, QY, FZ + .45 * (k + 1) / 2), M["concreto"], C_PAT)
-for k in range(8): box("Ginasio_Arquibancada_Escada", (.4, 1.0, .225 * (k + 1)), (51.7 + .4 * k + .2, QY + 9.5, FZ + .225 * (k + 1) / 2), M["concreto"], C_PAT)
+def degraus(nome, x0, y0, y1, n, passo, alt, m, col):
+    """Bloco de degraus numa peca so: perfil em escada (x, z) extrudado de y0 a y1. Antes eram caixas sobrepostas, uma
+    dentro da outra, e a textura emendava/piscava nas laterais."""
+    perfil = [(x0, FZ)]
+    for k in range(n):
+        perfil += [(x0 + passo * k, FZ + alt * (k + 1)), (x0 + passo * (k + 1), FZ + alt * (k + 1))]
+    perfil.append((x0 + passo * n, FZ))
+    P = len(perfil)
+    v = [(x, y0, z) for x, z in perfil] + [(x, y1, z) for x, z in perfil]
+    f = [tuple(range(P)), tuple(range(2 * P - 1, P - 1, -1))] + [(i, (i + 1) % P, P + (i + 1) % P, P + i) for i in range(P)]
+    malha(nome, v, f, m, col)
+degraus("Ginasio_Arquibancada", 51.7, QY - 9.0, QY + 9.0, 4, .8, .45, M["concreto"], C_PAT)
+degraus("Ginasio_Arquibancada_Escada", 51.7, QY + 9.0, QY + 10.0, 8, .4, .225, M["concreto"], C_PAT)
 barra("Ginasio_Arquibancada_Guarda_Corpo", (54.9, QY - 9.0, FZ + 2.9), (54.9, QY + 10.0, FZ + 2.9), .025, M["grafite"], C_SOLTO, seg=8)
 for k in range(8): barra("Ginasio_Arquibancada_Montante", (54.9, QY - 9.0 + k * 2.7, FZ + 1.8), (54.9, QY - 9.0 + k * 2.7, FZ + 2.9), .02, M["grafite"], C_SOLTO, seg=6)
 bloqueio("Bloqueio_Arquibancada", (3.3, 19.0, 1.8), (53.35, QY + .5, FZ + .9))
@@ -1613,9 +1655,8 @@ else:
 sol = luz("Sol", "SUN", 4.5, "#fff2dc", (0, 0, 40), C_LUZ, angle=math.radians(2.0))   # sol forte de manha (antes 3,6)
 sol.rotation_euler = (math.radians(48), 0, math.radians(-35))
 def tubo(nome, x, y, watts, comp=1.2, col=C_TER, desce=0.0):
-    box(nome + "_Tubo", (comp, .1, .04), (x, y, FZ + PD - .05 - desce), M["lamp_f"], col)
-    if desce:                                                    # calha pendurada abaixo das vigas (pilotis)
-        box(nome + "_Calha", (comp + .06, .16, .05), (x, y, FZ + PD - .01 - desce), M["metal"], col)
+    luminaria(nome, x, y, FZ + PD - desce, col, comp=comp + .05)
+    if desce:                                                    # luminaria pendurada abaixo das vigas (pilotis)
         for dx in (-comp / 3, comp / 3): barra(nome + "_Pendente", (x + dx, y, FZ + PD), (x + dx, y, FZ + PD - desce + .02), .006, M["metal"], C_SOLTO, seg=4)
     luz(nome + "_Luz", "POINT", watts, "#eaf2ff", (x, y, FZ + PD - .4 - desce), C_LUZ, shadow_soft_size=.3)
 for x, y in ((-7.5, 5.0), (-4.5, 5.0), (-7.5, 8.2), (-4.5, 8.2)): tubo("Luz_Recepcao", x, y, 45)

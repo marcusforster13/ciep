@@ -63,9 +63,11 @@
         { "id": "gestao_exigencias", "texto": "Lidou com exigências e prazos sem aceitar nem negar de forma seca", "pontos": 5, "base": "Gestão de exigências" },
         { "id": "uso_tecnologia", "texto": "Usou as informações de tecnologia (live, drone, câmeras, mensagens)", "pontos": 4, "base": "Inteligência em apoio à negociação" },
         { "id": "terceiros_avaliados", "texto": "Avaliou a mãe/terceiros antes de qualquer contato com ele", "pontos": 4, "base": "Intermediários só depois de avaliados (validar)", "condicao": "variacao.pressao == 'mae'", "validar": true },
-        { "id": "rendicao", "texto": "Conduziu a rendição com instruções claras e seguras", "pontos": 8, "base": "Plano de rendição" }
+        { "id": "rendicao", "texto": "Conduziu a rendição com instruções claras e seguras", "pontos": 8, "base": "Plano de rendição" },
+        { "id": "contato_visual", "texto": "Manteve contato visual com o Lucas (olhou no rosto dele, não na arma)", "pontos": 3, "base": "Comunicação não verbal no rapport (validar)" }
       ],
       "erros": [
+        { "id": "encarou_arma", "texto": "Ficou encarando a arma do Lucas, o que aumentou a tensão dele", "pontos": -2 },
         { "id": "neg_ameaca", "texto": "Ameaçou ou confrontou o causador", "pontos": -5 },
         { "id": "neg_mentira", "texto": "Mentiu sobre algo sério (impunidade, fuga)", "pontos": -6 },
         { "id": "neg_minimizar", "texto": "Minimizou o que ele sente", "pontos": -3 },

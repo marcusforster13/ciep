@@ -104,7 +104,16 @@
    "agachado",
    "andando",
    "correndo",
-   "rendido"
+   "rendido",
+   "fut_parado",
+   "fut_trote",
+   "fut_passe",
+   "fut_chute",
+   "fut_receber",
+   "fut_dominar",
+   "gol_parado",
+   "gol_pega",
+   "gol_repoe"
   ]
  },
  "refem_menino_b": {
@@ -115,7 +124,16 @@
    "agachado",
    "andando",
    "correndo",
-   "rendido"
+   "rendido",
+   "fut_parado",
+   "fut_trote",
+   "fut_passe",
+   "fut_chute",
+   "fut_receber",
+   "fut_dominar",
+   "gol_parado",
+   "gol_pega",
+   "gol_repoe"
   ]
  },
  "refem_menina_a": {

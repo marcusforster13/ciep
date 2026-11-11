@@ -54,6 +54,9 @@ function falasDoCenario() {
   for (const l of Object.values(cr.negociacao.aberturas_lucas)) l.forEach(t => add('lucas', t, 'Crise · negociação'));
   for (const e of Object.values(cr.negociacao.exigencias)) add('lucas', e.lucas, 'Crise · exigência');
   add('diretora_crise', 'Policial! Aqui! É na 201!', 'Crise · chegada');
+  // 'olhar importa' (crise.js): reacoes do Lucas ao contato visual e a quem encara a arma
+  for (const t of ['Para de me olhar assim... tá.', '...você tá me ouvindo mesmo, né?', 'Tá... eu tô te vendo.',
+                   'Tá olhando o quê? Olha pra mim!', 'Para de olhar pra arma! Fala comigo!', 'Tá com medo dela, é?']) add('lucas', t, 'Crise · olhar');
   return lista;
 }
 function montarFalas() {

@@ -1425,6 +1425,42 @@
         "personagem": "Diretora",
         "quando": "Crise · chegada",
         "texto": "Policial! Aqui! É na 201!"
+      },
+      {
+        "arquivo": "fala_lucas_21",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · olhar",
+        "texto": "Para de me olhar assim... tá."
+      },
+      {
+        "arquivo": "fala_lucas_22",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · olhar",
+        "texto": "...você tá me ouvindo mesmo, né?"
+      },
+      {
+        "arquivo": "fala_lucas_23",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · olhar",
+        "texto": "Tá... eu tô te vendo."
+      },
+      {
+        "arquivo": "fala_lucas_24",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · olhar",
+        "texto": "Tá olhando o quê? Olha pra mim!"
+      },
+      {
+        "arquivo": "fala_lucas_25",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · olhar",
+        "texto": "Para de olhar pra arma! Fala comigo!"
+      },
+      {
+        "arquivo": "fala_lucas_26",
+        "personagem": "Lucas (aluno, 15 anos)",
+        "quando": "Crise · olhar",
+        "texto": "Tá com medo dela, é?"
       }
     ]
   }

@@ -8,7 +8,7 @@ para 1024 px e exporta  04_ThreeJS/web/personagens/<papel>.glb  com as animacoes
 Uso:  blender -b --factory-startup --python converter_personagens.py            (so o que mudou)
       blender -b --factory-startup --python converter_personagens.py -- --forcar
 """
-import bpy, os, sys, json
+import bpy, os, sys, json, math
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RB = os.path.join(AQUI, "rocketbox")
@@ -36,8 +36,8 @@ PAPEIS = {
     "aluno": ("Male_Adult_01", _civil("m", {"apontando": "m_idle_neutral_01+apontando", "agachado": "m_crouch_idle", "sentado_parado": "m_idle_neutral_01+sentado_parado", "bracos_para_cima": "m_idle_neutral_01+bracos_para_cima", "irritado": "m_idle_angry_01", "triste": "m_gestic_talk_neutral_01"})),
     "funcionario": ("Male_Adult_16", _civil("m", {"agachado": "m_crouch_idle", "sentado_parado": "m_idle_neutral_01+sentado_parado"})),
     # missao "Sala 201" (crise com refens): criancas refens, professora, mae do aluno e negociador do BOPE
-    "refem_menino_a": ("Male_Child_01", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca"}),
-    "refem_menino_b": ("Male_Child_02", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca"}),
+    "refem_menino_a": ("Male_Child_01", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca", "fut_parado": "mx:mx_parado", "fut_trote": "mx:mx_trote", "fut_passe": "mx:mx_passe", "fut_chute": "mx:mx_chute", "fut_receber": "mx:mx_receber", "fut_dominar": "mx:mx_dominar", "gol_parado": "mx:mx_goleiro_parado", "gol_pega": "mx:mx_goleiro_pega", "gol_repoe": "mx:mx_goleiro_repoe"}),
+    "refem_menino_b": ("Male_Child_02", {"parada": "m_idle_neutral_01", "nervoso": "m_idle_nervous_01", "agachado": "m_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "rendido": "m_idle_neutral_01+maos_na_cabeca", "fut_parado": "mx:mx_parado", "fut_trote": "mx:mx_trote", "fut_passe": "mx:mx_passe", "fut_chute": "mx:mx_chute", "fut_receber": "mx:mx_receber", "fut_dominar": "mx:mx_dominar", "gol_parado": "mx:mx_goleiro_parado", "gol_pega": "mx:mx_goleiro_pega", "gol_repoe": "mx:mx_goleiro_repoe"}),
     "refem_menina_a": ("Female_Child_01", {"parada": "f_idle_neutral_01", "nervoso": "f_idle_nervous_01", "agachado": "f_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "chorando": "f_gestic_talk_sad_01"}),
     "refem_menina_b": ("Female_Child_01", {"parada": "f_idle_neutral_01", "nervoso": "f_idle_nervous_01", "agachado": "f_crouch_idle", "andando": "m_walk_fast_01", "correndo": "m_run_fast_01", "chorando": "f_gestic_talk_sad_01"}),
     "professora": ("Female_Adult_02", _civil("f", {"agachado": "f_crouch_idle", "estressada": "f_gestic_talk_femalestressed_01", "sentado_parado": "f_idle_neutral_01+sentado_parado", "sentada_nervosa": "f_idle_nervous_01+sentado_parado"})),
@@ -70,6 +70,47 @@ def colecoes_fcurves(acao):
 
 sufixo = lambda nome: nome.split(' ', 1)[1] if ' ' in nome else ''      # 'Bip01 L Thigh' -> 'L Thigh'
 rot = lambda m: m.to_3x3().normalized().to_quaternion()
+
+# ---- animacoes do Mixamo ("mx:arquivo" em 07_Personagens/mixamo/arquivo.fbx): futebol das criancas na quadra.
+# O esqueleto do Mixamo (mixamorig:*) tem outros nomes e outra direcao de frente; a pose de repouso e T-pose, entao a
+# rotacao de cada osso e medida a partir da T-pose do proprio Mixamo e girada para a frente do personagem Rocketbox.
+MX = os.path.join(AQUI, "mixamo")
+MX_OSSOS = {"Pelvis": "Hips", "Spine": "Spine", "Spine1": "Spine1", "Spine2": "Spine2", "Neck": "Neck", "Head": "Head"}
+for _L, _Ln in (("L", "Left"), ("R", "Right")):
+    MX_OSSOS.update({_L + " Clavicle": _Ln + "Shoulder", _L + " UpperArm": _Ln + "Arm", _L + " Forearm": _Ln + "ForeArm", _L + " Hand": _Ln + "Hand",
+                     _L + " Thigh": _Ln + "UpLeg", _L + " Calf": _Ln + "Leg", _L + " Foot": _Ln + "Foot", _L + " Toe0": _Ln + "ToeBase"})
+    for _k, _d in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky")):
+        MX_OSSOS.update({"%s Finger%d" % (_L, _k): _Ln + "Hand" + _d + "1", "%s Finger%d1" % (_L, _k): _Ln + "Hand" + _d + "2", "%s Finger%d2" % (_L, _k): _Ln + "Hand" + _d + "3"})
+def frente(esq, pe, dedo):
+    """Direcao da frente do personagem (do calcanhar para os dedos do pe esquerdo), no plano do chao."""
+    from mathutils import Vector
+    a = esq.matrix_world @ esq.data.bones[pe].head_local; b = esq.matrix_world @ esq.data.bones[dedo].head_local
+    v = Vector((b.x - a.x, b.y - a.y)); return v.normalized()
+def preparar_mixamo(src, arm):
+    from mathutils import Quaternion
+    nomes = {s: "mixamorig:" + n for s, n in MX_OSSOS.items() if "mixamorig:" + n in src.data.bones}
+    rest = {s: rot(src.matrix_world @ src.data.bones[n].matrix_local) for s, n in nomes.items()}
+    pe_t = next(b.name for b in arm.data.bones if sufixo(b.name) == "L Foot"); dedo_t = next(b.name for b in arm.data.bones if sufixo(b.name) == "L Toe0")
+    f_mx, f_rb = frente(src, "mixamorig:LeftFoot", "mixamorig:LeftToeBase"), frente(arm, pe_t, dedo_t)
+    ang = math.atan2(f_rb.y, f_rb.x) - math.atan2(f_mx.y, f_mx.x)
+    quadril = (src.matrix_world @ src.data.bones["mixamorig:Hips"].head_local).z
+    F = Quaternion((0, 0, 1), ang)
+    # As criancas do Rocketbox estao em pose A (bracos ~45 graus para baixo) e o Mixamo em pose T: antes de aplicar o
+    # movimento, cada osso do personagem e levado da pose dele para a direcao que o osso tem na T-pose do Mixamo
+    # (correcao C, so de direcao). Sem isso os bracos ficavam baixos e dobrados para tras.
+    tgt = {sufixo(b.name): arm.matrix_world @ b.head_local for b in arm.data.bones}
+    def cabeca_mx(sx): return src.matrix_world @ src.data.bones[nomes[sx]].head_local
+    FILHO = {"Spine": "Spine1", "Spine1": "Spine2", "Spine2": "Neck", "Neck": "Head"}
+    for L in ("L", "R"):
+        FILHO.update({L + " Clavicle": L + " UpperArm", L + " UpperArm": L + " Forearm", L + " Forearm": L + " Hand", L + " Hand": L + " Finger2",
+                      L + " Thigh": L + " Calf", L + " Calf": L + " Foot"})
+    C = {}
+    for sx, fx in FILHO.items():
+        if sx in tgt and fx in tgt and sx in nomes and fx in nomes:
+            d_t = (tgt[fx] - tgt[sx]); d_s = F @ (cabeca_mx(fx) - cabeca_mx(sx))
+            if d_t.length > 1e-4 and d_s.length > 1e-4:
+                C[sx] = d_t.normalized().rotation_difference(d_s.normalized())
+    return {"nomes": nomes, "rest": rest, "F": F, "quadril": quadril, "C": C}
 
 def repouso_mundo(esq):
     """Orientacao de cada osso no espaco do mundo, na pose de repouso (T-pose) do personagem."""
@@ -282,7 +323,7 @@ def pose_bracos(arm, desejado, f, tgt_inv, tipo):
             # dedos apontando para a outra mao, por cima/atras da cabeca (maos entrelacadas)
             mira(hd, lado_, M_fa, -lado * .85 + cima * .15 - frente * .25)
 
-def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lugar=False):
+def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lugar=False, mx=None):
     """Passa a animacao do esqueleto src para arm. Os FBX de animacao do Rocketbox vem com a pose do 1o quadro
     gravada como repouso, entao a rotacao de cada osso e comparada com a T-pose de um personagem adulto
     (rest_ref) no espaco do mundo e aplicada sobre a T-pose deste personagem (funciona tambem nas criancas,
@@ -294,8 +335,9 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lug
         ordem.append(b); [visita(c) for c in b.children]
     for b in arm.data.bones:
         if b.parent is None: visita(b)
-    ossos_src = {sufixo(b.name): b.name for b in src.data.bones}
-    pares = [(b, ossos_src.get(sufixo(b.name)) if sufixo(b.name) in rest_ref else None) for b in ordem]
+    ossos_src = mx["nomes"] if mx else {sufixo(b.name): b.name for b in src.data.bones}
+    ref = mx["rest"] if mx else rest_ref
+    pares = [(b, ossos_src.get(sufixo(b.name)) if sufixo(b.name) in ref else None) for b in ordem]
     rest_tgt = repouso_mundo(arm)
     acao = bpy.data.actions.new('retarget'); arm.animation_data.action = acao
     cena = bpy.context.scene
@@ -306,7 +348,10 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lug
         for b, ns in pares:
             pb, s = arm.pose.bones[b.name], sufixo(b.name)
             if ns:
-                delta = rot(src.matrix_world @ src.pose.bones[ns].matrix) @ rest_ref[s].inverted()
+                delta = rot(src.matrix_world @ src.pose.bones[ns].matrix) @ ref[s].inverted()
+                if mx:
+                    delta = mx["F"] @ delta @ mx["F"].inverted()          # gira o movimento para a frente do Rocketbox
+                    if s in mx["C"]: delta = delta @ mx["C"][s]          # pose A do personagem -> T-pose do Mixamo
                 r_arm = rot(tgt_inv) @ (delta @ rest_tgt[s])
             else:
                 r_arm = rot(b.matrix_local) if not b.parent else rot(desejado[b.parent.name] @ b.parent.matrix_local.inverted() @ b.matrix_local)
@@ -314,6 +359,7 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lug
                 pos = (desejado[b.parent.name] @ (b.parent.matrix_local.inverted() @ b.matrix_local)).translation
             elif ns:   # pelve: posicao do adulto proporcional a altura do personagem
                 w = (src.matrix_world @ src.pose.bones[ns].matrix).translation
+                if mx: w = mx["F"] @ w
                 if no_lugar:
                     xy0 = xy0 or (w.x, w.y); w = Vector((xy0[0], xy0[1], w.z))
                 pos = tgt_inv @ (w * fator)
@@ -394,7 +440,7 @@ manifesto = {}
 for papel, (pasta, anims) in PAPEIS.items():
     fbx = os.path.join(RB, pasta, pasta + ".fbx")
     saida = os.path.join(WEB, papel + ".glb")
-    fontes = [fbx] + [os.path.join(RB, "Animacoes", a.split("+")[0] + ".fbx") for a in anims.values()] + [os.path.abspath(__file__)]
+    fontes = [fbx] + [os.path.join(MX, a[3:] + ".fbx") if a.startswith("mx:") else os.path.join(RB, "Animacoes", a.split("+")[0] + ".fbx") for a in anims.values()] + [os.path.abspath(__file__)]
     if not os.path.exists(fbx):
         say("AVISO: %s nao encontrado (baixe pelo LEIA-ME)" % fbx); continue
     if os.path.exists(saida) and (os.environ.get("SO", papel) != papel or not FORCAR and os.path.getmtime(saida) > max(os.path.getmtime(f) for f in fontes if os.path.exists(f))):   # SO=crianca: so esse papel
@@ -423,7 +469,7 @@ for papel, (pasta, anims) in PAPEIS.items():
     arm.animation_data_create()
     for nome, a in anims.items():
         a, _, pose = a.partition("+")                       # "arquivo+pose" = animacao com pose ajustada
-        caminho = os.path.join(RB, 'Animacoes', a + '.fbx')
+        caminho = os.path.join(MX, a[3:] + '.fbx') if a.startswith('mx:') else os.path.join(RB, 'Animacoes', a + '.fbx')
         if not os.path.exists(caminho):
             say('AVISO: animacao %s nao encontrada' % a); continue
         antes = set(bpy.data.objects)
@@ -435,7 +481,11 @@ for papel, (pasta, anims) in PAPEIS.items():
         if acao:
             ini, fim = acao.frame_range[0], min(acao.frame_range[1], acao.frame_range[0] + 450)   # ate 15 s (loop)
             arm.location, arm.rotation_euler = base_loc, base_rot
-            assada = redirecionar(src, arm, rest_ref, ini, fim, fator, pose=pose or None, no_lugar=a.startswith(('m_run', 'm_walk', 'f_run', 'f_walk')))
+            if a.startswith('mx:'):                         # Mixamo: sempre no lugar (o site move a crianca e a bola)
+                mxd = preparar_mixamo(src, arm)
+                assada = redirecionar(src, arm, rest_ref, ini, fim, raiz_z / mxd["quadril"], passo=1, no_lugar=True, mx=mxd)
+            else:
+                assada = redirecionar(src, arm, rest_ref, ini, fim, fator, pose=pose or None, no_lugar=a.startswith(('m_run', 'm_walk', 'f_run', 'f_walk')))
             assada.name = nome; assada.use_fake_user = True
             tr = arm.animation_data.nla_tracks.new(); tr.name = nome
             st = tr.strips.new(nome, int(ini), assada); tr.mute = True
