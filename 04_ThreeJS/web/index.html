@@ -96,7 +96,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1111-1259';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1111-1624';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -266,7 +266,8 @@ scene.add(gltf.scene);
     for (const o of pisos) {
       const andar1 = BB.setFromObject(o).getCenter(new THREE.Vector3()).y > 2.5;
       for (const m of [].concat(o.material)) if (/Piso_Granilite|Piso_Corredor/.test(m.name)) {
-        m.envMap = andar1 ? env1 : env0; m.envMapIntensity = 1.1; m.roughness = .16; m.metalness = 0; m.needsUpdate = true;      // valores conferidos no navegador: brilho de cera, sem parecer molhado
+        const corr = /Piso_Corredor/.test(m.name);      // corredor: brilho mais discreto (refletia demais o azul da parede)
+        m.envMap = andar1 ? env1 : env0; m.envMapIntensity = corr ? .45 : 1.1; m.roughness = corr ? .3 : .16; m.metalness = 0; m.needsUpdate = true;      // valores conferidos no navegador: brilho de cera, sem parecer molhado
       }
     }
   }

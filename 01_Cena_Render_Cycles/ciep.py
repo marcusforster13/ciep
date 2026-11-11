@@ -758,8 +758,11 @@ def arvore_proc(name, loc, flor=False):
     return g
 def canteiro(nome, x, y, lado=2.4):
     """Canteiro de arvore no patio: mureta baixa de concreto e terra vermelha com mato rasteiro (textura CC0)."""
-    box(nome + "_Canteiro", (lado, lado, .12), (x, y, FZ + .06), M["chapim"], C_PAT)
-    box(nome + "_Canteiro_Terra", (lado - .3, lado - .3, .02), (x, y, FZ + .12), M["terra"], C_PAT)
+    # mureta de 15 cm em volta e a terra uns 8 cm mais funda que a borda (antes a terra ficava rente ao topo)
+    e = .15; H_ = .15
+    for dx, dy, sx, sy in ((0, -(lado - e) / 2, lado, e), (0, (lado - e) / 2, lado, e), (-(lado - e) / 2, 0, e, lado - 2 * e), ((lado - e) / 2, 0, e, lado - 2 * e)):
+        box(nome + "_Canteiro", (sx, sy, H_), (x + dx, y + dy, FZ + H_ / 2), M["chapim"], C_PAT)
+    box(nome + "_Canteiro_Terra", (lado - 2 * e, lado - 2 * e, .07), (x, y, FZ + .035), M["terra"], C_PAT)
 canteiro("Palmeira", 21.15, -2.8, 1.8)
 palmeira("Palmeira", 21.0, -2.8)
 bloqueio("Bloqueio_Tronco_Palmeira", (.3, .3, 2.0), (21.1, -2.8, FZ + 1.0))
@@ -809,13 +812,14 @@ AW, AH, AR = 3.9, 3.0, 1.35                                   # arco do terreo (
 box("Laje_Cobertura", (X1 - X0, PROF, .4), ((X0 + X1) / 2, PROF / 2, Z3 - .2), M["branco_fach"], C_FAC)
 # volumes fechados dos pavimentos superiores: secao 4b (o trecho x 10 .. 40 do 1o pavimento e acessivel)
 PL_H = 2.0
-for y in (-.05, PROF + .05):
+# frente toda no mesmo plano (como nas fotos): platibanda, fachada dos andares e arcos do terreo com a face a 17 cm do eixo
+for y in (-.02, PROF + .02):
     box("Platibanda", (X1 - X0 + .3, .3, PL_H), ((X0 + X1) / 2, y, Z3 + PL_H / 2 - .2), M["branco_fach"], C_FAC)
 for x in (X0 - .1, X1 + .1):
     box("Platibanda_Lateral", (.3, PROF + .3, PL_H), (x, PROF / 2, Z3 + PL_H / 2 - .2), M["branco_fach"], C_FAC)
     box("Empena", (.3, PROF + .2, Z3 - Z1), (x, PROF / 2, (Z1 + Z3) / 2), M["branco_fach"], C_FAC)
 # juntas da fachada (linhas finas da foto): horizontal na altura da cobertura e verticais na platibanda, a cada modulo
-for y, ld in ((-.21, -1), (PROF + .21, 1)):
+for y, ld in ((-.175, -1), (PROF + .175, 1)):
     box("Junta_Horizontal", (X1 - X0, .01, .025), ((X0 + X1) / 2, y, Z3 - .1), M["junta"], C_SOLTO)
     for k in range(NM + 1):
         box("Junta_Vertical", (.02, .01, PL_H - .1), (X0 + MOD * k, y, Z3 + PL_H / 2 - .2), M["junta"], C_SOLTO)
@@ -832,14 +836,27 @@ for fy, rz, lado in ((0.0, 0.0, -1), (PROF, PI, 1)):
             # vista da rua: a mesma janela com a sala escura ao fundo, 2 cm para fora (de dentro continua a persiana clara)
             quadro("Fachada_Janela_Externa", (xc, fy - lado * .08, zb + .92 + (JH - .92) / 2), "-y" if lado < 0 else "+y", JW - .1, JH - .92, M["persiana_ext"], C_SOLTO)
 # terreo: arcos na frente e nos fundos (pilotis)
-for fy, rz in ((0.0, 0.0), (PROF, PI)):
+for fy0, rz in ((0.0, 0.0), (PROF, PI)):
+    fy = fy0 + (.105 if fy0 == 0.0 else -.105)                  # arcos recuados 10,5 cm: a face fica no plano da fachada (sem degrau)
     for k in range(NM):
         xc = X0 + MOD * (k + .5)
         painel_simples("Arcada_Arco", MOD, PD, AW, AH, AR, -(PD - AH) / 2, .55, (xc, fy, FZ + PD / 2), M["branco_fach"], C_FAC, fundo_aberto=True, rz=rz)
+        # face de baixo do trecho reto no topo do arco (o painel em fatias deixava ali um vao preto, vendo o oco da parede)
+        box("Arcada_Arco_Teto", (AW - 2 * AR + .06, .545, .02), (xc, fy, FZ + AH + .008), M["branco_fach"], C_FAC)
     for k in range(NM + 1):
-        box("Arcada_Coluna", (MOD - AW - .02, .59, PD), (X0 + MOD * k, fy, FZ + PD / 2), M["branco_fach"], C_FAC)
+        box("Arcada_Coluna", (MOD - AW - .04, .53, PD), (X0 + MOD * k, fy, FZ + PD / 2), M["branco_fach"], C_FAC)      # por dentro da parede dos arcos: a face fica lisa, sem ressalto nem linha (a parede ja tem o trecho entre os arcos)
     box("Arcada_Viga", (X1 - X0, .55, Z1 - FZ - PD), ((X0 + X1) / 2, fy, (FZ + PD + Z1) / 2), M["branco_fach"], C_FAC)
-texto("Fachada_Letreiro", "CIEP TANCREDO NEVES", .5, (-27.5, -.35, Z1 - .17), "-y", M["texto_pr"], C_SOLTO)
+# nome da escola na faixa lisa do topo da fachada, em letras-caixa de metal escovado (como nas fotos dos CIEPs repintados)
+M["letra_metal"] = mat("Letra_Metal_Escovado", "#c4c8cc", .32, .85)
+def letreiro_metal(nome, conteudo, tam, pos, prof=.03):
+    cu = bpy.data.curves.new("_let", "FONT"); cu.body = conteudo; cu.size = tam; cu.align_x = "CENTER"; cu.align_y = "CENTER"
+    cu.resolution_u = 2; cu.extrude = prof / 2; cu.bevel_depth = .002; cu.space_character = 1.05
+    tmp = bpy.data.objects.new("_let_tmp", cu); scene.collection.objects.link(tmp); bpy.context.view_layer.update()
+    me = bpy.data.meshes.new_from_object(tmp.evaluated_get(bpy.context.evaluated_depsgraph_get())); me.name = nome
+    bpy.data.objects.remove(tmp, do_unlink=True); bpy.data.curves.remove(cu); me.materials.append(M["letra_metal"])
+    ob = bpy.data.objects.new(nome, me); C_SOLTO.objects.link(ob); ob.location = pos; ob.rotation_euler = VIRADO["-y"]
+    return ob
+letreiro_metal("Fachada_Letreiro", "CIEP TANCREDO NEVES", .95, (0.0, -.19, Z3 + PL_H / 2 - .2), prof=.04)
 # pilotis: piso, pilares internos (linha do meio) e a rampa
 box("Piso_Pilotis", (X1 - X0, PROF, .15), ((X0 + X1) / 2, PROF / 2, FZ - .075), M["piso_pilotis"], C_GAL)
 for k in range(NM + 1):
@@ -938,8 +955,22 @@ for x, y, nome, vir, z in ((-14.95, YC0 + .11, "SECRETARIA", "+y", 2.3), (12.95,
     box("Placa_Sala", (len(nome) * .075 + .2, .02, .2), (x, y, FZ + z), M["branco"], C_SOLTO)
     texto("Placa_Sala_Texto", nome, .09, (x, y + (.012 if vir == "+y" else -.012), FZ + z), vir, M["texto_pr"], C_SOLTO)
 texto("Placa_Direcao", "DIREÇÃO", .1, (-2.14, 5.45, FZ + 2.35), "-x", M["texto_pr"], C_SOLTO)
-for x, y in ((-14.95, YC0), (12.95, YC0), (-9.05, YC1), (-2.05, YC1), (16.45, YC1)):
-    box("Porta_Fechada", (.9, .05, 2.08), (x, y, FZ + 1.04), M["porta_azul"], C_TER)
+# portas fechadas do corredor: madeira pintada de azul (veio leve sob a tinta), folha lisa, batente e
+# macaneta de alavanca com espelho (antes era so uma placa azul lisa)
+M.update({"porta_mad_az": mat("Porta_Madeira_Azul", "#2f63a8", .4), "batente_corr": mat("Batente_Porta_Corredor", "#e6e2d6", .55),
+          "ferragem": mat("Ferragem_Porta", "#9ea2a6", .3, .8)})
+def porta_corredor(x, y, s):
+    box("Porta_Fechada", (.9, .05, 2.08), (x, y, FZ + 1.04), M["porta_mad_az"], C_TER)
+    f = y + s * .027                                             # face da porta voltada para o corredor
+    for dx in (-.48, .48): box("Porta_Fechada_Batente", (.06, .27, 2.13), (x + dx, y, FZ + 1.065), M["batente_corr"], C_TER)
+    box("Porta_Fechada_Batente", (1.02, .27, .06), (x, y, FZ + 2.13), M["batente_corr"], C_TER)
+    # folha lisa, como as portas de escola publica (sem frisos de almofada, a pedido do autor)
+    box("Porta_Fechada_Espelho", (.05, .01, .2), (x + .34, f + s * .004, FZ + 1.0), M["ferragem"], C_SOLTO, bevel=.004)
+    cyl("Porta_Fechada_Roseta", .022, .022, .02, (x + .34, f + s * .012, FZ + 1.05), M["ferragem"], C_SOLTO, rot=(PI / 2, 0, 0), seg=12)
+    box("Porta_Fechada_Macaneta", (.12, .018, .016), (x + .29, f + s * .03, FZ + 1.05), M["ferragem"], C_SOLTO, bevel=.006)
+    box("Porta_Fechada_Chave", (.008, .006, .022), (x + .34, f + s * .01, FZ + .94), M["preto"], C_SOLTO)
+for x, y, s_ in ((-14.95, YC0, 1), (12.95, YC0, 1), (-9.05, YC1, -1), (-2.05, YC1, -1), (16.45, YC1, -1)):
+    porta_corredor(x, y, s_)
 
 # ---- recepcao (x -10 .. -2, y 3 .. 10)
 r = vazio("Recepcao_Balcao", (-9.0, 6.4, FZ), C_MOV, PI / 2)
@@ -952,9 +983,29 @@ for k in range(7):
 texto("Recepcao_Mural_Titulo", "AVISOS", .12, (-3.4, BY0 + .175, FZ + 2.65), "+y", M["texto_az"], C_SOLTO)
 for k in range(4):
     modelo_ph("Recepcao_Cadeira", "plastic_monobloc_chair_01", (-4.6 + k * .6, BY0 + .5, FZ), PI, C_SOLTO, max_tris=3000)
-r = vazio("Relogio_Parede", (-6.0, YC0 - .14, FZ + 2.6), C_SOLTO)
-cyl("Relogio_Aro", .17, .17, .04, (0, 0, 0), M["preto"], C_SOLTO, r, rot=(PI / 2, 0, 0), seg=24)
-cyl("Relogio_Mostrador", .15, .15, .045, (0, 0, 0), M["branco"], C_SOLTO, r, rot=(PI / 2, 0, 0), seg=24)
+# relogio de parede do autor (o mesmo do projeto Violencia Domestica: modelos/relogio_parede.glb). O modelo tem o fundo em
+# y = 0 e a frente para -y; rz gira a frente (0 = -y, PI/2 = +x, PI = +y). Sem o arquivo, cai no relogio simples.
+_REL = {}
+def relogio(nome, x, y, z, rz):
+    arq = os.path.join(AQUI, "modelos", "relogio_parede.glb")
+    if "pecas" not in _REL:
+        _REL["pecas"] = []
+        if os.path.exists(arq):
+            antes = set(bpy.data.objects); bpy.ops.import_scene.gltf(filepath=arq)
+            for o in [o for o in bpy.data.objects if o not in antes]:
+                if o.type == "MESH":
+                    for m in o.data.materials:
+                        if m and not m.name.startswith("Modelo_"): m.name = "Modelo_Relogio_" + m.name.split(".")[0]   # o pipeline mantem UV e imagem
+                    _REL["pecas"].append((o.data, o.matrix_world.copy()))
+                bpy.data.objects.remove(o, do_unlink=True)
+    r = vazio(nome, (x, y, z), C_SOLTO, rz)
+    if not _REL["pecas"]:
+        cyl(nome + "_Aro", .16, .16, .04, (0, -.02, 0), M["preto"], C_SOLTO, r, rot=(PI / 2, 0, 0), seg=24)
+        cyl(nome + "_Mostrador", .14, .14, .045, (0, -.022, 0), M["branco"], C_SOLTO, r, rot=(PI / 2, 0, 0), seg=24)
+        return
+    for k, (me, mw) in enumerate(_REL["pecas"]):
+        ob = bpy.data.objects.new("%s_Peca_%d" % (nome, k), me); C_SOLTO.objects.link(ob); ob.parent = r; ob.matrix_parent_inverse.identity(); ob.matrix_basis = mw
+relogio("Relogio_Parede", -9.9, 6.4, FZ + 2.45, PI / 2)       # na parede atras do balcao da recepcao (antes ficava atras do ar-condicionado)
 # ---- direcao (x -2 .. 6, y 3 .. 10)
 r = vazio("Direcao_Mesa", (2.4, 7.0, FZ), C_MOV)
 box("Direcao_Mesa_Tampo", (1.7, .85, .04), (0, 0, .75), M["mad_cl"], C_MOV, r)
@@ -1123,14 +1174,41 @@ def porta(nome, dobradica, rz, m, larg=.88):
 porta("I_Porta_Direcao", (-2.0, 5.0), PI / 2, M["porta_mad"])
 porta("I_Porta_Banheiro", (-16.5, YC1), 0, M["porta_azul"])
 porta("I_Porta_Sala", (6.5, YC1), 0, M["porta_amarela"])      # porta amarela, como na foto da sala do Tancredo
+_PECAS = {}
+def peca_glb(nome, arq, pai, mats=None):
+    """Modelo pronto do autor (modelos/<arq>), com as pecas filhas do vazio 'pai'. mats: {trecho do nome do material: material
+    da cena}. Materiais com imagem ganham o prefixo Modelo_ (o pipeline mantem a UV). Devolve False sem o arquivo."""
+    cam = os.path.join(AQUI, "modelos", arq)
+    if arq not in _PECAS:
+        _PECAS[arq] = []
+        if os.path.exists(cam):
+            antes = set(bpy.data.objects); bpy.ops.import_scene.gltf(filepath=cam)
+            for o in [o for o in bpy.data.objects if o not in antes]:
+                if o.type == "MESH":
+                    if not o.data.materials: o.data.materials.append(M["preto"])           # pecas sem material (teclas)
+                    for i, m in enumerate(o.data.materials):
+                        if not m: continue
+                        troca = next((v for k_, v in (mats or {}).items() if k_ in m.name), None)
+                        if troca: o.data.materials[i] = troca
+                        elif m.node_tree and any(nd.type == "TEX_IMAGE" and nd.image for nd in m.node_tree.nodes) and not m.name.startswith("Modelo_"):
+                            m.name = "Modelo_%s_%d" % (os.path.splitext(arq)[0], i)
+                    _PECAS[arq].append((o.data, o.matrix_world.copy(), o.name))
+                bpy.data.objects.remove(o, do_unlink=True)
+    if not _PECAS[arq]: return False
+    for k_, (me, mw, n_) in enumerate(_PECAS[arq]):
+        ob = bpy.data.objects.new("%s_%d" % (nome, k_), me); C_SOLTO.objects.link(ob); ob.parent = pai; ob.matrix_parent_inverse.identity(); ob.matrix_basis = mw
+    return True
 def item(nome, pos, rz=0.0): return vazio(nome, pos, C_INT, rz)
 r = item("I_Celular_Print", (2.75, 6.95, FZ + .772), .4)
 box("I_Celular_Print_Corpo", (.075, .155, .009), (0, 0, .0045), M["preto"], C_INT, r, bevel=.004)
 box("I_Celular_Print_Tela", (.068, .145, .002), (0, 0, .0095), M["tela"], C_INT, r)
 r = item("I_Monitor_Cameras", (1.85, 7.2, FZ + .77), 0)
-box("I_Monitor_Cameras_Tela", (.55, .04, .34), (0, 0, .25), M["preto"], C_INT, r)
-box("I_Monitor_Cameras_Pe", (.08, .08, .08), (0, 0, .04), M["preto"], C_INT, r)
-quadro("I_Monitor_Cameras_Imagem", (0, .025, .25), "+y", .5, .3, M["tela"], C_INT, r)
+# notebook do autor (o do cassino: modelos/notebook_cassino.glb), no lugar do monitor; a tela fica no lado +x do modelo
+# e o vazio gira para ela ficar virada para a cadeira da diretora (+y). A tela acesa mostra a imagem das cameras.
+rn = vazio("I_Monitor_Cameras_Notebook", (0, 0, 0), C_INT, -PI / 2, parent=r)
+if not peca_glb("I_Monitor_Cameras_Notebook_Peca", "notebook_cassino.glb", rn, {"Tela_Acesa": M["tela"], "Metal_Escovado": M["metal"]}):
+    box("I_Monitor_Cameras_Tela", (.55, .04, .34), (0, 0, .25), M["preto"], C_INT, r)
+    quadro("I_Monitor_Cameras_Imagem", (0, .025, .25), "+y", .5, .3, M["tela"], C_INT, r)
 box("I_Monitor_Cameras_DVR", (.36, .26, .06), (.45, 0, .03), M["preto"], C_INT, r)
 r = item("I_Pasta_Frequencia", (-8.95, 7.2, FZ + 1.09), PI / 2 + .1)
 box("I_Pasta_Frequencia_Capa", (.32, .24, .03), (0, 0, .015), M["peit_verm"], C_INT, r)
@@ -1220,11 +1298,12 @@ for x, y, vir in ((BX0 + .15, (YC0 + YC1) / 2, "+x"), (BX1 - .15, (YC0 + YC1) / 
 for k, (x, y, z, rz) in enumerate(((-7.5, .7, PD - .15, PI), (BX0 + .3, 11.5, PD - .15, -PI / 2), (BX1 - .3, 11.5, PD - .15, PI / 2), (PX + 3.25, -38.0, 2.95, 0))):
     modelo_ph("Camera_Seguranca_%d" % k, "security_camera_01", (x, y, FZ + z - .25), rz, C_SOLTO, alt=.25)
 # ar-condicionado split (direcao, recepcao, sala 104)
-for k, (x, y, rz) in enumerate(((3.5, YC0 - .2, 0), (-6.0, YC0 - .2, 0), (11.75, 16.0, PI / 2))):
+for k, (x, y, rz) in enumerate(((3.5, YC0 - .1, PI), (-6.0, YC0 - .1, PI), (11.9, 16.0, PI / 2))):
+    # evaporadora de parede do autor (a mesma do cassino: modelos/ar_split_realista.glb). O modelo tem as costas em y = 0
+    # e a frente para +y; o vazio gira para a frente ficar para dentro da sala. Sem o arquivo, cai na caixa simples.
     r = vazio("Split_%d" % k, (x, y, FZ + 2.55), C_SOLTO, rz)
-    box("Split_%d_Corpo" % k, (.9, .22, .3), (0, 0, 0), M["split"], C_SOLTO, r, bevel=.03)
-    box("Split_%d_Saida" % k, (.75, .02, .04), (0, -.11, -.11), M["preto"], C_SOLTO, r)
-    barra("Split_%d_Dreno" % k, (.4, 0, -.15), (.4, 0, -.9), .008, M["branco"], C_SOLTO, r, seg=6)
+    if not peca_glb("Split_%d_Autor" % k, "ar_split_realista.glb", r):
+        box("Split_%d_Corpo" % k, (.9, .22, .3), (0, .11, 0), M["split"], C_SOLTO, r, bevel=.03)
 # bebedouro industrial de inox (4 torneiras) na galeria, junto a parede do bloco
 # --- banheiro masculino (x -20 .. -12, y 13 .. 19): azulejo ate 1,8 m, bancada de granito com 3 cubas, mictorios, 3 cabines
 box("Banheiro_Azulejo_Fundo", (7.8, .03, 1.8), (-16, BY1 - .14, FZ + .9), M["azulejo"], C_TER)
@@ -1252,7 +1331,7 @@ for k in range(3):                                              # cabines: vaso,
 por("Banheiro_Divisoria", "divisoria", _divisoria, -12.6, 18.2, FZ, 0, C_TER)
 lixeira("Banheiro_Lixeira", -13.0, 13.4, 0, M["branco"], alt=.45, r=.15)
 modelo_ph("Banheiro_Placa_Piso", "WetFloorSign_01", (-17.5, 14.6, FZ), .5, C_SOLTO, alt=.6)
-por("Bebedouro", "bebedouro", _bebedouro, -12.5, BY0 - .35, FZ, 0, C_MOV)
+por("Bebedouro", "bebedouro", _bebedouro, -2.5, BY0 - .35, FZ, 0, C_MOV)        # na parede lisa da galeria (antes ficava embaixo da janela gradeada)
 # grades nas janelas do terreo do bloco (muito comuns em escolas publicas)
 for y, divs in ((BY0, (-10.0, -2.0, 6.0)), (BY1, (-12.0, -6.0, 2.0, 12.0))):
     for v0, v1, zb, zt in janelas_frente(BX0, BX1, None, divs):
@@ -1513,11 +1592,7 @@ def vida_sala(nome, x0, x1, y0, y1, idx, frente_y):
     texto(nome + "_Quadro_Texto", t2, .12, (qx + .025, yc + .1, zq + .04), "+x", M["texto_pr"], C_SOLTO)
     texto(nome + "_Quadro_Texto", t3, .11, (qx + .025, yc + .1, zq - .17), "+x", M["texto_pr"], C_SOLTO)
     texto(nome + "_Quadro_Texto", t4, .11, (qx + .025, yc + .1, zq - .37), "+x", M["texto_pr"], C_SOLTO)
-    r = vazio(nome + "_Relogio", (x0 + .1, yc - 2.7, P1Z + 2.45), C_SOLTO)
-    cyl(nome + "_Relogio_Aro", .16, .16, .04, (0, 0, 0), M["preto"], C_SOLTO, r, rot=(0, PI / 2, 0), seg=24)
-    cyl(nome + "_Relogio_Mostrador", .14, .14, .045, (0, 0, 0), M["branco"], C_SOLTO, r, rot=(0, PI / 2, 0), seg=24)
-    box(nome + "_Relogio_Ponteiro", (.01, .008, .1), (.026, 0, .04), M["preto"], C_SOLTO, r)
-    box(nome + "_Relogio_Ponteiro", (.01, .07, .008), (.026, .03, 0), M["preto"], C_SOLTO, r)
+    relogio(nome + "_Relogio", x0 + .1, yc - 2.7, P1Z + 2.45, PI / 2)     # na parede do quadro, virado para a sala
     ys = [y0 + 1.6 + k * 1.25 for k in range(int((y1 - y0 - 2.4) / 1.25) + 1)]
     ys = ys[:-1] if abs(frente_y - y1) < abs(frente_y - y0) else ys[1:]      # mesma fileira livre junto a porta de sala_aula
     for x in [x0 + 2.8 + k * 1.5 for k in range(5)]:
@@ -1654,9 +1729,9 @@ else:
 # ------------------------------------------------------------------ 8. luzes
 sol = luz("Sol", "SUN", 4.5, "#fff2dc", (0, 0, 40), C_LUZ, angle=math.radians(2.0))   # sol forte de manha (antes 3,6)
 sol.rotation_euler = (math.radians(48), 0, math.radians(-35))
-def tubo(nome, x, y, watts, comp=1.2, col=C_TER, desce=0.0):
-    luminaria(nome, x, y, FZ + PD - desce, col, comp=comp + .05)
-    if desce:                                                    # luminaria pendurada abaixo das vigas (pilotis)
+def tubo(nome, x, y, watts, comp=1.2, col=C_TER, desce=0.0, ao_longo_x=True):
+    luminaria(nome, x, y, FZ + PD - desce, col, comp=comp + .05, ao_longo_x=ao_longo_x)
+    if desce >= .1:                                                    # luminaria pendurada abaixo das vigas (pilotis)
         for dx in (-comp / 3, comp / 3): barra(nome + "_Pendente", (x + dx, y, FZ + PD), (x + dx, y, FZ + PD - desce + .02), .006, M["metal"], C_SOLTO, seg=4)
     luz(nome + "_Luz", "POINT", watts, "#eaf2ff", (x, y, FZ + PD - .4 - desce), C_LUZ, shadow_soft_size=.3)
 for x, y in ((-7.5, 5.0), (-4.5, 5.0), (-7.5, 8.2), (-4.5, 8.2)): tubo("Luz_Recepcao", x, y, 45)
@@ -1666,12 +1741,13 @@ for x, y in ((-17.5, 15.0), (-14.5, 17.0)): tubo("Luz_Banheiro", x, y, 30)
 for x, y in ((4.5, 14.8), (9.5, 14.8), (4.5, 17.6), (9.5, 17.6)): tubo("Luz_Sala_104", x, y, 40)
 # pilotis e rampa: calhas fluorescentes no teto (como nas fotos de CIEP), em grade nas duas alas abertas e nas faixas da frente e dos fundos
 for x in range(-45, 50, 10):
-    for y in (1.5, PROF - 1.5): tubo("Luz_Pilotis_Borda", x, y, 45, col=C_GAL, desce=.45)
+    # no vao entre duas vigas (as vigas ficam a cada 1,25 m a partir de x = -50), paralela a elas e rente a laje
+    for y in (1.5, PROF - 1.5): tubo("Luz_Pilotis_Borda", x + .625, y, 45, col=C_GAL, desce=.02, ao_longo_x=False)
 for sx in (-1, 1):
     for k in range(6):
         for y in (6.0, 16.0):
             if 23.0 < sx * (22.5 + 5 * k) < 37.5 and y > 12: continue        # area da rampa
-            tubo("Luz_Pilotis", sx * (22.5 + 5 * k), y, 60, col=C_GAL, desce=.45)
+            tubo("Luz_Pilotis", sx * (22.5 + 5 * k) + .625, y, 60, col=C_GAL, desce=.02, ao_longo_x=False)
 
 # ------------------------------------------------------------------ 9. pontos do treinamento (cena.json)
 ponto("Inicio", PX + 3.0, -41.5, (-.2, 1)); ponto("Parceiro", PX + 4.5, -41.0, (-.4, 1)); ponto("Inspetora", PX + 4.1, -35.6, (-.3, -1))
@@ -2037,18 +2113,24 @@ for (a, b), y, s_, folha in (((14.5, 15.4), PC0, -1, False), ((24.5, 25.4), PC0,
 
 # 4) teto: eletrodutos aparentes, caixas de passagem e detectores de fumaca (corredores e salas)
 M.update({"detector": mat("Detector_Fumaca", "#f1f1ec", .4), "caixa_luz": mat("Caixa_Passagem", "#9a9d9f", .5, .3)})
+def detector_fumaca(nome, x, y, z):
+    cyl(nome + "_Base", .068, .068, .012, (x, y, z - .006), M["detector"], C_SOLTO, seg=24)
+    cyl(nome + "_Grade", .056, .05, .022, (x, y, z - .023), M["caixa_luz"], C_SOLTO, seg=24)
+    esfera(nome + "_Domo", .05, (x, y, z - .034), M["detector"], C_SOLTO, sub=2, esc=(1, 1, .38))
+    for k in range(10):
+        a = k / 10 * 2 * PI; box(nome + "_Fresta", (.004, .012, .016), (x + .057 * math.cos(a), y + .057 * math.sin(a), z - .022), M["preto"], C_SOLTO, rot=(0, 0, a))
+    esfera(nome + "_Led", .005, (x + .03, y, z - .045), M["giro_verm"], C_SOLTO, sub=1)
 def teto_instalacoes(nome, x0, x1, y_tubo, z, detectores):
     cyl(nome + "_Eletroduto_Teto", .016, .016, x1 - x0, ((x0 + x1) / 2, y_tubo, z - .02), M["pvc"], C_SOLTO, rot=(0, PI / 2, 0), seg=8)
     x = x0 + 2.5
     while x < x1 - 1:
         box(nome + "_Caixa_Passagem", (.11, .11, .05), (x, y_tubo, z - .028), M["caixa_luz"], C_SOLTO, bevel=.006); x += 5.0
     for xd, yd in detectores:
-        cyl(nome + "_Detector_Fumaca", .065, .06, .035, (xd, yd, z - .02), M["detector"], C_SOLTO, seg=20)
-        esfera(nome + "_Detector_Led", .006, (xd + .03, yd, z - .04), M["giro_verm"], C_SOLTO, sub=1)
+        detector_fumaca(nome + "_Detector_Fumaca", xd, yd, z)
 teto_instalacoes("Corredor_Terreo", -19.6, 19.6, YC0 + .18, FZ + PD, [(x, (YC0 + YC1) / 2) for x in (-14.5, -4.5, 5.5, 15.5)])
 teto_instalacoes("Pav1_Corredor", 10.2, 39.8, PC0 + .18, Z2 - .39, [(x, (PC0 + PC1) / 2) for x in (14.5, 24.5, 34.5)])
 for nome, x0, x1, y0, y1 in (("Sala_201", 10.0, 20.0, .5, PC0), ("Sala_202", 20.0, 30.0, .5, PC0), ("Sala_203", 30.0, 40.0, .5, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5)):
-    cyl(nome + "_Detector_Fumaca", .065, .06, .035, ((x0 + x1) / 2, (y0 + y1) / 2, P1Z + PD1 - .05), M["detector"], C_SOLTO, seg=20)
+    detector_fumaca(nome + "_Detector_Fumaca", (x0 + x1) / 2, (y0 + y1) / 2, P1Z + PD1 - .03)
 
 # 5) banheiro masculino: papeleira de papel higienico em cada cabine e dispenser de alcool gel na entrada
 for k in range(3):
@@ -2064,8 +2146,8 @@ for k, cor in enumerate(("#2e7d32", "#1f5fb0", "#6b6f72")):
     box("Contentor_Lixo_Corpo", (.58, .72, .95), (x, -1.0, FZ + .06 + .475), m_, C_SOLTO, bevel=.03)
     box("Contentor_Lixo_Tampa", (.62, .78, .05), (x, -1.03, FZ + 1.06), m_, C_SOLTO, bevel=.015)
     for sx in (-1, 1): cyl("Contentor_Lixo_Roda", .1, .1, .05, (x + sx * .26, -.62, FZ + .1), M["preto"], C_SOLTO, rot=(0, PI / 2, 0), seg=12)
-r = vazio("Mural_Entrada", (-6.0, -33.6, FZ), C_SOLTO, 0)         # de frente para quem entra pelo portao (avisos no lado -y)
-for sx in (-1, 1): cyl("Mural_Entrada_Poste", .04, .04, 2.2, (sx * .85, 0, 1.1), M["galvanizado"], C_SOLTO, r, seg=10)
+# mural de avisos preso na parede da galeria, ao lado da entrada da recepcao (entre a porta e o bebedouro)
+r = vazio("Mural_Entrada", (-4.65, BY0 - .15, FZ), C_SOLTO, 0)
 box("Mural_Entrada_Quadro", (1.8, .04, 1.0), (0, 0, 1.55), M["cortica"], C_SOLTO, r)
 box("Mural_Entrada_Moldura", (1.86, .05, .06), (0, 0, 2.08), M["metal"], C_SOLTO, r)
 box("Mural_Entrada_Moldura", (1.86, .05, .06), (0, 0, 1.02), M["metal"], C_SOLTO, r)

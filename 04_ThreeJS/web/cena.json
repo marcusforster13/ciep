@@ -1,18 +1,18 @@
 {
- "gerado_em": "2026-11-11 12:58",
+ "gerado_em": "2026-11-11 16:24",
  "qualidade": "alta",
  "lightmaps": {
   "01_Rua_Estatico": {
    "lm": "lightmaps/LM_01_Rua.png",
-   "max": 1.14795
+   "max": 1.14798
   },
   "02_Patio_Estatico": {
    "lm": "lightmaps/LM_02_Patio.png",
-   "max": 1.1799
+   "max": 1.17811
   },
   "03_Predio_Fachada_Estatico": {
    "lm": "lightmaps/LM_03_Predio_Fachada.png",
-   "max": 1.13465
+   "max": 1.13621
   },
   "04_Terreo_Interior_Estatico": {
    "lm": "lightmaps/LM_04_Terreo_Interior.png",
@@ -20,11 +20,11 @@
   },
   "05_Passarela_Estatico": {
    "lm": "lightmaps/LM_05_Passarela.png",
-   "max": 1.16123
+   "max": 1.15908
   },
   "06_Moveis_Estatico": {
    "lm": "lightmaps/LM_06_Moveis.png",
-   "max": 0.50819
+   "max": 0.4721
   },
   "07_Pilotis_Estatico": {
    "lm": "lightmaps/LM_07_Pilotis.png",
@@ -32,40 +32,40 @@
   },
   "10_Viatura_Estatico": {
    "lm": "lightmaps/LM_10_Viatura.png",
-   "max": 1.41761
+   "max": 1.41752
   },
   "Giroflex_Lente_1": {
    "lm": "lightmaps/LM_10_Viatura.png",
-   "max": 1.41761
+   "max": 1.41752
   },
   "Giroflex_Lente_2": {
    "lm": "lightmaps/LM_10_Viatura.png",
-   "max": 1.41761
+   "max": 1.41752
   },
   "Giroflex_Lente_3": {
    "lm": "lightmaps/LM_10_Viatura.png",
-   "max": 1.41761
+   "max": 1.41752
   },
   "Giroflex_Lente_4": {
    "lm": "lightmaps/LM_10_Viatura.png",
-   "max": 1.41761
+   "max": 1.41752
   },
   "Giroflex_Lente_5": {
    "lm": "lightmaps/LM_10_Viatura.png",
-   "max": 1.41761
+   "max": 1.41752
   },
   "Giroflex_Lente_6": {
    "lm": "lightmaps/LM_10_Viatura.png",
-   "max": 1.41761
+   "max": 1.41752
   },
   "11_Pavimento_1_Estatico": {
    "lm": "lightmaps/LM_11_Pavimento_1.png",
-   "max": 2.98904
+   "max": 2.98743
   }
  },
  "lightmap_ganho": 3.14159,
  "exposicao": 1.0,
- "glb_bytes": 46024268,
+ "glb_bytes": 47665764,
  "env": "env/noite_1k.hdr",
  "env_intensidade": 0.35,
  "cameras": {

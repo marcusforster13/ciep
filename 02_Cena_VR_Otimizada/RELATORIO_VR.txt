@@ -1,32 +1,32 @@
 A MENSAGEM (CIEP) - VERSAO VR OTIMIZADA
 
-DEPOIS: 518735 tris | 44 malhas | 236 slots de material (~draw calls) | 91 luzes
+DEPOIS: 556017 tris | 44 malhas | 252 slots de material (~draw calls) | 91 luzes
 
 Triangulos por colecao:
-  12_Objetos_Soltos                    325447
+  12_Objetos_Soltos                    357727
   06_Moveis                            101360
-  03_Predio_Fachada                     36696
+  03_Predio_Fachada                     37176
   07_Pilotis                            17784
-  04_Terreo_Interior                     9548
+  04_Terreo_Interior                     9728
   11_Pavimento_1                         8556
   10_Viatura                             8394
-  02_Patio                               4660
+  08_Interativos                         5964
+  02_Patio                               4768
   05_Passarela                           4212
-  08_Interativos                         1730
   01_Rua                                  348
 
 Etapas:
   - Grama instanciada removida de 0 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
-  - Modificadores aplicados em 5141 objetos; textos e fios convertidos em malha.
+  - Modificadores aplicados em 5345 objetos; textos e fios convertidos em malha.
   - Bake de 0 materiais procedurais em texturas de imagem.
-  - 26 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
+  - 29 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
-  - Colisao: 1100 caixas orientadas preparadas.
+  - Colisao: 1121 caixas orientadas preparadas.
   - 6 conjuntos interativos unidos (1 malha por conjunto).
-  - 5102 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
+  - 5304 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: ciep_VR.glb
   - Exportado: ciep_VR.fbx
-  - Colisao: 1100 caixas, 13200 tris -> colisao.glb / colisao.fbx
+  - Colisao: 1121 caixas, 13452 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps
