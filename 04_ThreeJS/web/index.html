@@ -96,7 +96,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1111-1624';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1111-1711';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
@@ -238,6 +238,8 @@ gltf.scene.traverse(o => {
     if (m.transmission > 0) { m.transmission = 0; m.transparent = true; m.opacity = 0.45; m.roughness = 0.05; }
     // decalques (sombras de canto, marcas de mao, sujeira, infiltracao): sempre por cima da superficie, sem piscar no Quest
     if (/sombra_|marca_mao|sujeira_rodape|infiltracao/i.test(m.name)) { m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -4; m.depthWrite = false; }
+    if (/sujeira_rodape/i.test(m.name)) m.opacity = .35;      // sujeira de rodape bem discreta (os riscos pareciam listras/reflexo na parede)
+    if (m.name === 'Letra_Metal_Escovado') { m.color.set(0x2c2f33); m.metalness = .55; m.roughness = .35; }      // letreiro escuro: contraste com a fachada cinza
     m.envMapIntensity = CFG.env_intensidade ?? 0.35;
     if (lm && o.geometry.attributes.uv1) {
       // pilotis (embaixo do predio) um pouco mais escuros que o patio ao sol: mais contraste, como na realidade

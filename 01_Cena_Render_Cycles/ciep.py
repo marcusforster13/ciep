@@ -840,14 +840,15 @@ for fy0, rz in ((0.0, 0.0), (PROF, PI)):
     fy = fy0 + (.105 if fy0 == 0.0 else -.105)                  # arcos recuados 10,5 cm: a face fica no plano da fachada (sem degrau)
     for k in range(NM):
         xc = X0 + MOD * (k + .5)
-        painel_simples("Arcada_Arco", MOD, PD, AW, AH, AR, -(PD - AH) / 2, .55, (xc, fy, FZ + PD / 2), M["branco_fach"], C_FAC, fundo_aberto=True, rz=rz)
+        # parede dos arcos ate a laje do 1o andar numa peca so (antes: parede + viga separada, que deixava uma linha horizontal)
+        HA = Z1 - FZ
+        painel_simples("Arcada_Arco", MOD, HA, AW, AH, AR, -(HA - AH) / 2, .55, (xc, fy, FZ + HA / 2), M["branco_fach"], C_FAC, fundo_aberto=True, rz=rz)
         # face de baixo do trecho reto no topo do arco (o painel em fatias deixava ali um vao preto, vendo o oco da parede)
         box("Arcada_Arco_Teto", (AW - 2 * AR + .06, .545, .02), (xc, fy, FZ + AH + .008), M["branco_fach"], C_FAC)
     for k in range(NM + 1):
         box("Arcada_Coluna", (MOD - AW - .04, .53, PD), (X0 + MOD * k, fy, FZ + PD / 2), M["branco_fach"], C_FAC)      # por dentro da parede dos arcos: a face fica lisa, sem ressalto nem linha (a parede ja tem o trecho entre os arcos)
-    box("Arcada_Viga", (X1 - X0, .55, Z1 - FZ - PD), ((X0 + X1) / 2, fy, (FZ + PD + Z1) / 2), M["branco_fach"], C_FAC)
 # nome da escola na faixa lisa do topo da fachada, em letras-caixa de metal escovado (como nas fotos dos CIEPs repintados)
-M["letra_metal"] = mat("Letra_Metal_Escovado", "#c4c8cc", .32, .85)
+M["letra_metal"] = mat("Letra_Metal_Escovado", "#2c2f33", .35, .55)      # metal escuro: le bem contra a fachada cinza
 def letreiro_metal(nome, conteudo, tam, pos, prof=.03):
     cu = bpy.data.curves.new("_let", "FONT"); cu.body = conteudo; cu.size = tam; cu.align_x = "CENTER"; cu.align_y = "CENTER"
     cu.resolution_u = 2; cu.extrude = prof / 2; cu.bevel_depth = .002; cu.space_character = 1.05
@@ -1978,8 +1979,8 @@ def tex_cartaz(seed, W=160, H=208):
 def tex_rodape(W=512, H=64, seed=9):
     """Sujeira de uso no pe da parede: faixa escura que some para cima, com marcas de sapato e mochila."""
     r = np.random.default_rng(seed); yy, xx = np.mgrid[0:H, 0:W]; yy = yy / H; xx = xx / W
-    al = .5 * np.clip(1 - yy / .55, 0, 1) ** 2 * (.6 + .4 * np.sin(xx * 23 + r.uniform(0, 6)) ** 2)
-    for _ in range(40):                                                 # riscos de sapato
+    al = .2 * np.clip(1 - yy / .55, 0, 1) ** 2 * (.6 + .4 * np.sin(xx * 23 + r.uniform(0, 6)) ** 2)
+    for _ in range(0):                                                  # (sem riscos de sapato: pareciam listras na parede)
         x0, y0 = r.uniform(0, 1), r.uniform(.05, .5); L = r.uniform(.01, .05)
         m = (np.abs(yy - y0) < .025) & (xx > x0) & (xx < x0 + L); al[m] = np.maximum(al[m], r.uniform(.35, .7))
     al = np.clip(al * (.7 + .3 * r.random((H, W))), 0, 1)
