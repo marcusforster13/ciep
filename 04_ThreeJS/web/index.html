@@ -13,8 +13,7 @@
   #loading{position:fixed;inset:0;display:grid;place-items:center;background:#f5f7fa;z-index:1000;transition:opacity .6s;font-family:var(--sans)}
   #loading.fim{opacity:0;pointer-events:none}
   #loading .ld{width:min(440px,calc(100% - 32px));text-align:center}
-  #loading .ldlogo{width:100%;aspect-ratio:788/208;overflow:hidden;margin:0 auto 26px;position:relative}
-  #loading .ldlogo video{position:absolute;left:-24%;top:50%;width:148%;transform:translateY(-50%);display:block}      /* logo animado (com luz) do autor: toca uma vez e fica no ultimo quadro */
+  #loading img{width:100%;height:auto;display:block;margin:0 auto 26px}
   #loading .ldt{color:#0b1453;font:600 15px/1.4 var(--sans);letter-spacing:.02em;margin-bottom:18px}
   #loading .ldbar{height:8px;border-radius:4px;background:#dde5ec;overflow:hidden}
   #loading .ldbar i{display:block;height:100%;width:0;background:#00d3e4;border-radius:4px;transition:width .25s}
@@ -45,7 +44,7 @@
 </style>
 </head>
 <body>
-<div id="loading"><div class="ld"><div class="ldlogo"><video src="img/logo_xpto_intro.webm" poster="img/logo_xpto.png" autoplay muted playsinline aria-label="XPTO inc."></video></div>
+<div id="loading"><div class="ld"><img src="img/logo_xpto.png" alt="XPTO inc." width="788" height="208">
   <div class="ldt">A mensagem · Missão Sala 201 · Treinamento em realidade virtual</div>
   <div class="ldbar"><i id="ldfill"></i></div>
   <div class="ldinfo"><span id="ldmsg">Preparando…</span><b id="pct">0%</b></div></div></div>
@@ -97,7 +96,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 const $ = id => document.getElementById(id);
-const VERSAO = '1112-1119';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
+const VERSAO = '1112-1123';      // carimbada por carimbar_versao.py a cada envio; entra no endereco dos arquivos para o navegador nao usar copia antiga
 window.__versao = VERSAO; window.__arq = {};
 // endereco de um arquivo com a marca do conteudo dele: muda so quando o arquivo muda (o resto fica guardado no navegador)
 const H = window.__h = p => p + '?h=' + (window.__arq[p] || VERSAO);
