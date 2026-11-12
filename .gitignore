@@ -36,3 +36,7 @@ _referencias/
 
 # animacoes do Mixamo (futebol na quadra); baixadas pelo autor, ficam fora do GitHub
 07_Personagens/mixamo/
+
+# pecas exportadas para o autor refazer (geradas por exportar_para_editar.py)
+08_Para_Editar/
+08_Para_Editar_pecas_ciep.zip

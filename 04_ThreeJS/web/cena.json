@@ -1,18 +1,18 @@
 {
- "gerado_em": "2026-11-11 17:53",
+ "gerado_em": "2026-11-12 10:23",
  "qualidade": "alta",
  "lightmaps": {
   "01_Rua_Estatico": {
    "lm": "lightmaps/LM_01_Rua.png",
-   "max": 1.14798
+   "max": 1.14797
   },
   "02_Patio_Estatico": {
    "lm": "lightmaps/LM_02_Patio.png",
-   "max": 1.17799
+   "max": 1.17954
   },
   "03_Predio_Fachada_Estatico": {
    "lm": "lightmaps/LM_03_Predio_Fachada.png",
-   "max": 1.13565
+   "max": 1.13596
   },
   "04_Terreo_Interior_Estatico": {
    "lm": "lightmaps/LM_04_Terreo_Interior.png",
@@ -20,11 +20,11 @@
   },
   "05_Passarela_Estatico": {
    "lm": "lightmaps/LM_05_Passarela.png",
-   "max": 1.15857
+   "max": 1.16023
   },
   "06_Moveis_Estatico": {
    "lm": "lightmaps/LM_06_Moveis.png",
-   "max": 0.4721
+   "max": 0.48185
   },
   "07_Pilotis_Estatico": {
    "lm": "lightmaps/LM_07_Pilotis.png",
@@ -60,12 +60,12 @@
   },
   "11_Pavimento_1_Estatico": {
    "lm": "lightmaps/LM_11_Pavimento_1.png",
-   "max": 2.98743
+   "max": 2.98745
   }
  },
  "lightmap_ganho": 3.14159,
  "exposicao": 1.0,
- "glb_bytes": 47661752,
+ "glb_bytes": 46353256,
  "env": "env/noite_1k.hdr",
  "env_intensidade": 0.35,
  "cameras": {

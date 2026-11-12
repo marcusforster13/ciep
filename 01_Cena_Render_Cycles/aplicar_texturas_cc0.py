@@ -159,7 +159,7 @@ TABELA = {
     "Piso_Pilotis":       ("piso_corredor", 2.5, "#7c7d7a", neutro, .2),
     "Terra_Canteiro":     ("terra", 1.2, "#6b4a35", None, .4),            # brown_mud_leaves_01: terra vermelha com mato rasteiro
     "Concreto_Aparente":  ("concreto", 1.5, "#9c9c98", neutro, .3),            # arquibancada, bases: concreto aparente
-    "Parede_Azul_1070":   ("concreto", 1.5, "#4a70aa", neutro, .3),            # rampa: o mesmo concreto da borda da quadra, pintado de azul
+    "Parede_Azul_1070":   ("fachada_concreto", 1.6, "#4b6c9c", neutro, .25),   # rampa: reboco pintado (o mesmo acabamento da barra azul dos corredores)
     "Corrimao_Galvanizado": ("metal_pintado", .5, "#a9adb1", neutro, .15),     # corrimao da rampa: tubo de aco galvanizado
     "Chapim_Concreto":    ("concreto", 1.5, "#a8a59e", neutro, .3),
     "Armario_Aco_Cinza":  ("metal_pintado", 1.0, "#8a8f94", neutro, .15),
@@ -173,7 +173,7 @@ TABELA = {
     "Muro_Reboco":        ("reboco", 2.0, "#dcd9d2", None, .3),
     "Laje_Teto":          ("fachada_branca", 2.5, "#eeece6", None, .05),
     "Porta_Madeira":      ("madeira_escura", 1.4, "#6b4a30", None, .15),
-    "Porta_Madeira_Azul": ("madeira_escura", 1.2, "#2f63a8", neutro, .08),      # madeira pintada de azul: o veio aparece leve sob a tinta
+    "Porta_Madeira_Azul": ("metal_pintado", 1.0, "#2f63a8", neutro, .04),      # compensado liso pintado com esmalte (sem veio de madeira)
     "Madeira_Clara":      ("madeira_tabuas", 1.2, "#9a7650", None, .2),
     "Tronco_Arvore":      ("casca_arvore", 1.0, "#6b5a48", None, .4),
     "Poste_Metal":        ("metal_pintado", 1.0, "#3b3d40", grafite, .15),

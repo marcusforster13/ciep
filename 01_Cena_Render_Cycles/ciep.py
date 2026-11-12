@@ -814,9 +814,9 @@ box("Laje_Cobertura", (X1 - X0, PROF, .4), ((X0 + X1) / 2, PROF / 2, Z3 - .2), M
 PL_H = 2.0
 # frente toda no mesmo plano (como nas fotos): platibanda, fachada dos andares e arcos do terreo com a face a 17 cm do eixo
 for y in (-.02, PROF + .02):
-    box("Platibanda", (X1 - X0 + .3, .3, PL_H), ((X0 + X1) / 2, y, Z3 + PL_H / 2 - .2), M["branco_fach"], C_FAC)
+    box("Platibanda", (X1 - X0 + .3, .3, PL_H - .2), ((X0 + X1) / 2, y, Z3 + (PL_H - .2) / 2), M["branco_fach"], C_FAC)      # comeca onde a fachada termina (sem sobrepor: nada de flicker)
 for x in (X0 - .1, X1 + .1):
-    box("Platibanda_Lateral", (.3, PROF + .3, PL_H), (x, PROF / 2, Z3 + PL_H / 2 - .2), M["branco_fach"], C_FAC)
+    box("Platibanda_Lateral", (.3, PROF + .3, PL_H - .2), (x, PROF / 2, Z3 + (PL_H - .2) / 2), M["branco_fach"], C_FAC)
     box("Empena", (.3, PROF + .2, Z3 - Z1), (x, PROF / 2, (Z1 + Z3) / 2), M["branco_fach"], C_FAC)
 # juntas da fachada (linhas finas da foto): horizontal na altura da cobertura e verticais na platibanda, a cada modulo
 # (juntas decorativas retiradas a pedido do autor: no site pareciam listras)
@@ -955,7 +955,7 @@ for x, y, nome, vir, z in ((-14.95, YC0 + .11, "SECRETARIA", "+y", 2.3), (12.95,
 texto("Placa_Direcao", "DIREÇÃO", .1, (-2.14, 5.45, FZ + 2.35), "-x", M["texto_pr"], C_SOLTO)
 # portas fechadas do corredor: madeira pintada de azul (veio leve sob a tinta), folha lisa, batente e
 # macaneta de alavanca com espelho (antes era so uma placa azul lisa)
-M.update({"porta_mad_az": mat("Porta_Madeira_Azul", "#2f63a8", .4), "batente_corr": mat("Batente_Porta_Corredor", "#e6e2d6", .55),
+M.update({"porta_mad_az": mat("Porta_Madeira_Azul", "#2f63a8", .3), "batente_corr": mat("Batente_Porta_Corredor", "#e6e2d6", .55),
           "ferragem": mat("Ferragem_Porta", "#9ea2a6", .3, .8)})
 def porta_corredor(x, y, s):
     box("Porta_Fechada", (.9, .05, 2.08), (x, y, FZ + 1.04), M["porta_mad_az"], C_TER)
@@ -1473,8 +1473,8 @@ box("Pav2_Volume", (X1 - X0 - .8, PROF - 1.6, PISO - .6), ((X0 + X1) / 2, PROF /
 
 # ------------------------------------------------------------------ 6c. fidelidade ao CIEP real (fotos da Agencia Brasil, 2025)
 # --- vigas pre-moldadas aparentes no teto dos pilotis e das galerias (nervuras a cada 1,25 m)
-for k in range(int((X1 - X0) / 1.25) + 1):
-    x = X0 + k * 1.25
+for k in range(int((X1 - X0) / 2.5) + 1):                      # uma viga a cada 2,5 m (antes 1,25 m: muitas, a pedido do autor)
+    x = X0 + k * 2.5
     trechos = [(0.3, PROF - .3)] if not (BX0 - .1 < x < BX1 + .1) else [(0.3, BY0 - .1), (BY1 + .1, PROF - .3)]   # sobre o bloco fechado ha forro
     if HX0 - .2 < x < HX1 + .2: trechos = [(a, min(b, HY0 - .2)) for a, b in trechos if a < HY0 - .2] + [(max(a, HY1 + .2), b) for a, b in trechos if b > HY1 + .2]
     for y0, y1 in trechos:
@@ -2109,6 +2109,11 @@ for (a, b), y, s_, folha in (((14.5, 15.4), PC0, -1, False), ((24.5, 25.4), PC0,
             cyl("Pav1_Porta_Roseta", .028, .028, .012, (a + .03 + sx * .026, yf + s_ * .4, P1Z + 1.02), M["metal"], C_SOLTO, rot=(0, PI / 2, 0), seg=12)
             adesivo("Pav1_Porta_Sujeira_Mao", lambda u, v, sx=sx, yf=yf, s_=s_: Vector((a + .03 + sx * .0215, yf + s_ * .36 + (u - .5) * .3, P1Z + 1.02 + (v - .5) * .4)), 1, 1, C_SOLTO, mat_=M_MAO)
 
+# portas do corredor (compensado liso pintado): marca de mao junto a macaneta e encardido no pe da porta
+for x, y, s_ in ((-14.95, YC0, 1), (12.95, YC0, 1), (-9.05, YC1, -1), (-2.05, YC1, -1), (16.45, YC1, -1)):
+    f_ = y + s_ * .029
+    adesivo("Porta_Fechada_Sujeira_Mao", lambda u, v, x=x, f_=f_: Vector((x + .3 + (u - .5) * .3, f_, FZ + 1.05 + (v - .5) * .45)), 1, 1, C_SOLTO, mat_=M_MAO)
+    adesivo("Porta_Fechada_Sujeira_Pe", lambda u, v, x=x, f_=f_: Vector((x + (u - .5) * .86, f_, FZ + .02 + v * .3)), 1, 1, C_SOLTO, mat_=M_RODAPE)
 # 4) teto: eletrodutos aparentes, caixas de passagem e detectores de fumaca (corredores e salas)
 M.update({"detector": mat("Detector_Fumaca", "#f1f1ec", .4), "caixa_luz": mat("Caixa_Passagem", "#9a9d9f", .5, .3)})
 def detector_fumaca(nome, x, y, z):
