@@ -53,6 +53,12 @@ PECAS = {
     "cardapio_refeitorio": ("pre:Refeitorio_Cardapio", 1.0), "fogao": ("pre:Cozinha_Fogao", 1.0),
     "geladeira": ("pre:Cozinha_Geladeira", 1.0), "caldeirao": ("pre:Cozinha_Caldeirao", .6), "panela": ("pre:Cozinha_Panela", .3),
     "tabela_basquete": ("pre:Ginasio_Basquete", 2.5), "trave_futsal": ("pre:Ginasio_Trave", 2.5),
+    "poste_volei_rede": ("pre:Ginasio_Poste_Volei", 6.0), "balcao_refeitorio": ("pre:Refeitorio_Balcao", 4.0),
+    "trilho_bandeja": ("pre:Refeitorio_Trilho_Bandeja", 4.0), "pia_cozinha": ("pre:Cozinha_Pia_Cuba", 1.0),
+    "bancada_cozinha": ("pre:Cozinha_Bancada", 2.5), "coifa": ("pre:Cozinha_Coifa", 2.0), "prateleira_cozinha": ("pre:Cozinha_Prateleira", 2.0),
+    "bancada_banheiro": ("pre:Banheiro_Bancada", 1.6), "mastro_bandeira": ("pre:Mastro", 2.0), "portao_entrada": ("pre:Portao_", 3.5),
+    "portao_grade_corredor": ("pre:Corredor_Portao", 2.0), "horta_alface": ("pre:Horta_Alface", .2), "horta_couve": ("pre:Horta_Couve", .3),
+    "cadeira_recepcao_plastico": ("pre:Recepcao_Cadeira", .4), "estante_direcao": ("pre:Direcao_Estante", 1.0),
 }
 
 def centro(o): return sum((o.matrix_world @ Vector(c) for c in o.bound_box), Vector()) / 8

@@ -2158,6 +2158,85 @@ for k in range(7):
     box("Mural_Entrada_Aviso", (rv.uniform(.22, .34), .006, rv.uniform(.26, .38)), (-.7 + k * .23 + rv.uniform(-.03, .03), -.026, 1.55 + rv.uniform(-.22, .22)), M[("papel", "papel_am", "papel_az")[k % 3]], C_SOLTO, r)
 texto("Mural_Entrada_Texto", "AVISOS · CIEP", .1, (0, -.03, 2.0), "-y", M["texto_az"], C_SOLTO, r)
 
+# ------------------------------------------------------------------ pecas refeitas pelo autor (12/11)
+# As pecas exportadas por exportar_para_editar.py voltaram refeitas (modelos/<peca>_realista.glb). Cada uma entra no lugar
+# exato da peca de codigo: o modelo esta na orientacao da peca de REFERENCIA (a primeira pelo nome, a mesma que foi exportada),
+# centrado em X/Y com a base em z = 0; as outras copias recebem o mesmo encaixe com a rotacao (e o tamanho) delas.
+# O objeto antigo fica (nome, colecao e pai: o treinamento acha os itens pelo nome) e so troca de malha; as partes extras somem.
+import re as _re
+_MATS_ANTES = set(m.name for m in bpy.data.materials)
+def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0):
+    cam = os.path.join(AQUI, "modelos", arq)
+    if not os.path.exists(cam): return None
+    antes = set(bpy.data.objects); bpy.ops.import_scene.gltf(filepath=cam)
+    novos = [o for o in bpy.data.objects if o not in antes]; ms = [o for o in novos if o.type == "MESH"]
+    bpy.context.view_layer.update()
+    for o in ms:
+        if dec:
+            md = o.modifiers.new("dec", "DECIMATE"); md.ratio = dec
+            me = bpy.data.meshes.new_from_object(o.evaluated_get(bpy.context.evaluated_depsgraph_get())); o.modifiers.clear()
+        else: me = o.data.copy()
+        mw = o.matrix_world.copy(); me.transform(mw)
+        if mw.determinant() < 0: me.flip_normals()
+        o.data = me; o.parent = None; o.matrix_world = Matrix.Identity(4)
+    for o in novos:
+        if o.type != "MESH": bpy.data.objects.remove(o, do_unlink=True)
+    with bpy.context.temp_override(active_object=ms[0], selected_objects=ms, selected_editable_objects=ms):
+        bpy.ops.object.join()
+    me = ms[0].data; bpy.data.objects.remove(ms[0], do_unlink=True); me.name = "Autor_" + os.path.splitext(arq)[0]
+    if giro: me.transform(Matrix.Rotation(giro, 4, "Z"))                       # frente do modelo virada para o outro lado
+    if not me.materials and sem_mat: me.materials.append(sem_mat)
+    for i, m in enumerate(me.materials):
+        if m is None: me.materials[i] = sem_mat; continue
+        base = _re.sub(r"\.\d+$", "", m.name)
+        troca = next((v for k_, v in (mats or {}).items() if k_ == base), None)
+        if troca: me.materials[i] = troca
+        elif base != m.name and base in _MATS_ANTES: me.materials[i] = bpy.data.materials[base]      # mesmo material da cena (texturas CC0)
+        elif m.node_tree and any(nd.type == "TEX_IMAGE" and nd.image and nd.image.size[0] > 1 for nd in m.node_tree.nodes):
+            m.name = "Modelo_%s_%d" % (os.path.splitext(arq)[0], i)                                      # o pipeline mantem a UV e a imagem
+    return me
+def _caixa_local(o):
+    xs, ys, zs = zip(*[tuple(c) for c in o.bound_box]); return Vector((max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)))
+def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0):
+    """copias: lista de grupos (listas de objetos); o 1o objeto de cada grupo fica com a malha nova."""
+    copias = [g for g in copias if g]
+    if not copias: say("[AUTOR] %s: peca de codigo nao encontrada" % arq); return
+    me = _malha_glb(arq, mats, sem_mat, dec, giro)
+    if me is None: say("[AUTOR] %s: arquivo nao encontrado" % arq); return
+    bpy.context.view_layer.update()
+    ref = copias[0]; pts = [o.matrix_world @ Vector(c) for o in ref for c in o.bound_box]
+    desl = Matrix.Translation(((min(p.x for p in pts) + max(p.x for p in pts)) / 2, (min(p.y for p in pts) + max(p.y for p in pts)) / 2, min(p.z for p in pts)))
+    base = ref[0].matrix_world.inverted() @ desl; dref = _caixa_local(ref[0]); variantes = {}
+    for g in copias:
+        a = g[0]; d = _caixa_local(a)
+        S = Matrix.Diagonal([d[i] / dref[i] if dref[i] > 1e-4 and d[i] > 1e-4 else 1 for i in range(3)] + [1])
+        mw = a.matrix_world @ S @ base
+        m_ = me
+        if cor and a.data.materials:                     # cadernos: cada um mantem a cor da capa que tinha
+            c0 = a.data.materials[0]
+            if c0.name not in variantes:
+                variantes[c0.name] = me.copy()
+                for i, m in enumerate(variantes[c0.name].materials):
+                    if m and m.name.startswith(cor): variantes[c0.name].materials[i] = c0
+            m_ = variantes[c0.name]
+        for o in g[1:]: bpy.data.objects.remove(o, do_unlink=True)
+        a.modifiers.clear(); a.data = m_; a.matrix_world = mw
+    say("[AUTOR] %s: %d copia(s) trocada(s)" % (arq, len(copias)))
+def _obs(rx): return sorted((o for o in bpy.data.objects if o.type == "MESH" and _re.match(rx, o.name)), key=lambda o: o.name)
+def _cada(rx): return [[o] for o in _obs(rx)]
+def _dados(nome): return [[o] for o in sorted((o for o in bpy.data.objects if o.type == "MESH" and o.data.name == nome), key=lambda o: o.name)]
+
+trocar_peca("carteira_fnde_realista.glb", _dados("Peca_carteira_fnde"))
+trocar_peca("bebedouro_inox_realista.glb", _dados("Peca_bebedouro"))
+trocar_peca("caderno_realista.glb", _cada(r"^Sala_\d+_Caderno(\.\d+)?$"), mats={"Material": M["papel"]}, cor="Caderno_Capa")
+trocar_peca("lapis_realista.glb", _cada(r"^Sala_\d+_Lapis(\.\d+)?$"))
+trocar_peca("caldeirao_realista.glb", _cada(r"^Cozinha_Caldeirao(\.\d+)?$"))
+trocar_peca("celular_realista.glb", [_obs(r"^I_Celular_Print_Corpo") + _obs(r"^I_Celular_Print_Tela")])
+trocar_peca("cardapio_refeitorio_realista.glb", [_obs(r"^Refeitorio_Cardapio")])
+trocar_peca("bandeja_pilha_realista.glb", [_obs(r"^Refeitorio_Bandeja")], dec=.3)
+trocar_peca("horta_canteiro_realista.glb", [_obs(r"^Horta_Canteiro_%d(\.\d+)?$" % k) + _obs(r"^Horta_Canteiro_%d_Terra" % k) for k in range(3)], sem_mat=M["muro"])
+trocar_peca("cartaz_corredor_realista.glb", _cada(r"^Corredor_Frente_Cartaz(\.\d+)?$")[:1], giro=PI)
+
 bpy.data.collections.remove(C_TMP)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(AQUI, "ciep.blend"))
 tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in scene.objects if o.type == "MESH")
