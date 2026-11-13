@@ -1196,6 +1196,54 @@ def peca_glb(nome, arq, pai, mats=None):
     for k_, (me, mw, n_) in enumerate(_PECAS[arq]):
         ob = bpy.data.objects.new("%s_%d" % (nome, k_), me); C_SOLTO.objects.link(ob); ob.parent = pai; ob.matrix_parent_inverse.identity(); ob.matrix_basis = mw
     return True
+def notebook_texturas(arq="notebook_cassino.glb", nome="I_Monitor_Cameras_Notebook_Peca"):
+    """Como no cassino: o teclado do notebook com a textura da foto (modelos/notebook_teclado_textura.png) projetada de cima
+    na base e nas teclas, e a tela acesa com uma imagem; aqui, o mosaico das 4 cameras da escola (gerado uma vez)."""
+    pasta = os.path.join(AQUI, "modelos"); f_tec = os.path.join(pasta, "notebook_teclado_textura.png"); f_tela = os.path.join(pasta, "notebook_tela_cameras.png")
+    if not os.path.exists(f_tec) or not _PECAS.get(arq): return
+    if not os.path.exists(f_tela):                         # mosaico de cameras de seguranca (cinza, com data e hora)
+        W, H = 1024, 640; rg = np.random.default_rng(7); a = np.zeros((H, W, 3))
+        yy, xx = np.mgrid[0:H // 2, 0:W // 2] / np.array([H // 2, W // 2])[:, None, None]
+        for q, (y0, x0) in enumerate(((0, 0), (0, W // 2), (H // 2, 0), (H // 2, W // 2))):
+            hz = .42 + .08 * q                                                   # linha do piso
+            p_ = np.where(yy > hz, .30 + .25 * (yy - hz), .48 - .15 * yy) + .04 * np.sin(xx * (3 + q))
+            p_ = p_ + .03 * rg.random(p_.shape)
+            if q in (0, 3): p_[int(hz * H / 2) - 90:int(hz * H / 2), 60 + q * 30:120 + q * 30] = .2       # porta
+            if q in (1, 2): p_[int(hz * H / 2) - 60:int(hz * H / 2) - 20, 140:360] = .62                  # janela/balcao
+            a[y0:y0 + H // 2, x0:x0 + W // 2] = p_[..., None] * np.array([.95, 1.0, .97])
+            a[y0 + 14:y0 + 30, x0 + 16:x0 + 150] = .92; a[y0 + 14:y0 + 30, x0 + W // 2 - 190:x0 + W // 2 - 16] = .92    # CAM e data/hora
+            a[y0 + 18:y0 + 26, x0 + 22:x0 + 34] = (.9, .15, .1)                   # ponto vermelho (gravando)
+        a[H // 2 - 2:H // 2 + 2] = 0; a[:, W // 2 - 2:W // 2 + 2] = 0
+        im = bpy.data.images.new("tmp_tela", W, H, alpha=False); im.pixels.foreach_set(np.dstack([a, np.ones((H, W))])[::-1].astype(np.float32).ravel())
+        im.filepath_raw = f_tela; im.file_format = "PNG"; im.save(); bpy.data.images.remove(im)
+    def mat_img(n_, f, emit=0.0):
+        m = bpy.data.materials.new(n_); nt = m.node_tree; bs = nt.nodes.get("Principled BSDF"); tx = nt.nodes.new("ShaderNodeTexImage")
+        tx.image = bpy.data.images.load(f); tx.image.pack(); nt.links.new(tx.outputs["Color"], bs.inputs["Base Color"]); bs.inputs["Roughness"].default_value = .5
+        if emit: nt.links.new(tx.outputs["Color"], bs.inputs["Emission Color"]); bs.inputs["Emission Strength"].default_value = emit
+        return m
+    m_tec, m_tela = mat_img("Modelo_Notebook_Teclado", f_tec), mat_img("Modelo_Notebook_Tela_Cameras", f_tela, 1.4)
+    obs = {}
+    for k, (me, mw, n_) in enumerate(_PECAS[arq]):
+        ob = bpy.data.objects.get("%s_%d" % (nome, k))
+        if ob: m2 = me.copy(); m2.transform(mw); ob.data = m2; ob.matrix_basis = Matrix.Identity(4); obs[n_] = ob
+    def caixa(ns):
+        vs = [v.co for n in ns for v in obs[n].data.vertices]; return Vector([min(v[i] for v in vs) for i in range(3)]), Vector([max(v[i] for v in vs) for i in range(3)])
+    n_base = next((n for n in obs if n.startswith("I_Notebook_Base")), None); n_acesa = next((n for n in obs if "Tela_Acesa" in n), None)
+    if not (n_base and n_acesa): return
+    b0, b1 = caixa([n_base]); a0, a1 = caixa([n_acesa])
+    uv_tec = lambda c: ((b1.y - c.y) / (b1.y - b0.y), (c.x - b0.x) / (b1.x - b0.x))
+    uv_tela = lambda c: ((a1.y - c.y) / (a1.y - a0.y), (c.z - a0.z) / (a1.z - a0.z))
+    for n, ob in obs.items():
+        if n == n_acesa: m_, uv, teste = m_tela, uv_tela, lambda f: f.normal.x < -.3
+        elif n == n_base or not n.startswith("I_Notebook"): m_, uv, teste = m_tec, uv_tec, lambda f: f.normal.z > .5
+        else: continue
+        me = ob.data; me.materials.append(m_); i_ = len(me.materials) - 1
+        bm = bmesh.new(); bm.from_mesh(me); uvl = bm.loops.layers.uv.active or bm.loops.layers.uv.new("UVMap")
+        for f in bm.faces:
+            if teste(f):
+                f.material_index = i_
+                for lp in f.loops: lp[uvl].uv = uv(lp.vert.co)
+        bm.to_mesh(me); bm.free()
 def item(nome, pos, rz=0.0): return vazio(nome, pos, C_INT, rz)
 r = item("I_Celular_Print", (2.75, 6.95, FZ + .772), .4)
 box("I_Celular_Print_Corpo", (.075, .155, .009), (0, 0, .0045), M["preto"], C_INT, r, bevel=.004)
@@ -1207,6 +1255,7 @@ rn = vazio("I_Monitor_Cameras_Notebook", (0, 0, 0), C_INT, -PI / 2, parent=r)
 if not peca_glb("I_Monitor_Cameras_Notebook_Peca", "notebook_cassino.glb", rn, {"Tela_Acesa": M["tela"], "Metal_Escovado": M["metal"]}):
     box("I_Monitor_Cameras_Tela", (.55, .04, .34), (0, 0, .25), M["preto"], C_INT, r)
     quadro("I_Monitor_Cameras_Imagem", (0, .025, .25), "+y", .5, .3, M["tela"], C_INT, r)
+else: notebook_texturas()
 box("I_Monitor_Cameras_DVR", (.36, .26, .06), (.45, 0, .03), M["preto"], C_INT, r)
 r = item("I_Pasta_Frequencia", (-8.95, 7.2, FZ + 1.09), PI / 2 + .1)
 box("I_Pasta_Frequencia_Capa", (.32, .24, .03), (0, 0, .015), M["peit_verm"], C_INT, r)
@@ -1477,6 +1526,8 @@ for k in range(int((X1 - X0) / 2.5) + 1):                      # uma viga a cada
     x = X0 + k * 2.5
     trechos = [(0.3, PROF - .3)] if not (BX0 - .1 < x < BX1 + .1) else [(0.3, BY0 - .1), (BY1 + .1, PROF - .3)]   # sobre o bloco fechado ha forro
     if HX0 - .2 < x < HX1 + .2: trechos = [(a, min(b, HY0 - .2)) for a, b in trechos if a < HY0 - .2] + [(max(a, HY1 + .2), b) for a, b in trechos if b > HY1 + .2]
+    if -47.2 < x < -36.8:                                         # cozinha (KX0..KX1, KY0..KY1): sem vigas no teto, a pedido do autor
+        trechos = [(a, min(b, 14.3)) for a, b in trechos if a < 14.3] + [(max(a, 21.7), b) for a, b in trechos if b > 21.7]
     for y0, y1 in trechos:
         if y1 - y0 > .5: box("Pilotis_Viga", (.22, y1 - y0, .38), (x, (y0 + y1) / 2, Z1 - .35 - .19), M["pilotis"], C_GAL)
 # --- fachada envelhecida: escorrimentos com textura (transparencia em degrade), sob os peitoris e sob a platibanda
@@ -2165,7 +2216,39 @@ texto("Mural_Entrada_Texto", "AVISOS · CIEP", .1, (0, -.03, 2.0), "-y", M["text
 # O objeto antigo fica (nome, colecao e pai: o treinamento acha os itens pelo nome) e so troca de malha; as partes extras somem.
 import re as _re
 _MATS_ANTES = set(m.name for m in bpy.data.materials)
-def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0):
+def _refazer_textura(me, nome, px=2048):
+    """A textura do modelo veio num atlas ruim (desenhos espremidos, muito espaco para as costas). Abre UV nova so com a
+    FRENTE (+y) ocupando quase todo o quadro, costas e laterais minusculas, e grava a cor numa imagem nova de px x px."""
+    ob = bpy.data.objects.new("_rebake", me); scene.collection.objects.link(ob)
+    for o in bpy.context.view_layer.objects: o.select_set(False)
+    bpy.context.view_layer.objects.active = ob; ob.select_set(True)
+    uv0 = me.uv_layers[0]; uv0.active_render = True; uvn = me.uv_layers.new(name="Rebake"); me.uv_layers.active = uvn
+    bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=.003)
+    bm = bmesh.from_edit_mesh(me); lu = bm.loops.layers.uv["Rebake"]
+    for f in bm.faces:
+        if f.normal.y < .7:                                # costas, laterais e espessura: quase sem resolucao
+            c = sum((l[lu].uv for l in f.loops), Vector((0, 0))) / len(f.loops)
+            for l in f.loops: l[lu].uv = c + (l[lu].uv - c) * .05
+    bmesh.update_edit_mesh(me)
+    bpy.ops.uv.select_all(action="SELECT"); bpy.ops.uv.pack_islands(rotate=True, margin=.002)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    img = bpy.data.images.new("rebake_" + nome, px, px)
+    for m in me.materials:
+        if m and m.node_tree:
+            n = m.node_tree.nodes.new("ShaderNodeTexImage"); n.image = img; m.node_tree.nodes.active = n
+    eng = scene.render.engine; scene.render.engine = "CYCLES"; amos = scene.cycles.samples; scene.cycles.samples = 1
+    bpy.ops.object.bake(type="DIFFUSE", pass_filter={"COLOR"}, margin=6, use_clear=True)
+    scene.render.engine = eng; scene.cycles.samples = amos
+    f_ = os.path.join(AQUI, "modelos", "_rebake_%s.jpg" % nome); img.filepath_raw = f_; img.file_format = "JPEG"; img.save()
+    img = bpy.data.images.load(f_); img.pack(); img.name = "rebake_" + nome      # JPG embutido no .blend (o PNG gerado tinha 4,6 MB)
+    nm = bpy.data.materials.new("Modelo_" + nome); bsdf = nm.node_tree.nodes["Principled BSDF"]
+    t = nm.node_tree.nodes.new("ShaderNodeTexImage"); t.image = img; nm.node_tree.links.new(t.outputs["Color"], bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = .75; bsdf.inputs["Metallic"].default_value = 0
+    me.materials.clear(); me.materials.append(nm)
+    me.uv_layers.remove(me.uv_layers[0]); me.uv_layers[0].name = "UVMap"
+    bpy.data.objects.remove(ob, do_unlink=True)
+def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0, rebake=False):
     cam = os.path.join(AQUI, "modelos", arq)
     if not os.path.exists(cam): return None
     antes = set(bpy.data.objects); bpy.ops.import_scene.gltf(filepath=cam)
@@ -2184,6 +2267,7 @@ def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0):
     with bpy.context.temp_override(active_object=ms[0], selected_objects=ms, selected_editable_objects=ms):
         bpy.ops.object.join()
     me = ms[0].data; bpy.data.objects.remove(ms[0], do_unlink=True); me.name = "Autor_" + os.path.splitext(arq)[0]
+    if rebake: _refazer_textura(me, os.path.splitext(arq)[0])
     if giro: me.transform(Matrix.Rotation(giro, 4, "Z"))                       # frente do modelo virada para o outro lado
     if not me.materials and sem_mat: me.materials.append(sem_mat)
     for i, m in enumerate(me.materials):
@@ -2197,11 +2281,11 @@ def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0):
     return me
 def _caixa_local(o):
     xs, ys, zs = zip(*[tuple(c) for c in o.bound_box]); return Vector((max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)))
-def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0, virar=None):
+def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0, virar=None, rebake=False):
     """copias: lista de grupos (listas de objetos); o 1o objeto de cada grupo fica com a malha nova."""
     copias = [g for g in copias if g]
     if not copias: say("[AUTOR] %s: peca de codigo nao encontrada" % arq); return
-    me = _malha_glb(arq, mats, sem_mat, dec, giro)
+    me = _malha_glb(arq, mats, sem_mat, dec, giro, rebake)
     if me is None: say("[AUTOR] %s: arquivo nao encontrado" % arq); return
     bpy.context.view_layer.update()
     ref = copias[0]; pts = [o.matrix_world @ Vector(c) for o in ref for c in o.bound_box]
@@ -2241,6 +2325,12 @@ trocar_peca("banco_patio_realista.glb", [sorted([c for c in o.children if c.type
 trocar_peca("pia_cozinha_realista.glb", _cada(r"^Cozinha_Pia_Cuba(\.\d+)?$"))
 trocar_peca("fogao_realista.glb", [_obs(r"^Cozinha_Fogao(\.\d+)?$") + _obs(r"^Cozinha_Fogao_Boca")])
 trocar_peca("geladeira_realista.glb", [_obs(r"^Cozinha_Geladeira(\.\d+)?$") + _obs(r"^Cozinha_Geladeira_Puxador")])
+_gel = bpy.data.objects.get("Cozinha_Geladeira")        # costas encostadas na parede oeste da cozinha (frente para o meio)
+if _gel:
+    bpy.context.view_layer.update(); pts = [_gel.matrix_world @ Vector(c) for c in _gel.bound_box]
+    _cx, _cy = (min(p.x for p in pts) + max(p.x for p in pts)) / 2, (min(p.y for p in pts) + max(p.y for p in pts)) / 2
+    _pr = max(p.y for p in pts) - min(p.y for p in pts)
+    _gel.matrix_world = Matrix.Translation((KX0 + .1 + _pr / 2 + .01, _cy, 0)) @ Matrix.Rotation(-PI / 2, 4, "Z") @ Matrix.Translation((-_cx, -_cy, 0)) @ _gel.matrix_world
 trocar_peca("cesto_lixo_realista.glb", [sorted([c for c in bpy.data.objects[n].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))
                                         for n in ("Cesto_Sala", "Cesto_Direcao", "Cesto_Recepcao") if n in bpy.data.objects])
 def _murais():                                    # murais de cortica dos corredores (com moldura e desenhos presos)
@@ -2249,7 +2339,7 @@ def _murais():                                    # murais de cortica dos corred
         base = _re.sub(r"\.\d+$", "", a.name); ca = a.matrix_world.translation
         gs.append([a] + [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith(base + "_") and (o.matrix_world @ Vector(o.bound_box[0]) - ca).xy.length < 1.0])
     return gs
-trocar_peca("mural_corredor_realista.glb", _murais(), virar=lambda g: "Fundos" in g[0].name)
+trocar_peca("mural_corredor_realista.glb", _murais(), virar=lambda g: "Fundos" in g[0].name, rebake=True)
 # a cuba nova desce 13 cm para dentro da bancada: abre o furo no tampo de inox para ela aparecer
 _cuba, _banc = bpy.data.objects.get("Cozinha_Pia_Cuba"), bpy.data.objects.get("Cozinha_Bancada")
 if _cuba and _banc:

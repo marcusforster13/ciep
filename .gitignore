@@ -40,3 +40,4 @@ _referencias/
 # pecas exportadas para o autor refazer (geradas por exportar_para_editar.py)
 08_Para_Editar/
 08_Para_Editar_pecas_ciep.zip
+01_Cena_Render_Cycles/modelos/_rebake_*.jpg
