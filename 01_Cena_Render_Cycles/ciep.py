@@ -2197,7 +2197,7 @@ def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0):
     return me
 def _caixa_local(o):
     xs, ys, zs = zip(*[tuple(c) for c in o.bound_box]); return Vector((max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)))
-def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0):
+def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0, virar=None):
     """copias: lista de grupos (listas de objetos); o 1o objeto de cada grupo fica com a malha nova."""
     copias = [g for g in copias if g]
     if not copias: say("[AUTOR] %s: peca de codigo nao encontrada" % arq); return
@@ -2210,7 +2210,7 @@ def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0
     for g in copias:
         a = g[0]; d = _caixa_local(a)
         S = Matrix.Diagonal([d[i] / dref[i] if dref[i] > 1e-4 and d[i] > 1e-4 else 1 for i in range(3)] + [1])
-        mw = a.matrix_world @ S @ base
+        mw = a.matrix_world @ (Matrix.Rotation(PI, 4, "Z") if virar and virar(g) != virar(ref) else Matrix.Identity(4)) @ S @ base      # parede do outro lado
         m_ = me
         if cor and a.data.materials:                     # cadernos: cada um mantem a cor da capa que tinha
             c0 = a.data.materials[0]
@@ -2236,6 +2236,33 @@ trocar_peca("cardapio_refeitorio_realista.glb", [_obs(r"^Refeitorio_Cardapio")])
 trocar_peca("bandeja_pilha_realista.glb", [_obs(r"^Refeitorio_Bandeja")], dec=.3)
 trocar_peca("horta_canteiro_realista.glb", [_obs(r"^Horta_Canteiro_%d(\.\d+)?$" % k) + _obs(r"^Horta_Canteiro_%d_Terra" % k) for k in range(3)], sem_mat=M["muro"])
 trocar_peca("cartaz_corredor_realista.glb", _cada(r"^Corredor_Frente_Cartaz(\.\d+)?$")[:1], giro=PI)
+trocar_peca("banco_patio_realista.glb", [sorted([c for c in o.children if c.type == "MESH"], key=lambda c: not c.name.startswith("Banco_Patio_Tampo"))
+                                         for o in sorted(bpy.data.objects, key=lambda o: o.name) if o.type == "EMPTY" and _re.match(r"^Banco_Patio(\.\d+)?$", o.name)])
+trocar_peca("pia_cozinha_realista.glb", _cada(r"^Cozinha_Pia_Cuba(\.\d+)?$"))
+trocar_peca("fogao_realista.glb", [_obs(r"^Cozinha_Fogao(\.\d+)?$") + _obs(r"^Cozinha_Fogao_Boca")])
+trocar_peca("geladeira_realista.glb", [_obs(r"^Cozinha_Geladeira(\.\d+)?$") + _obs(r"^Cozinha_Geladeira_Puxador")])
+trocar_peca("cesto_lixo_realista.glb", [sorted([c for c in bpy.data.objects[n].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))
+                                        for n in ("Cesto_Sala", "Cesto_Direcao", "Cesto_Recepcao") if n in bpy.data.objects])
+def _murais():                                    # murais de cortica dos corredores (com moldura e desenhos presos)
+    gs = []
+    for a in _obs(r"^(Corredor_Frente|Corredor_Fundos|Pav1_Frente|Pav1_Fundos)_Mural(\.\d+)?$"):
+        base = _re.sub(r"\.\d+$", "", a.name); ca = a.matrix_world.translation
+        gs.append([a] + [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith(base + "_") and (o.matrix_world @ Vector(o.bound_box[0]) - ca).xy.length < 1.0])
+    return gs
+trocar_peca("mural_corredor_realista.glb", _murais(), virar=lambda g: "Fundos" in g[0].name)
+# a cuba nova desce 13 cm para dentro da bancada: abre o furo no tampo de inox para ela aparecer
+_cuba, _banc = bpy.data.objects.get("Cozinha_Pia_Cuba"), bpy.data.objects.get("Cozinha_Bancada")
+if _cuba and _banc:
+    bpy.context.view_layer.update()
+    pts = [_cuba.matrix_world @ Vector(c) for c in _cuba.bound_box]
+    _c = sum(pts, Vector()) / 8; _d = Vector((max(p.x for p in pts) - min(p.x for p in pts), max(p.y for p in pts) - min(p.y for p in pts), 0))
+    _me = bpy.data.meshes.new("Furo_Cuba"); _bm = bmesh.new(); bmesh.ops.create_cube(_bm, size=1); _bm.to_mesh(_me); _bm.free()
+    _fu = bpy.data.objects.new("Furo_Cuba", _me); scene.collection.objects.link(_fu)
+    _fu.location = (_c.x, _c.y, max(p.z for p in pts) - .1); _fu.scale = (_d.x - .04, _d.y - .04, .2)
+    _mb = _banc.modifiers.new("furo", "BOOLEAN"); _mb.operation = "DIFFERENCE"; _mb.object = _fu; _mb.solver = "EXACT"
+    bpy.context.view_layer.update()
+    _nm = bpy.data.meshes.new_from_object(_banc.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    _banc.modifiers.clear(); _banc.data = _nm; bpy.data.objects.remove(_fu, do_unlink=True)
 
 bpy.data.collections.remove(C_TMP)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(AQUI, "ciep.blend"))
