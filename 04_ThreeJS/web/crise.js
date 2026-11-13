@@ -158,9 +158,12 @@ export async function iniciarCrise(H, { papel, modo }) {
     (f.falhas_graves || []).forEach(a => acoes[a.id] = { ...a, fase: f.id, tipo: 'grave' });
   });
   const tempo = () => (performance.now() - C.t0) / 1000;
+  const aoAtingirRefem = () => { if (C.fim) return window.removeEventListener('refem_atingido', aoAtingirRefem); C.refemAtingido = true; registrar('atingiu_refem'); };
+  window.addEventListener('refem_atingido', aoAtingirRefem);      // tiro do policial acertou uma crianca refem
   const condOk = c => { if (!c) return true; const m = c.match(/variacao\.(\w+)\s*(==|!=)\s*'([^']*)'/); return !m || (m[2] === '==' ? v[m[1]] === m[3] : v[m[1]] !== m[3]); };
   function registrar(id, extra = '') {
     const a = acoes[id]; if (!a || C.fim) return;
+    if (id === 'vidas_preservadas' && C.refemAtingido) return;
     if (a.tipo === 'acao') { if (C.feitos.has(id) || !condOk(a.condicao)) return; C.feitos.set(id, tempo()); }
     else if (a.tipo === 'erro') { if (C.erros.some(e => e.id === id)) return; C.erros.push({ id, texto: a.texto, pontos: a.pontos, t: tempo() }); }
     else { if (C.graves.some(e => e.id === id)) return; C.graves.push({ id, texto: a.texto, pontos: a.pontos, base: a.base, t: tempo() }); legenda('Instrutor', 'Falha grave: ' + a.texto, 5); }

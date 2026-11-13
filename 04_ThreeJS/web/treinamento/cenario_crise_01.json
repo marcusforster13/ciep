@@ -83,6 +83,9 @@
         { "id": "intervencao_correta", "texto": "Reagiu corretamente à agressão ativa (intervenção imediata)", "pontos": 6, "base": "Agressor ativo: intervenção imediata (validar)", "condicao": "variacao.virada == 'ataque'", "validar": true },
         { "id": "vidas_preservadas", "texto": "Todas as vidas preservadas", "pontos": 10, "base": "Objetivo do gerenciamento de crises" },
         { "id": "apreensao_correta", "texto": "Apreensão do adolescente sem violência desnecessária, com proteção da identidade", "pontos": 4, "base": "ECA arts. 106, 143 e 178; Súmula Vinculante 11" }
+      ],
+      "falhas_graves": [
+        { "id": "atingiu_refem", "texto": "Disparo atingiu um refém", "pontos": -40, "base": "Uso da força: proteção de terceiros, linha de tiro e segundo plano (validar)" }
       ] }
   ],
 

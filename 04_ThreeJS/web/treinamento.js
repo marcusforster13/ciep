@@ -241,7 +241,7 @@ export async function iniciar(ctx) {
     if (parada) { parada.play(); parada.time = Math.random() * parada.getClip().duration; }
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, 1, 10), new THREE.MeshBasicMaterial({ visible: false }));
     hit.scale.y = altura; hit.position.y = altura / 2; g.add(hit);
-    g.userData = { hit, nome, mixer, acoes: acs, atual: parada, modelo: m, real: true, rosto: montarRosto(m), olhar: montarOlhar(m) };
+    g.userData = { hit, nome, papel, mixer, acoes: acs, atual: parada, modelo: m, real: true, rosto: montarRosto(m), olhar: montarOlhar(m) };
     return g;
   }
   function montarRosto(m) {
@@ -534,6 +534,36 @@ export async function iniciar(ctx) {
     status();
   }
   const marcas = [], geoMarca = new THREE.CircleGeometry(.014, 10), matMarca = new THREE.MeshBasicMaterial({ color: 0x050505 });
+  // sangue (como no cassino): mancha na parede ou movel atras de quem foi atingido e poca sob quem caiu. So em adultos:
+  // criancas e adolescentes nao sangram em cena (decisao do treinamento)
+  const menor = n => /^refem_/.test(n.userData.papel || '') || n.userData.papel === 'aluno';
+  const texSangue = (() => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+    for (let k = 0; k < 26; k++) {
+      const a = Math.random() * 6.28, d = Math.pow(Math.random(), 1.6) * 46, r = 4 + Math.random() * (k < 6 ? 22 : 8);
+      g.fillStyle = `rgba(${95 + Math.random() * 40 | 0},4,4,${.75 + Math.random() * .25})`; g.beginPath(); g.arc(64 + Math.cos(a) * d, 64 + Math.sin(a) * d, r, 0, 7); g.fill();
+    }
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  const manchas = [], geoMancha = new THREE.PlaneGeometry(1, 1);
+  function mancha(ponto, normal, raio) {
+    const m = new THREE.Mesh(geoMancha, new THREE.MeshBasicMaterial({ map: texSangue, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, toneMapped: false, color: 0x9a9a9a }));
+    m.position.copy(ponto).addScaledVector(normal, .007); m.lookAt(ponto.clone().add(normal)); m.rotateZ(Math.random() * 6.28); m.scale.setScalar(raio * 2);
+    scene.add(m); manchas.push(m); if (manchas.length > 36) { const v = manchas.shift(); scene.remove(v); v.material.dispose(); }
+    return m;
+  }
+  function limparSangue() { for (const m of manchas) { scene.remove(m); m.material.dispose(); } manchas.length = 0; }
+  function sangue(p, dir) {
+    rayG.set(p, GV.copy(dir).normalize()); rayG.far = 3.5;                 // mancha na parede ou no movel atras
+    const h = rayG.intersectObjects(ctx.colisao(), false)[0];
+    if (h?.face) mancha(h.point, GN.copy(h.face.normal).transformDirection(h.object.matrixWorld).clone(), .16 + Math.random() * .2);
+  }
+  function pocaSangue(n, s = 1) {          // s = -1: corpo caido de costas (a poca fica atras dos pes)
+    setTimeout(() => {
+      const m = mancha(new THREE.Vector3(n.position.x + Math.sin(n.rotation.y) * s, n.position.y + .002, n.position.z + Math.cos(n.rotation.y) * s), new THREE.Vector3(0, 1, 0), .06);
+      suave(6, e => { m.scale.setScalar(.12 + .95 * e); });
+    }, 900);
+  }
   function marcar(h) { const m = marcas.length >= 40 ? marcas.shift() : new THREE.Mesh(geoMarca, matMarca); const n = h.face.normal.clone().transformDirection(h.object.matrixWorld); m.position.copy(h.point).addScaledVector(n, .004); m.lookAt(h.point.clone().add(n)); scene.add(m); marcas.push(m); }
   let ultimoTiro = 0; const CARREGADOR = 15, MIRA = new THREE.Vector3(), BOCA = new THREE.Vector3();
   function recarregar() {
@@ -566,15 +596,20 @@ export async function iniciar(ctx) {
         } else registrar('disparo_injustificado', n.userData.nome);
         A.feridos.add(n.userData.chave);
       }
-      cair(n, ray.ray.direction.clone());
+      if (!menor(n)) sangue(hn.point, ray.ray.direction); cair(n, ray.ray.direction.clone());
     } else { if (hp?.face) marcar(hp); if (S.ativo && A) registrar('disparo_sem_alvo'); }
     return true;
   }
   function cair(n, dirTiro = null) {          // dirTiro: direcao do tiro (de frente, a pessoa em pe cai de costas). Igual ao cassino.
     const u = n.userData; u.caido = true; u.rota = []; u.destino = null; u.semVirar = true; u.aoChegar = null;
+    if (/^refem_/.test(u.papel || '')) {          // crianca refem atingida: sem queda nem sangue em cena; encolhe no chao e vira falha grave
+      u.sentado = false; u.base = 'agachado'; animar(n, u.acoes.agachado ? 'agachado' : 'parada', 1e6, .2); u.pose = 'morrendo';
+      window.dispatchEvent(new CustomEvent('refem_atingido', { detail: u.chave })); sincAmeaca(); status(); return;
+    }
     const lado = u.sentado ? 1 : -1; if (u.sentado) { u.sentado = false; n.position.y = .15; }      // sentado: tomba para a frente, no chao
     u.ameaca = false; u.atira = false;
     if (u.arma?.visible) { u.arma.visible = false; armaChao(n.position); }
+    const sangra = !menor(n);
     // em pe, tiro de frente: "Dying Backwards" inteiro, de costas (~1,8 m); senao uma das duas quedas para a frente (~2 m)
     // sentado: o "Dying Backwards" cortado ja na pose sentada, caindo para tras (~1,4 m)
     // o corpo gira (aos poucos) para um lado livre de parede ou movel; sem lado livre ou sem a animacao, tomba inteiro como antes
@@ -585,13 +620,14 @@ export async function iniciar(ctx) {
     if (dir === null && queda.length) dir = direcaoLivre(n, lado < 0 ? 2.0 : 1.4, lado > 0);
     if (dir !== null) {
       const r0 = n.rotation.y, dr = Math.atan2(Math.sin(dir - r0), Math.cos(dir - r0));
-      suave(tras ? 1.1 : .45, e => { n.rotation.y = r0 + dr * e; });
+      suave(tras ? 1.1 : .45, e => { n.rotation.y = r0 + dr * e; }); if (sangra) setTimeout(() => pocaSangue(n, tras ? -1 : 1), 300);
       const acao = u.acoes[queda[Math.floor(Math.random() * queda.length)]];
       clearTimeout(u.volta); acao.reset(); acao.setLoop(THREE.LoopOnce, 1); acao.clampWhenFinished = true; acao.play();
       u.atual?.crossFadeTo(acao, .15, false); u.atual = acao; u.pose = 'morrendo';
       sincAmeaca(); status(); return;
     }
     const giro = direcaoLivre(n, 1.8); if (giro !== null) n.rotation.y = giro;      // tombo antigo: tambem para um lado sem parede
+    if (sangra) pocaSangue(n);
     const y0 = n.position.y, r0 = n.rotation.x;
     suave(.7, e => { n.rotation.x = r0 + (lado * Math.PI / 2 - r0) * e; n.position.y = y0 + .12 * e; });
     sincAmeaca(); status();
@@ -706,7 +742,7 @@ export async function iniciar(ctx) {
     ['aluno', 'aluno', 'Lucas (aluno, 9º ano)', [6.65, 15.9], [-1, 0], 'j', 1.68],
   ];
   const ALTURA_SENTADO = alt => .15 + .46 - .925 * (alt / 1.78);
-  function limparNPCs() { Object.values(npcs).forEach(n => scene.remove(n)); for (const k in npcs) delete npcs[k]; }
+  function limparNPCs() { Object.values(npcs).forEach(n => scene.remove(n)); for (const k in npcs) delete npcs[k]; limparSangue(); }
   function criarNPCs(v) {
     limparNPCs(); armaNPC.visible = false; armaSolta.visible = false;
     for (const [chave, papel, nome, [x, y], [dx, dy], voz, alt] of ELENCO) {
