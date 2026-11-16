@@ -2226,8 +2226,9 @@ def _refazer_textura(me, nome, px=2048):
     bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=.003)
     bm = bmesh.from_edit_mesh(me); lu = bm.loops.layers.uv["Rebake"]
+    ym = sum(v.co.y for v in bm.verts) / len(bm.verts)      # frente = metade +y (algumas faces dos desenhos vem com a normal invertida)
     for f in bm.faces:
-        if f.normal.y < .7:                                # costas, laterais e espessura: quase sem resolucao
+        if abs(f.normal.y) < .7 or f.calc_center_median().y < ym:      # costas, laterais e espessura: quase sem resolucao
             c = sum((l[lu].uv for l in f.loops), Vector((0, 0))) / len(f.loops)
             for l in f.loops: l[lu].uv = c + (l[lu].uv - c) * .05
     bmesh.update_edit_mesh(me)
@@ -2281,7 +2282,7 @@ def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0, rebake=False):
     return me
 def _caixa_local(o):
     xs, ys, zs = zip(*[tuple(c) for c in o.bound_box]); return Vector((max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)))
-def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0, virar=None, rebake=False):
+def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0, virar=None, rebake=False, girar_acaso=False):
     """copias: lista de grupos (listas de objetos); o 1o objeto de cada grupo fica com a malha nova."""
     copias = [g for g in copias if g]
     if not copias: say("[AUTOR] %s: peca de codigo nao encontrada" % arq); return
@@ -2303,6 +2304,9 @@ def trocar_peca(arq, copias, mats=None, sem_mat=None, cor=None, dec=None, giro=0
                 for i, m in enumerate(variantes[c0.name].materials):
                     if m and m.name.startswith(cor): variantes[c0.name].materials[i] = c0
             m_ = variantes[c0.name]
+        if girar_acaso:                                  # plantas: cada pe girado ao acaso em torno do proprio centro
+            gp = [o.matrix_world @ Vector(c) for o in g for c in o.bound_box]; cg = Vector(((min(p.x for p in gp) + max(p.x for p in gp)) / 2, (min(p.y for p in gp) + max(p.y for p in gp)) / 2, 0))
+            mw = Matrix.Translation(cg) @ Matrix.Rotation(random.uniform(0, 2 * PI), 4, "Z") @ Matrix.Translation(-cg) @ mw
         for o in g[1:]: bpy.data.objects.remove(o, do_unlink=True)
         a.modifiers.clear(); a.data = m_; a.matrix_world = mw
     say("[AUTOR] %s: %d copia(s) trocada(s)" % (arq, len(copias)))
@@ -2340,6 +2344,15 @@ def _murais():                                    # murais de cortica dos corred
         gs.append([a] + [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith(base + "_") and (o.matrix_world @ Vector(o.bound_box[0]) - ca).xy.length < 1.0])
     return gs
 trocar_peca("mural_corredor_realista.glb", _murais(), virar=lambda g: "Fundos" in g[0].name, rebake=True)
+def _pes(rx, raio=.2):                                 # agrupa as pecas soltas de cada pe de planta pela posicao
+    gs = []
+    for o in _obs(rx):
+        c = o.matrix_world.translation; g = next((g for g in gs if (g[0].matrix_world.translation - c).xy.length < raio), None)
+        (g.append(o) if g else gs.append([o]))
+    return gs
+trocar_peca("mesa_professor_realista.glb", _dados("Peca_mesa_professor"))
+trocar_peca("horta_alface_realista.glb", _pes(r"^Horta_Alface"), dec=.3, girar_acaso=True)
+trocar_peca("horta_couve_realista.glb", [sorted(g, key=lambda o: not o.name.startswith("Horta_Couve_Talo")) for g in _pes(r"^Horta_Couve", .25)], dec=.6, girar_acaso=True)
 # a cuba nova desce 13 cm para dentro da bancada: abre o furo no tampo de inox para ela aparecer
 _cuba, _banc = bpy.data.objects.get("Cozinha_Pia_Cuba"), bpy.data.objects.get("Cozinha_Bancada")
 if _cuba and _banc:
