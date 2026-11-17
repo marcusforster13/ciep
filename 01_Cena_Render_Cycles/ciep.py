@@ -1307,7 +1307,6 @@ lixeira("Lixeira_Pedal_Banheiro", -19.6, 17.8, PI / 2, M["branco"], alt=.48, r=.
 for k, (x, y) in enumerate(((-8.0, -2.2), (20.0, -1.8))):
     torno("Tambor_%d" % k, [(0, .01), (.29, .01), (.29, .88), (.27, .9), (0, .9)], M["lix_azul"], C_SOLTO, pos=(x, y, FZ))
     for z in (.3, .6): torno("Tambor_%d_Aro" % k, [(.295, z - .015), (.3, z), (.295, z + .015)], M["lix_azul"], C_SOLTO, pos=(x, y, FZ))
-    texto("Tambor_%d_Texto" % k, "LIXO", .09, (x, y - .3, FZ + .55), "-y", M["texto_br"], C_SOLTO)
 # extintores: na parede, com placa vermelha e demarcacao no piso (vermelho com borda amarela, como nas escolas)
 M["extintor_corpo"] = mat("Extintor_Vermelho", "#c4161c", .35, .2)
 def extintor(nome, x, y, virado, z0=FZ):
@@ -2353,6 +2352,21 @@ def _pes(rx, raio=.2):                                 # agrupa as pecas soltas 
 trocar_peca("mesa_professor_realista.glb", _dados("Peca_mesa_professor"))
 trocar_peca("horta_alface_realista.glb", _pes(r"^Horta_Alface"), dec=.3, girar_acaso=True)
 trocar_peca("horta_couve_realista.glb", [sorted(g, key=lambda o: not o.name.startswith("Horta_Couve_Talo")) for g in _pes(r"^Horta_Couve", .25)], dec=.6, girar_acaso=True)
+def _quadros():                                    # quadros brancos das salas (placa + moldura); o aparador fica
+    return [[q] + _obs(r"^%s_Moldura(\.\d+)?$" % _re.escape(q.name)) for q in _obs(r"^(.+_)?Quadro$")
+            if q.data.materials and q.data.materials[0] == M["quadro_branco"]]
+trocar_peca("quadro_branco_realista.glb", _quadros())
+for o in _obs(r"^.+_Quadro_Texto"): o.location.x += .03          # materia escrita na frente da placa nova
+trocar_peca("regador_realista.glb", [_obs(r"^Horta_Regador")])
+trocar_peca("tambor_lixo_realista.glb", [_obs(r"^Tambor_%d(_Aro)?(\.\d+)?$" % k) for k in range(2)])
+trocar_peca("hidrante_realista.glb", [_obs(r"^Hidrante_(Caixa|Vidro|Texto)")])
+trocar_peca("mural_avisos_realista.glb", [sorted([c for c in bpy.data.objects["Mural_Entrada"].children if c.type == "MESH"], key=lambda c: not c.name.startswith("Mural_Entrada_Quadro"))]
+            if "Mural_Entrada" in bpy.data.objects else [])
+trocar_peca("mochila_chao_realista.glb", _cada(r"^.+_Mochila_Chao(\.\d+)?$"), dec=.12)      # 52 copias: malha leve
+trocar_peca("coifa_realista.glb", [_obs(r"^Cozinha_Coifa$")])
+if "Cozinha_Coifa" in bpy.data.objects:            # coifa nova e mais funda: costas na parede, duto proprio ate o teto
+    for o in _obs(r"^Cozinha_Coifa_Duto"): bpy.data.objects.remove(o, do_unlink=True)
+    bpy.data.objects["Cozinha_Coifa"].location.y -= .205
 # a cuba nova desce 13 cm para dentro da bancada: abre o furo no tampo de inox para ela aparecer
 _cuba, _banc = bpy.data.objects.get("Cozinha_Pia_Cuba"), bpy.data.objects.get("Cozinha_Bancada")
 if _cuba and _banc:

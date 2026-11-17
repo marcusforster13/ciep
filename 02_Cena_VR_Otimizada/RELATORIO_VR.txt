@@ -1,15 +1,15 @@
 A MENSAGEM (CIEP) - VERSAO VR OTIMIZADA
 
-DEPOIS: 652861 tris | 44 malhas | 258 slots de material (~draw calls) | 91 luzes
+DEPOIS: 709184 tris | 44 malhas | 253 slots de material (~draw calls) | 91 luzes
 
 Triangulos por colecao:
-  12_Objetos_Soltos                    433719
-  06_Moveis                            118096
+  12_Objetos_Soltos                    488978
+  06_Moveis                            118120
   03_Predio_Fachada                     37632
   07_Pilotis                            17052
-  04_Terreo_Interior                     9728
+  04_Terreo_Interior                     9936
+  11_Pavimento_1                         9388
   02_Patio                               9160
-  11_Pavimento_1                         8556
   10_Viatura                             8394
   08_Interativos                         5964
   05_Passarela                           4212
@@ -17,16 +17,16 @@ Triangulos por colecao:
 
 Etapas:
   - Grama instanciada removida de 0 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
-  - Modificadores aplicados em 4874 objetos; textos e fios convertidos em malha.
+  - Modificadores aplicados em 4842 objetos; textos e fios convertidos em malha.
   - Bake de 0 materiais procedurais em texturas de imagem.
   - 29 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
-  - Colisao: 972 caixas orientadas preparadas.
+  - Colisao: 970 caixas orientadas preparadas.
   - 6 conjuntos interativos unidos (1 malha por conjunto).
-  - 4834 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
+  - 4802 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: ciep_VR.glb
   - Exportado: ciep_VR.fbx
-  - Colisao: 972 caixas, 11664 tris -> colisao.glb / colisao.fbx
+  - Colisao: 970 caixas, 11640 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps
