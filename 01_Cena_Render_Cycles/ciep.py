@@ -946,12 +946,16 @@ for x in (-12.0, -6.0, 2.0, 12.0):
 # barra azul tambem na recepcao (parede da galeria, por dentro)
 box("Recepcao_Barra", (1.4, .012, 1.4), (-9.3, BY0 + .137, FZ + .7), M["barra_az"], C_TER)      # dos dois lados da porta de entrada (x -8.5 .. -6.5)
 box("Recepcao_Barra", (4.4, .012, 1.4), (-4.3, BY0 + .137, FZ + .7), M["barra_az"], C_TER)
-# placas das salas
+# placas das salas (cada uma com nome proprio, para trocar pelo modelo do autor: modelos/placa_<slug>_realista.glb)
+import unicodedata
+def _slug(t): return unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower().replace(" · ", " ").replace(" ", "_").replace("__", "_")
+PLACAS_PORTA = {}                                          # nome do objeto -> (slug, lado para onde o texto olha)
 for x, y, nome, vir, z in ((-14.95, YC0 + .11, "SECRETARIA", "+y", 2.3), (12.95, YC0 + .11, "SALA DE REUNIÕES", "+y", 2.3), (-6.8, YC0 + .11, "RECEPÇÃO", "+y", 2.62),
                            (-16.05, YC1 - .11, "BANHEIRO MASCULINO", "-y", 2.3), (-9.05, YC1 - .11, "BANHEIRO FEMININO", "-y", 2.3), (-2.05, YC1 - .11, "SALA DE LEITURA", "-y", 2.3),
                            (6.95, YC1 - .11, "SALA 104", "-y", 2.3), (16.45, YC1 - .11, "SALA DOS PROFESSORES", "-y", 2.3), (-7.5, BY0 - .14, "ENTRADA · RECEPÇÃO", "-y", 2.62)):
-    box("Placa_Sala", (len(nome) * .075 + .2, .02, .2), (x, y, FZ + z), M["branco"], C_SOLTO)
-    texto("Placa_Sala_Texto", nome, .09, (x, y + (.012 if vir == "+y" else -.012), FZ + z), vir, M["texto_pr"], C_SOLTO)
+    sl = _slug(nome); PLACAS_PORTA["Placa_Sala_" + sl] = (sl, vir)
+    box("Placa_Sala_" + sl, (len(nome) * .075 + .2, .02, .2), (x, y, FZ + z), M["branco"], C_SOLTO)
+    texto("Placa_Sala_" + sl + "_Texto", nome, .09, (x, y + (.012 if vir == "+y" else -.012), FZ + z), vir, M["texto_pr"], C_SOLTO)
 texto("Placa_Direcao", "DIREÇÃO", .1, (-2.14, 5.45, FZ + 2.35), "-x", M["texto_pr"], C_SOLTO)
 # portas fechadas do corredor: madeira pintada de azul (veio leve sob a tinta), folha lisa, batente e
 # macaneta de alavanca com espelho (antes era so uma placa azul lisa)
@@ -1472,10 +1476,12 @@ for x in (PX0, PX1):
     box("Pav1_Porta_Corta_Fogo", (.06, 2.2, 2.2), (x, (PC0 + PC1) / 2, P1Z + 1.1), M["porta_ferro"], C_PAV)
 for (a, b), nome in zip(portas_f, ("SALA 201", "SALA 202", "SALA 203")):
 
-    box("Pav1_Placa", (.8, .02, .2), ((a + b) / 2, PC0 + .11, P1Z + 2.3), M["branco"], C_SOLTO)
-    texto("Pav1_Placa_Texto", nome, .09, ((a + b) / 2, PC0 + .122, P1Z + 2.3), "+y", M["texto_pr"], C_SOLTO)
-box("Pav1_Placa", (.8, .02, .2), (14.95, PC1 - .11, P1Z + 2.3), M["branco"], C_SOLTO)
-texto("Pav1_Placa_Texto", "SALA 204", .09, (14.95, PC1 - .122, P1Z + 2.3), "-y", M["texto_pr"], C_SOLTO)
+    sl = _slug(nome); PLACAS_PORTA["Pav1_Placa_" + sl] = (sl, "+y")
+    box("Pav1_Placa_" + sl, (.8, .02, .2), ((a + b) / 2, PC0 + .11, P1Z + 2.3), M["branco"], C_SOLTO)
+    texto("Pav1_Placa_" + sl + "_Texto", nome, .09, ((a + b) / 2, PC0 + .122, P1Z + 2.3), "+y", M["texto_pr"], C_SOLTO)
+PLACAS_PORTA["Pav1_Placa_sala_204"] = ("sala_204", "-y")
+box("Pav1_Placa_sala_204", (.8, .02, .2), (14.95, PC1 - .11, P1Z + 2.3), M["branco"], C_SOLTO)
+texto("Pav1_Placa_sala_204_Texto", "SALA 204", .09, (14.95, PC1 - .122, P1Z + 2.3), "-y", M["texto_pr"], C_SOLTO)
 # luminaria regua LED de sobrepor (como a do bar no cassino): corpo fino de aluminio, difusor branco aceso embaixo
 # e tampas cinza nas pontas. ztopo = altura do teto/forro; ao_longo_x = comprimento no eixo X.
 M.update({"lum_corpo": mat("Luminaria_Corpo_Aluminio", "#b9bdc2", .35, .6), "lum_tampa": mat("Luminaria_Tampa_Cinza", "#8d9196", .45, .3)})
@@ -2215,17 +2221,37 @@ texto("Mural_Entrada_Texto", "AVISOS · CIEP", .1, (0, -.03, 2.0), "-y", M["text
 # O objeto antigo fica (nome, colecao e pai: o treinamento acha os itens pelo nome) e so troca de malha; as partes extras somem.
 import re as _re
 _MATS_ANTES = set(m.name for m in bpy.data.materials)
+def _mat_cortica():
+    """Cortica de mural: graos de 3-5 mm em varios tons de marrom (Voronoi) com manchas suaves por cima (Noise)."""
+    lin = lambda h: tuple((int(h[i:i + 2], 16) / 255) ** 2.2 for i in (1, 3, 5)) + (1,)
+    m = bpy.data.materials.new("_Cortica_Proc"); nt = m.node_tree; b = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    vo = nt.nodes.new("ShaderNodeTexVoronoi"); vo.inputs["Scale"].default_value = 240; vo.inputs["Randomness"].default_value = 1
+    no = nt.nodes.new("ShaderNodeTexNoise"); no.inputs["Scale"].default_value = 25; no.inputs["Detail"].default_value = 6
+    for n in (vo, no): nt.links.new(tc.outputs["Object"], n.inputs["Vector"])
+    ra = nt.nodes.new("ShaderNodeValToRGB"); el = ra.color_ramp.elements
+    el[0].position, el[0].color = 0, lin("#5a3a1c"); el[1].position, el[1].color = 1, lin("#d2a46c")
+    for p, h in ((.35, "#8a5f34"), (.65, "#a97b48")): e = el.new(p); e.color = lin(h)
+    nt.links.new(vo.outputs["Color"], ra.inputs["Fac"])
+    rb = nt.nodes.new("ShaderNodeValToRGB"); rb.color_ramp.elements[0].color = (.72, .72, .72, 1); nt.links.new(no.outputs["Fac"], rb.inputs["Fac"])
+    mx = nt.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"; mx.blend_type = "MULTIPLY"; mx.inputs[0].default_value = 1
+    nt.links.new(ra.outputs["Color"], mx.inputs[6]); nt.links.new(rb.outputs["Color"], mx.inputs[7]); nt.links.new(mx.outputs[2], b.inputs["Base Color"])
+    return m
 def _refazer_textura(me, nome, px=2048):
     """A textura do modelo veio num atlas ruim (desenhos espremidos, muito espaco para as costas). Abre UV nova so com a
     FRENTE (+y) ocupando quase todo o quadro, costas e laterais minusculas, e grava a cor numa imagem nova de px x px."""
     ob = bpy.data.objects.new("_rebake", me); scene.collection.objects.link(ob)
     for o in bpy.context.view_layer.objects: o.select_set(False)
     bpy.context.view_layer.objects.active = ob; ob.select_set(True)
+    mc = _mat_cortica(); me.materials.append(mc)           # placa de cortica (a maior face da frente): grao procedural fino
+    for f in me.polygons:                                  # no lugar do borrao que vinha no atlas
+        if f.normal.y > .7 and f.area > .3: f.material_index = len(me.materials) - 1
     uv0 = me.uv_layers[0]; uv0.active_render = True; uvn = me.uv_layers.new(name="Rebake"); me.uv_layers.active = uvn
     bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=.003)
     bm = bmesh.from_edit_mesh(me); lu = bm.loops.layers.uv["Rebake"]
-    ym = sum(v.co.y for v in bm.verts) / len(bm.verts)      # frente = metade +y (algumas faces dos desenhos vem com a normal invertida)
+    ys = [v.co.y for v in bm.verts]; ym = (min(ys) + max(ys)) / 2      # frente = metade +y da caixa (algumas faces dos desenhos vem com a normal
+                                                           # invertida; a media dos vertices caia na frente e a cortica ia para as costas)
     for f in bm.faces:
         if abs(f.normal.y) < .7 or f.calc_center_median().y < ym:      # costas, laterais e espessura: quase sem resolucao
             c = sum((l[lu].uv for l in f.loops), Vector((0, 0))) / len(f.loops)
@@ -2237,7 +2263,7 @@ def _refazer_textura(me, nome, px=2048):
     for m in me.materials:
         if m and m.node_tree:
             n = m.node_tree.nodes.new("ShaderNodeTexImage"); n.image = img; m.node_tree.nodes.active = n
-    eng = scene.render.engine; scene.render.engine = "CYCLES"; amos = scene.cycles.samples; scene.cycles.samples = 1
+    eng = scene.render.engine; scene.render.engine = "CYCLES"; amos = scene.cycles.samples; scene.cycles.samples = 8      # 8: suaviza o grao
     bpy.ops.object.bake(type="DIFFUSE", pass_filter={"COLOR"}, margin=6, use_clear=True)
     scene.render.engine = eng; scene.cycles.samples = amos
     f_ = os.path.join(AQUI, "modelos", "_rebake_%s.jpg" % nome); img.filepath_raw = f_; img.file_format = "JPEG"; img.save()
@@ -2278,6 +2304,9 @@ def _malha_glb(arq, mats=None, sem_mat=None, dec=None, giro=0, rebake=False):
         elif base != m.name and base in _MATS_ANTES: me.materials[i] = bpy.data.materials[base]      # mesmo material da cena (texturas CC0)
         elif m.node_tree and any(nd.type == "TEX_IMAGE" and nd.image and nd.image.size[0] > 1 for nd in m.node_tree.nodes):
             m.name = "Modelo_%s_%d" % (os.path.splitext(arq)[0], i)                                      # o pipeline mantem a UV e a imagem
+            for nd in m.node_tree.nodes:                 # imagens com nome do arquivo (as placas vem todas com "BaseColor")
+                if nd.type == "TEX_IMAGE" and nd.image and not nd.image.name.startswith(("rebake_", "autor_")):
+                    nd.image.name = "autor_%s_%s" % (os.path.splitext(arq)[0], _re.sub(r"\.\d+$", "", nd.image.name))
     return me
 def _caixa_local(o):
     xs, ys, zs = zip(*[tuple(c) for c in o.bound_box]); return Vector((max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)))
@@ -2363,6 +2392,10 @@ trocar_peca("hidrante_realista.glb", [_obs(r"^Hidrante_(Caixa|Vidro|Texto)")])
 trocar_peca("mural_avisos_realista.glb", [sorted([c for c in bpy.data.objects["Mural_Entrada"].children if c.type == "MESH"], key=lambda c: not c.name.startswith("Mural_Entrada_Quadro"))]
             if "Mural_Entrada" in bpy.data.objects else [])
 trocar_peca("mochila_chao_realista.glb", _cada(r"^.+_Mochila_Chao(\.\d+)?$"), dec=.12)      # 52 copias: malha leve
+trocar_peca("extintor_realista.glb", [sorted(_obs(r"^%s_(Corpo|Valvula|Gatilho|Alca|Mangueira|Rotulo|Suporte|Placa|Placa_Texto)(\.\d+)?$" % e.name), key=lambda o: not o.name.endswith("_Corpo"))
+                                      for e in sorted(bpy.data.objects, key=lambda o: o.name) if e.type == "EMPTY" and _re.match(r"^Extintor_[A-Za-z0-9]+(_[AB])?$", e.name)])
+for _pn, (_sl, _vir) in PLACAS_PORTA.items():      # placas das portas: o texto do modelo olha para -y
+    trocar_peca("placa_%s_realista.glb" % _sl, [_obs(r"^%s(_Texto)?$" % _pn)], giro=PI if _vir == "+y" else 0)
 trocar_peca("coifa_realista.glb", [_obs(r"^Cozinha_Coifa$")])
 if "Cozinha_Coifa" in bpy.data.objects:            # coifa nova e mais funda: costas na parede, duto proprio ate o teto
     for o in _obs(r"^Cozinha_Coifa_Duto"): bpy.data.objects.remove(o, do_unlink=True)

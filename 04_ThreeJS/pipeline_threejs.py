@@ -276,7 +276,7 @@ def para_jpg(img, dados):
     if not os.path.exists(out):
         w, h = img.size
         copia = img.copy()
-        lim = 2048 if img.name.startswith("rebake_") else 1024      # texturas refeitas de desenhos/texto: 2048
+        lim = 2048 if img.name.startswith(("rebake_", "autor_placa_")) else 1024      # desenhos refeitos e texto das placas: 2048
         if max(w, h) > lim:
             k = lim / max(w, h); copia.scale(max(1, int(w * k)), max(1, int(h * k)))
         copia.filepath_raw = out; copia.file_format = "PNG" if alfa else "JPEG"; copia.save(); bpy.data.images.remove(copia)
