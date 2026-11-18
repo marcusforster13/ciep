@@ -2396,6 +2396,7 @@ trocar_peca("extintor_realista.glb", [sorted(_obs(r"^%s_(Corpo|Valvula|Gatilho|A
                                       for e in sorted(bpy.data.objects, key=lambda o: o.name) if e.type == "EMPTY" and _re.match(r"^Extintor_[A-Za-z0-9]+(_[AB])?$", e.name)])
 for _pn, (_sl, _vir) in PLACAS_PORTA.items():      # placas das portas: o texto do modelo olha para -y
     trocar_peca("placa_%s_realista.glb" % _sl, [_obs(r"^%s(_Texto)?$" % _pn)], giro=PI if _vir == "+y" else 0)
+trocar_peca("placa_horta_realista.glb", [_obs(r"^Horta_Placa")])
 trocar_peca("coifa_realista.glb", [_obs(r"^Cozinha_Coifa$")])
 if "Cozinha_Coifa" in bpy.data.objects:            # coifa nova e mais funda: costas na parede, duto proprio ate o teto
     for o in _obs(r"^Cozinha_Coifa_Duto"): bpy.data.objects.remove(o, do_unlink=True)
