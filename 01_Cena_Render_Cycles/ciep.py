@@ -930,6 +930,7 @@ for x in (BX0, BX1):                                            # laterais do bl
             a, b = 4 * i, 4 * (i + 1)
             fs += [(a, a + 1, b + 1, b), (a + 2, b + 2, b + 3, a + 3), (a, b, b + 2, a + 2)]
         malha("Corredor_Arco_Portao", vs, fs, M["parede"], C_TER)
+    if x > 0: continue                                     # deste lado ja tem a placa verde de SAIDA (ficavam duas)
     texto("Corredor_Porta_Placa", "SAÍDA" if x > 0 else "SAÍDA · PILOTIS", .09, (x - (.2 if x > 0 else -.2), (YC0 + YC1) / 2, FZ + 2.7), "-x" if x > 0 else "+x", M["texto_pr"], C_SOLTO)
     box("Corredor_Porta_Placa_Fundo", (.012, 1.0 if x > 0 else 1.6, .22), (x - (.19 if x > 0 else -.19), (YC0 + YC1) / 2, FZ + 2.7), M["branco"], C_SOLTO)   # placa com fundo: de fora nao aparece espelhada
 BARRA = (M["barra_az"], (1,), 1.4)
@@ -1013,8 +1014,8 @@ r = vazio("Direcao_Mesa", (2.4, 7.0, FZ), C_MOV)
 box("Direcao_Mesa_Tampo", (1.7, .85, .04), (0, 0, .75), M["mad_cl"], C_MOV, r)
 box("Direcao_Mesa_Gaveteiro", (.45, .75, .7), (.6, 0, .37), M["mad_cl"], C_MOV, r)
 box("Direcao_Mesa_Painel", (1.6, .03, .55), (0, .38, .45), M["mad_cl"], C_MOV, r)
-modelo_ph("Direcao_Cadeira_Diretora", "plastic_monobloc_chair_01", (2.4, 7.85, FZ), PI, C_SOLTO, max_tris=3000)
-for x in (1.8, 3.0): modelo_ph("Direcao_Cadeira_Visita", "plastic_monobloc_chair_01", (x, 6.1, FZ), 0, C_SOLTO, max_tris=3000)
+modelo_ph("Direcao_Cadeira_Diretora", "plastic_monobloc_chair_01", (2.4, 7.85, FZ), 0, C_SOLTO, max_tris=3000)       # de frente para a mesa
+for x in (1.8, 3.0): modelo_ph("Direcao_Cadeira_Visita", "plastic_monobloc_chair_01", (x, 6.1, FZ), PI, C_SOLTO, max_tris=3000)
 # armario de aco cinza de 2 portas (o de escola publica / almoxarifado), no lugar do armario de madeira pintada
 M.update({"aco_cinza": mat("Armario_Aco_Cinza", "#8a8f94", .45, .3), "aco_cinza_esc": mat("Armario_Aco_Frisos", "#5e6267", .5, .3)})
 def armario_aco(nome, x, y, rz, larg=.9, prof=.45, alt=1.98):
@@ -1143,10 +1144,11 @@ def _bebedouro():
 
 # ---- sala 104 (x 2 .. 12, y 13 .. 19)
 QX = 2.0 + .15                                                 # quadro branco na parede oeste (as janelas ficam na parede do fundo)
-box("Sala_Quadro", (.04, 3.6, 1.2), (QX, 16.2, FZ + 1.5), M["quadro_branco"], C_TER)
-for zq in (.9, 2.1): box("Sala_Quadro_Moldura", (.06, 3.7, .04), (QX + .01, 16.2, FZ + zq), M["metal"], C_SOLTO)
-for yq in (14.38, 18.02): box("Sala_Quadro_Moldura", (.06, .04, 1.24), (QX + .01, yq, FZ + 1.5), M["metal"], C_SOLTO)
-box("Sala_Quadro_Aparador", (.1, 3.6, .03), (QX + .06, 16.2, FZ + .88), M["metal"], C_SOLTO)
+QUADRO_Y = {"Sala_104": 17.1}                                  # centro de cada quadro branco: o meio das fileiras de carteiras
+box("Sala_Quadro", (.04, 3.6, 1.2), (QX, 17.1, FZ + 1.5), M["quadro_branco"], C_TER)
+for zq in (.9, 2.1): box("Sala_Quadro_Moldura", (.06, 3.7, .04), (QX + .01, 17.1, FZ + zq), M["metal"], C_SOLTO)
+for yq in (15.28, 18.92): box("Sala_Quadro_Moldura", (.06, .04, 1.24), (QX + .01, yq, FZ + 1.5), M["metal"], C_SOLTO)
+box("Sala_Quadro_Aparador", (.1, 3.6, .03), (QX + .06, 17.1, FZ + .88), M["metal"], C_SOLTO)
 mesa_professor("Sala_Mesa_Professor", 3.4, 18.0, -PI / 2)
 for x in (4.6, 6.2, 7.8, 9.4, 11.0):                          # filas de frente para o quadro; faixa livre junto a porta (y 13 .. 14)
     for y in (15.9, 17.1, 18.3):                               # passagem livre junto a porta (y 13 .. 15)
@@ -1313,9 +1315,10 @@ for k, (x, y) in enumerate(((-8.0, -2.2), (20.0, -1.8))):
     for z in (.3, .6): torno("Tambor_%d_Aro" % k, [(.295, z - .015), (.3, z), (.295, z + .015)], M["lix_azul"], C_SOLTO, pos=(x, y, FZ))
 # extintores: na parede, com placa vermelha e demarcacao no piso (vermelho com borda amarela, como nas escolas)
 M["extintor_corpo"] = mat("Extintor_Vermelho", "#c4161c", .35, .2)
+EXTINTORES = {}
 def extintor(nome, x, y, virado, z0=FZ):
     """Extintor de po quimico (padrao brasileiro) pendurado na parede em suporte, alca a ~1,6 m; placa e demarcacao no piso."""
-    du = {"-y": (0, -1), "+y": (0, 1), "-x": (-1, 0), "+x": (1, 0)}[virado]
+    du = {"-y": (0, -1), "+y": (0, 1), "-x": (-1, 0), "+x": (1, 0)}[virado]; EXTINTORES[nome] = (x, y, du)      # (x, y) = face da parede
     rz = {"-y": 0, "+y": PI, "-x": -PI / 2, "+x": PI / 2}[virado]
     r = vazio(nome, (x + du[0] * .13, y + du[1] * .13, z0 + 1.0), C_SOLTO, rz + PI)
     torno(nome + "_Corpo", [(0, 0), (.075, 0), (.08, .02), (.08, .42), (.06, .48), (.02, .5), (0, .5)], M["extintor_corpo"], C_SOLTO, r, seg=16)
@@ -1345,7 +1348,7 @@ for x, y, vir in ((BX0 + .15, (YC0 + YC1) / 2, "+x"), (BX1 - .15, (YC0 + YC1) / 
     box("Placa_Saida", (.42 if du[1] else .02, .02 if du[1] else .42, .16), (x, y, FZ + 2.45), M["saida"], C_SOLTO)
     texto("Placa_Saida_Texto", "SAÍDA", .07, (x + du[0] * .012, y + du[1] * .012, FZ + 2.45), vir, M["texto_br"], C_SOLTO)
 # cameras de seguranca
-for k, (x, y, z, rz) in enumerate(((-7.5, .7, PD - .15, PI), (BX0 + .3, 11.5, PD - .15, -PI / 2), (BX1 - .3, 11.5, PD - .15, PI / 2), (PX + 3.25, -38.0, 2.95, 0))):
+for k, (x, y, z, rz) in enumerate(((-7.5, .7, PD - .15, PI), (BX0 + .3, 11.5, PD - .15, PI / 2), (BX1 - .3, 11.5, PD - .15, -PI / 2), (PX + 3.25, -38.0, 2.95, 0))):      # as do corredor com a lente para dentro
     modelo_ph("Camera_Seguranca_%d" % k, "security_camera_01", (x, y, FZ + z - .25), rz, C_SOLTO, alt=.25)
 # ar-condicionado split (direcao, recepcao, sala 104)
 for k, (x, y, rz) in enumerate(((3.5, YC0 - .1, PI), (-6.0, YC0 - .1, PI), (11.9, 16.0, PI / 2))):
@@ -1497,13 +1500,15 @@ def luminaria(nome, x, y, ztopo, col, comp=1.25, ao_longo_x=True):
 
 # salas: carteiras viradas para o quadro (parede lateral), mesa do professor, ventiladores, quadro branco
 def sala_aula(nome, x0, x1, y0, y1, frente_y):
+    global QUADRO_Y
     """Sala com quadro na parede x0 e carteiras viradas para ele."""
-    qx = x0 + .14; yc = (y0 + y1) / 2
+    qx = x0 + .14
+    ys = [y0 + 1.6 + k * 1.25 for k in range(int((y1 - y0 - 2.4) / 1.25) + 1)]
+    ys = ys[:-1] if abs(frente_y - y1) < abs(frente_y - y0) else ys[1:]      # passagem livre junto a porta
+    yc = QUADRO_Y[nome] = (ys[0] + ys[-1]) / 2                                 # quadro centrado nas fileiras de carteiras
     box(nome + "_Quadro", (.04, 3.6, 1.2), (qx, yc, P1Z + 1.5), M["quadro_branco"], C_PAV)
     for zq in (.9, 2.1): box(nome + "_Quadro_Moldura", (.06, 3.7, .04), (qx + .01, yc, P1Z + zq), M["metal"], C_SOLTO)
     mesa_professor(nome + "_Mesa_Professor", x0 + 1.4, yc + 2.2, -PI / 2, z=P1Z)
-    ys = [y0 + 1.6 + k * 1.25 for k in range(int((y1 - y0 - 2.4) / 1.25) + 1)]
-    ys = ys[:-1] if abs(frente_y - y1) < abs(frente_y - y0) else ys[1:]      # passagem livre junto a porta
     for x in [x0 + 2.8 + k * 1.5 for k in range(5)]:
         for y in ys:
             carteira(nome + "_Carteira", x, y, z=P1Z)
@@ -1533,6 +1538,7 @@ for k in range(int((X1 - X0) / 2.5) + 1):                      # uma viga a cada
     if HX0 - .2 < x < HX1 + .2: trechos = [(a, min(b, HY0 - .2)) for a, b in trechos if a < HY0 - .2] + [(max(a, HY1 + .2), b) for a, b in trechos if b > HY1 + .2]
     if -47.2 < x < -36.8:                                         # cozinha (KX0..KX1, KY0..KY1): sem vigas no teto, a pedido do autor
         trechos = [(a, min(b, 14.3)) for a, b in trechos if a < 14.3] + [(max(a, 21.7), b) for a, b in trechos if b > 21.7]
+    if abs(x + 7.5) < .3: trechos = [(a, b) for a, b in trechos if a > BY0 - .5]       # galeria da entrada: viga passava em cima da placa
     for y0, y1 in trechos:
         if y1 - y0 > .5: box("Pilotis_Viga", (.22, y1 - y0, .38), (x, (y0 + y1) / 2, Z1 - .35 - .19), M["pilotis"], C_GAL)
 # --- fachada envelhecida: escorrimentos com textura (transparencia em degrade), sob os peitoris e sob a platibanda
@@ -1622,7 +1628,8 @@ def estante(nome, x, y, rz, larg=3.6, zf=FZ):
 def detalhes_sala(nome, x0, x1, y0, y1, zf, qx, porta_y):
     """Detalhes da foto: quadro verde pequeno ao lado do branco, ventiladores de parede, eletrodutos, forro modular, estante."""
     yc = (y0 + y1) / 2
-    box(nome + "_Quadro_Verde", (.04, 1.2, 1.0), (qx, yc + 2.55, zf + 1.5), M["verde_quadro"], C_SOLTO)
+    qy = QUADRO_Y.get(nome, yc); lado = -1 if qy + 3.15 > y1 - .05 else 1          # ao lado do branco (do outro lado se nao couber)
+    box(nome + "_Quadro_Verde", (.04, 1.2, 1.0), (qx, qy + lado * 2.55, zf + 1.5), M["verde_quadro"], C_SOLTO)
     for y in (y0 + .9, y1 - .9): ventilador_parede(nome + "_Ventilador_Parede", x1 - .12, y, zf + 2.55, PI / 2)
     eletrodutos(nome + "_Eletroduto", x0 + .2, x1 - .2, y0 + .12 if porta_y > yc else y1 - .12, zf + PD - .15)
     forro_modular(nome + "_Forro_Grade", x0 + .1, x1 - .1, y0 + .1, y1 - .1, zf + PD - .03)
@@ -1639,7 +1646,7 @@ MATERIAS = (("PORTUGUÊS", "Interpretação de texto", "1) Leia o texto da pág.
             ("CIÊNCIAS", "O ciclo da água", "evaporação · condensação", "precipitação"),
             ("HISTÓRIA", "Brasil Colônia", "Trabalho: entregar sexta", "Ler cap. 3"))
 def vida_sala(nome, x0, x1, y0, y1, idx, frente_y):
-    qx = x0 + .14; yc = (y0 + y1) / 2; zq = P1Z + 1.5
+    qx = x0 + .14; yc = QUADRO_Y.get(nome, (y0 + y1) / 2); zq = P1Z + 1.5
     t1, t2, t3, t4 = MATERIAS[idx % len(MATERIAS)]
     texto(nome + "_Quadro_Texto", "Rio, 10 de novembro", .09, (qx + .025, yc - 1.0, zq + .46), "+x", M["texto_az"], C_SOLTO)
     texto(nome + "_Quadro_Texto", t1, .17, (qx + .025, yc + .1, zq + .26), "+x", M["texto_az"], C_SOLTO)
@@ -2385,7 +2392,6 @@ def _quadros():                                    # quadros brancos das salas (
     return [[q] + _obs(r"^%s_Moldura(\.\d+)?$" % _re.escape(q.name)) for q in _obs(r"^(.+_)?Quadro$")
             if q.data.materials and q.data.materials[0] == M["quadro_branco"]]
 trocar_peca("quadro_branco_realista.glb", _quadros())
-for o in _obs(r"^.+_Quadro_Texto"): o.location.x += .03          # materia escrita na frente da placa nova
 trocar_peca("regador_realista.glb", [_obs(r"^Horta_Regador")])
 trocar_peca("tambor_lixo_realista.glb", [_obs(r"^Tambor_%d(_Aro)?(\.\d+)?$" % k) for k in range(2)])
 trocar_peca("hidrante_realista.glb", [_obs(r"^Hidrante_(Caixa|Vidro|Texto)")])
@@ -2393,10 +2399,22 @@ trocar_peca("mural_avisos_realista.glb", [sorted([c for c in bpy.data.objects["M
             if "Mural_Entrada" in bpy.data.objects else [])
 trocar_peca("mochila_chao_realista.glb", _cada(r"^.+_Mochila_Chao(\.\d+)?$"), dec=.12)      # 52 copias: malha leve
 trocar_peca("extintor_realista.glb", [sorted(_obs(r"^%s_(Corpo|Valvula|Gatilho|Alca|Mangueira|Rotulo|Suporte|Placa|Placa_Texto)(\.\d+)?$" % e.name), key=lambda o: not o.name.endswith("_Corpo"))
-                                      for e in sorted(bpy.data.objects, key=lambda o: o.name) if e.type == "EMPTY" and _re.match(r"^Extintor_[A-Za-z0-9]+(_[AB])?$", e.name)])
+                                      for e in sorted(bpy.data.objects, key=lambda o: o.name) if e.type == "EMPTY" and _re.match(r"^Extintor_[A-Za-z0-9]+(_[AB])?$", e.name)])      # placa do modelo recuada ate a parede em modelos/extintor_realista.glb (vinha 21 cm a frente)
+bpy.context.view_layer.update()
+for _en, (_x, _y, _du) in EXTINTORES.items():      # extintor novo (com a placa) encostado na parede: a placa ficava solta
+    _a = bpy.data.objects.get(_en + "_Corpo")
+    if not _a: continue
+    _d = min((_a.matrix_world @ Vector(c)).x * _du[0] + (_a.matrix_world @ Vector(c)).y * _du[1] for c in _a.bound_box) - (_x * _du[0] + _y * _du[1])
+    _a.matrix_world = Matrix.Translation((-_d * _du[0], -_d * _du[1], 0)) @ _a.matrix_world
+for o in _obs(r"^.+_Quadro_Texto"): bpy.data.objects.remove(o, do_unlink=True)      # o quadro novo ja vem com a materia escrita
 for _pn, (_sl, _vir) in PLACAS_PORTA.items():      # placas das portas: o texto do modelo olha para -y
     trocar_peca("placa_%s_realista.glb" % _sl, [_obs(r"^%s(_Texto)?$" % _pn)], giro=PI if _vir == "+y" else 0)
 trocar_peca("placa_horta_realista.glb", [_obs(r"^Horta_Placa")])
+trocar_peca("quadro_avisos_direcao_realista.glb", [_obs(r"^Direcao_Quadro_(Avisos|Papel)")])
+trocar_peca("placa_escola_realista.glb", [sorted([c for c in bpy.data.objects["Placa_Escola"].children if c.type == "MESH"], key=lambda c: not c.name.startswith("Placa_Escola_Chapa"))]
+            if "Placa_Escola" in bpy.data.objects else [])
+trocar_peca("gravador_cameras_realista.glb", [_obs(r"^I_Monitor_Cameras_DVR")])
+trocar_peca("telefone_realista.glb", [_obs(r"^I_Telefone_Base") + _obs(r"^I_Telefone_Fone")])
 trocar_peca("coifa_realista.glb", [_obs(r"^Cozinha_Coifa$")])
 if "Cozinha_Coifa" in bpy.data.objects:            # coifa nova e mais funda: costas na parede, duto proprio ate o teto
     for o in _obs(r"^Cozinha_Coifa_Duto"): bpy.data.objects.remove(o, do_unlink=True)
