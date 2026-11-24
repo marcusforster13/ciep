@@ -1397,7 +1397,7 @@ export async function iniciar(ctx) {
     menu: abrirMenu, quadro, estado: S, relatorio,
     _t: { tutorial, cair, tut: () => TUT, comecar, encerrar, objetivos, sortear, derivar, novaOcorrencia, npcs, portas, moverPorta, itens, usarItem, sacar, disparar, falarRadio, menuInspetora, menuResponsavel, menuDiretora, menuAluno, menuFuncionario,
       decidirFinal, finalizar, escalar, ordemVerbal, usar, armaNPC, armaSolta, B, zona, irAte, caminho, noProximo, imagemPrint, imagemCameras, abrigamento, chamarAluno, pedirSocorro,
-      ocorrencia: () => A, historico: HIST, H,   // H: usado so pelo monitor.js (monitoramento do instrutor)
+      ocorrencia: () => A, historico: HIST, H, comecarFilmar,   // H: usado so pelo monitor.js (monitoramento do instrutor)
       botoes: () => (dialogo.mesh.visible ? dialogo : menu).botoes, painel: () => (dialogo.mesh.visible ? dialogo : menu.mesh.visible ? menu : null) }
   };
   return window.__trein;

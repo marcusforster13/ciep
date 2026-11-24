@@ -24,11 +24,11 @@ async function aluno({ camera, scene, renderer, fase }) {
   const T = await trein(), H = T._t.H, S = T.estado;
 
   // catalogo das acoes (textos, pontos, base legal) dos cenarios do site
-  const catalogo = {}, nomesVar = {};
+  const catalogo = {}, nomesVar = {}; let variacoes = {};
   for (const arq of ['treinamento/cenario_ms_01.json', 'treinamento/cenario_crise_01.json']) {
     try {
       const c = await fetch(window.__h ? window.__h(arq) : arq).then(r => r.json());
-      Object.assign(nomesVar, c.nomes_variacao || {});
+      Object.assign(nomesVar, c.nomes_variacao || {}); if (/cenario_ms/.test(arq)) variacoes = c.variacoes || {};
       for (const f of c.fases || []) for (const [lista, tipo] of [['acoes', 'acao'], ['erros', 'erro'], ['falhas_graves', 'grave']])
         for (const a of f[lista] || []) catalogo[a.id] = { texto: a.texto, pontos: a.pontos, base: a.base || '', tipo, fase: f.nome || f.id };
     } catch (e) { }
@@ -52,17 +52,71 @@ async function aluno({ camera, scene, renderer, fase }) {
     peer.on('connection', c => {
       c.on('open', () => {
         conexoes.add(c); atualizarSelo(); avisarVR('Instrutor conectado.', 4);
-        c.send({ tipo: 'ola', fase, titulo: document.title, url: location.origin + location.pathname, catalogo, nomesVar });
+        c.send({ tipo: 'ola', fase, titulo: document.title, url: location.origin + location.pathname, catalogo, nomesVar, variacoes, modos: MODOS });
         enviarEstado(true);
       });
       c.on('data', m => {
-        if (m?.tipo === 'mensagem' && typeof m.texto === 'string') avisarVR(m.texto.slice(0, 220), Math.min(14, 4 + m.texto.length / 18), 'Instrutor');
+        if (m?.tipo === 'mensagem' && typeof m.texto === 'string') avisarVR(m.texto.slice(0, 220), Math.min(14, 4 + m.texto.length / 18), m.como === 'central' ? 'Central (rádio)' : 'Instrutor');
+        else if (m?.tipo === 'comando') comando(m);
       });
       c.on('close', () => { conexoes.delete(c); atualizarSelo(); });
     });
   }
   abrir();
   renderer.xr.addEventListener('sessionstart', () => setTimeout(() => avisarVR(conexoes.size ? 'Monitoramento ativo.' : `Código para o instrutor: ${codigo}`, 8), 1500));
+
+  /* ---------- controles do instrutor ---------- */
+  const MODOS = [['historia', 'História (guiado)'], ['treino', 'Treino (com dicas)'], ['avaliacao', 'Avaliação (sem dicas)'], ['ameaca', 'Treino de ameaça ativa']];
+  let pausado = false, tPausa = 0, posPausa = null;
+  const veuP = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.MeshBasicMaterial({ color: 0x02040a, transparent: true, opacity: .82, depthTest: false, toneMapped: false, fog: false }));
+  const tcv = document.createElement('canvas'); tcv.width = 1024; tcv.height = 256;
+  { const g = tcv.getContext('2d'); g.textAlign = 'center'; g.fillStyle = '#5cf0ff'; g.font = '600 38px Segoe UI, sans-serif'; g.fillText('TREINO PAUSADO PELO INSTRUTOR', 512, 110); g.fillStyle = '#c3cbdb'; g.font = '30px Segoe UI, sans-serif'; g.fillText('Aguarde. O treino continua de onde parou.', 512, 170); }
+  const texP = new THREE.CanvasTexture(tcv); texP.colorSpace = THREE.SRGBColorSpace;
+  const txtP = new THREE.Mesh(new THREE.PlaneGeometry(.64, .16), new THREE.MeshBasicMaterial({ map: texP, transparent: true, depthTest: false, toneMapped: false, fog: false }));
+  // texto a 80 cm: confortavel no Quest
+  veuP.position.z = -.29; txtP.position.z = -.8; veuP.renderOrder = 2000; txtP.renderOrder = 2001; veuP.visible = txtP.visible = false; camera.add(veuP, txtP);
+  // embrulha a interacao do jogo: pausado, nada anda e nenhum clique vale
+  const quadroOrig = T.quadro;
+  T.quadro = (...a) => { if (!pausado) return quadroOrig(...a); };
+  for (const k of ['clique', 'gatilho', 'botao', 'recarregar', 'menu']) { const f = T[k]; if (typeof f === 'function') T[k] = (...a) => pausado ? true : f(...a); }
+  const travaAnterior = scene.onBeforeRender;
+  scene.onBeforeRender = (...a) => { travaAnterior?.(...a); if (pausado && posPausa) { T._t.H.rig.position.copy(posPausa); T._t.H.rig.updateMatrixWorld(true); } };
+  function pausar(sim) {
+    if (sim === pausado) return;
+    pausado = sim; veuP.visible = txtP.visible = sim;
+    if (sim) { tPausa = performance.now(); posPausa = T._t.H.rig.position.clone(); try { speechSynthesis.pause(); } catch (e) { } }
+    else {
+      const d = performance.now() - tPausa; posPausa = null;
+      if (S.inicio) S.inicio += d; const A = T._t.ocorrencia?.(); if (A) { if (A.t0) A.t0 += d; if (A.tAmeaca) A.tAmeaca += d; }
+      try { speechSynthesis.resume(); } catch (e) { } avisarVR('Treino retomado.', 3, 'Instrutor');
+    }
+    enviarEstado(true);
+  }
+  function eventos() {
+    const A = T._t.ocorrencia?.();
+    return [
+      { id: 'filmar', label: 'Responsável começa a filmar', ok: !!(S.ativo && A && !A.filmando && !A.ameacaAtiva) },
+      { id: 'disparos', label: 'Antecipar a ameaça (disparos no corredor)', ok: !!(S.ativo && A && S.variacao?.origem === 'ameaca_real' && !A.ameacaAtiva), so: 'só na variação de ameaça real' }
+    ];
+  }
+  function comando(m) {
+    try {
+      if (m.acao === 'iniciar' && !S.ativo && MODOS.some(([k]) => k === m.modo)) {
+        const v = Object.entries(m.variacao || {}).filter(([k, x]) => variacoes[k]?.includes(x)).map(([k, x]) => `${k}:${x}`).join(',');
+        const u = new URL(location.href); v ? u.searchParams.set('v', v) : u.searchParams.delete('v'); history.replaceState(null, '', u);
+        pausar(false); T._t.comecar(m.modo);
+        setTimeout(() => avisarVR('O instrutor iniciou o treinamento.', 4, 'Instrutor'), 800);
+      }
+      else if (m.acao === 'pausar') pausar(true);
+      else if (m.acao === 'retomar') pausar(false);
+      else if (m.acao === 'encerrar' && S.ativo) { pausar(false); T._t.encerrar(); }
+      else if (m.acao === 'evento') {
+        const e = eventos().find(x => x.id === m.id && x.ok); if (!e) return;
+        if (e.id === 'filmar') T._t.comecarFilmar(); else if (e.id === 'disparos') T._t.escalar('disparos');
+      }
+    } catch (er) { console.warn('monitor comando:', er); }
+    setTimeout(() => enviarEstado(true), 300);
+  }
 
   const enviar = m => { for (const c of conexoes) if (c.open) try { c.send(m); } catch (e) { } };
 
@@ -93,10 +147,10 @@ async function aluno({ camera, scene, renderer, fase }) {
   function enviarEstado(forcar) {
     if (!conexoes.size) return;
     const A = T._t.ocorrencia?.();
-    if (!forcar && S.log.length === nLog && !(S.fim && S.fim !== fimEnviado)) { enviar({ tipo: 'relogio', ativo: S.ativo, t: S.ativo ? (performance.now() - S.inicio) / 1000 : null }); return; }
+    if (!forcar && S.log.length === nLog && !(S.fim && S.fim !== fimEnviado)) { enviar({ tipo: 'relogio', ativo: S.ativo, pausado, t: S.ativo ? ((pausado ? tPausa : performance.now()) - S.inicio) / 1000 : null, eventos: eventos() }); return; }
     nLog = S.log.length;
     const est = {
-      tipo: 'estado', ativo: S.ativo, modo: S.historia ? 'historia' : S.modo, t: S.inicio ? ((S.fim || performance.now()) - S.inicio) / 1000 : 0,
+      tipo: 'estado', ativo: S.ativo, pausado, eventos: eventos(), modo: S.historia ? 'historia' : S.modo, t: S.inicio ? ((S.fim || (pausado ? tPausa : performance.now())) - S.inicio) / 1000 : 0,
       variacao: S.variacao, ocorrencia: A ? { titulo: A.titulo, n: A.n, fatos: A.fatos || [] } : null,
       feitos: [...S.feitos.entries()], erros: S.erros.map(e => ({ id: e.id, texto: e.texto, pontos: e.pontos, t: e.t })),
       graves: S.graves.map(g => ({ id: g.id, texto: g.texto, pontos: g.pontos, base: g.base, t: g.t })), log: S.log.slice(-200)
