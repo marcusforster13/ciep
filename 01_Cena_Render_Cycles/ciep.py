@@ -957,7 +957,9 @@ for x, y, nome, vir, z in ((-14.95, YC0 + .11, "SECRETARIA", "+y", 2.3), (12.95,
     sl = _slug(nome); PLACAS_PORTA["Placa_Sala_" + sl] = (sl, vir)
     box("Placa_Sala_" + sl, (len(nome) * .075 + .2, .02, .2), (x, y, FZ + z), M["branco"], C_SOLTO)
     texto("Placa_Sala_" + sl + "_Texto", nome, .09, (x, y + (.012 if vir == "+y" else -.012), FZ + z), vir, M["texto_pr"], C_SOLTO)
-texto("Placa_Direcao", "DIREÇÃO", .1, (-2.14, 5.45, FZ + 2.35), "-x", M["texto_pr"], C_SOLTO)
+PLACAS_PORTA["Placa_Sala_direcao"] = ("direcao", "-x")          # placa branca igual as outras, na parede que olha para -x
+box("Placa_Sala_direcao", (.02, len("DIREÇÃO") * .075 + .2, .2), (-2.14, 5.45, FZ + 2.35), M["branco"], C_SOLTO)
+texto("Placa_Sala_direcao_Texto", "DIREÇÃO", .09, (-2.152, 5.45, FZ + 2.35), "-x", M["texto_pr"], C_SOLTO)
 # portas fechadas do corredor: madeira pintada de azul (veio leve sob a tinta), folha lisa, batente e
 # macaneta de alavanca com espelho (antes era so uma placa azul lisa)
 M.update({"porta_mad_az": mat("Porta_Madeira_Azul", "#2f63a8", .3), "batente_corr": mat("Batente_Porta_Corredor", "#e6e2d6", .55),
@@ -1144,11 +1146,11 @@ def _bebedouro():
 
 # ---- sala 104 (x 2 .. 12, y 13 .. 19)
 QX = 2.0 + .15                                                 # quadro branco na parede oeste (as janelas ficam na parede do fundo)
-QUADRO_Y = {"Sala_104": 17.1}                                  # centro de cada quadro branco: o meio das fileiras de carteiras
-box("Sala_Quadro", (.04, 3.6, 1.2), (QX, 17.1, FZ + 1.5), M["quadro_branco"], C_TER)
-for zq in (.9, 2.1): box("Sala_Quadro_Moldura", (.06, 3.7, .04), (QX + .01, 17.1, FZ + zq), M["metal"], C_SOLTO)
-for yq in (15.28, 18.92): box("Sala_Quadro_Moldura", (.06, .04, 1.24), (QX + .01, yq, FZ + 1.5), M["metal"], C_SOLTO)
-box("Sala_Quadro_Aparador", (.1, 3.6, .03), (QX + .06, 17.1, FZ + .88), M["metal"], C_SOLTO)
+QUADRO_Y = {"Sala_104": 16.9}                                  # centro de cada quadro branco: o meio das fileiras de carteiras
+box("Sala_Quadro", (.04, 3.6, 1.2), (QX, 16.9, FZ + 1.5), M["quadro_branco"], C_TER)
+for zq in (.9, 2.1): box("Sala_Quadro_Moldura", (.06, 3.7, .04), (QX + .01, 16.9, FZ + zq), M["metal"], C_SOLTO)
+for yq in (15.08, 18.72): box("Sala_Quadro_Moldura", (.06, .04, 1.24), (QX + .01, yq, FZ + 1.5), M["metal"], C_SOLTO)
+box("Sala_Quadro_Aparador", (.1, 3.6, .03), (QX + .06, 16.9, FZ + .88), M["metal"], C_SOLTO)
 mesa_professor("Sala_Mesa_Professor", 3.4, 18.0, -PI / 2)
 for x in (4.6, 6.2, 7.8, 9.4, 11.0):                          # filas de frente para o quadro; faixa livre junto a porta (y 13 .. 14)
     for y in (15.9, 17.1, 18.3):                               # passagem livre junto a porta (y 13 .. 15)
@@ -2402,8 +2404,11 @@ for _en, (_x, _y, _du) in EXTINTORES.items():      # extintor novo (com a placa)
     _a.matrix_world = Matrix.Translation((-_d * _du[0], -_d * _du[1], 0)) @ _a.matrix_world
 for o in _obs(r"^.+_Quadro_Texto"): bpy.data.objects.remove(o, do_unlink=True)      # o quadro novo ja vem com a materia escrita
 for _pn, (_sl, _vir) in PLACAS_PORTA.items():      # placas das portas: o texto do modelo olha para -y
-    trocar_peca("placa_%s_realista.glb" % _sl, [_obs(r"^%s(_Texto)?$" % _pn)], giro=PI if _vir == "+y" else 0)
+    trocar_peca("placa_%s_realista.glb" % _sl, [_obs(r"^%s(_Texto)?$" % _pn)], giro={"+y": PI, "-x": -PI / 2}.get(_vir, 0))
 trocar_peca("placa_horta_realista.glb", [_obs(r"^Horta_Placa")])
+trocar_peca("horta_cebolinha_realista.glb", _pes(r"^Horta_Cebolinha", .1), girar_acaso=True)
+trocar_peca("livro_ocorrencias_realista.glb", [_obs(r"^I_Livro_Ocorrencias_Capa")])
+trocar_peca("mural_recepcao_realista.glb", [sorted(_obs(r"^Recepcao_Mural(_Aviso|_Titulo)?(\.\d+)?$"), key=lambda o: o.name != "Recepcao_Mural")])      # o titulo vem no modelo
 trocar_peca("quadro_avisos_direcao_realista.glb", [_obs(r"^Direcao_Quadro_(Avisos|Papel)")])
 trocar_peca("placa_escola_realista.glb", [sorted([c for c in bpy.data.objects["Placa_Escola"].children if c.type == "MESH"], key=lambda c: not c.name.startswith("Placa_Escola_Chapa"))]
             if "Placa_Escola" in bpy.data.objects else [])
