@@ -1303,9 +1303,7 @@ def coleta_seletiva(nome, x, y, rz):
     for sx in (-1, 1): box(nome + "_Suporte_Pe", (.04, .04, .8), (sx * 1.02, .12, .4), M["metal"], C_SOLTO, r)
     box(nome + "_Suporte_Barra", (2.08, .03, .03), (0, .12, .55), M["metal"], C_SOLTO, r)
     bloqueio("Bloqueio_" + nome, (2.1, .5, .8), (x, y, FZ + .4))          # uma caixa so para a colisao (fica dentro das lixeiras)
-coleta_seletiva("Coleta_Seletiva_Patio", 12.5, -1.7, 0)
-coleta_seletiva("Coleta_Seletiva_Portao", -3.5, -36.6, 0)
-coleta_seletiva("Coleta_Seletiva_Pilotis", -24.0, 1.6, 0)
+# (conjuntos de coleta seletiva retirados a pedido do autor)
 for nome, x, y, rz, m in (("Cesto_Sala", 2.5, 13.45, 0, "lix_cinza"), ("Cesto_Direcao", 5.6, 9.5, 0, "lix_cinza"), ("Cesto_Recepcao", -2.5, 3.45, 0, "lix_azul")):
     lixeira(nome, x, y, rz, M[m], alt=.42, r=.15)
 lixeira("Lixeira_Pedal_Banheiro", -19.6, 17.8, PI / 2, M["branco"], alt=.48, r=.16)
@@ -1342,11 +1340,7 @@ extintor("Extintor_Recepcao", -9.87, 8.6, "+x")
 box("Hidrante_Caixa", (.8, .2, .95), (-0.2, YC1 - .2, FZ + 1.35), M["hidrante"], C_SOLTO)
 box("Hidrante_Vidro", (.6, .02, .6), (-0.2, YC1 - .31, FZ + 1.4), M["vidro"], C_SOLTO)
 texto("Hidrante_Texto", "INCÊNDIO", .07, (-0.2, YC1 - .33, FZ + 1.75), "-y", M["texto_br"], C_SOLTO)
-# placas de saida (verdes) sobre as portas corta-fogo e a entrada
-for x, y, vir in ((BX0 + .15, (YC0 + YC1) / 2, "+x"), (BX1 - .15, (YC0 + YC1) / 2, "-x"), (-7.5, BY0 + .15, "+y")):
-    du = {"+x": (1, 0), "-x": (-1, 0), "+y": (0, 1)}[vir]
-    box("Placa_Saida", (.42 if du[1] else .02, .02 if du[1] else .42, .16), (x, y, FZ + 2.45), M["saida"], C_SOLTO)
-    texto("Placa_Saida_Texto", "SAÍDA", .07, (x + du[0] * .012, y + du[1] * .012, FZ + 2.45), vir, M["texto_br"], C_SOLTO)
+# (placas verdes de saida retiradas a pedido do autor)
 # cameras de seguranca
 for k, (x, y, z, rz) in enumerate(((-7.5, .7, PD - .15, PI), (BX0 + .3, 11.5, PD - .15, PI / 2), (BX1 - .3, 11.5, PD - .15, -PI / 2), (PX + 3.25, -38.0, 2.95, 0))):      # as do corredor com a lente para dentro
     modelo_ph("Camera_Seguranca_%d" % k, "security_camera_01", (x, y, FZ + z - .25), rz, C_SOLTO, alt=.25)
