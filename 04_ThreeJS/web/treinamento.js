@@ -1392,6 +1392,9 @@ export async function iniciar(ctx) {
     B, olharPara, zona, visto, moverPorta, portas, sacar, disparar, armaNPC, armaSolta, somTiro, acenderFlash, veu, suave, espera, limparNPCs, ajustarAreaClique, levantar,
     fmt, aviso, cenaExploracao, carregarPapeis, estado: S, fimCrise: () => { S.crise = null; cenaExploracao(); } };
   window.__trein = {
+    _mon: { legenda, personagem, animar, menu, dialogo, relatorio, rig, camera, estado: S, ocorrencia: () => (typeof A !== 'undefined' ? A : null),
+      ...(typeof sacar === 'function' ? { sacar } : {}), ...(typeof portas === 'object' ? { portas } : {}),
+      ...(typeof carregarPapeis === 'function' ? { carregarPapeis } : {}), ...(typeof iniciarCrise === 'function' ? { iniciarCrise } : {}) },   // so para o monitor.js (monitoramento do instrutor)
     clique: ray => usar(ray), gatilho: (ray, c) => usar(ray, c), botao, recarregar, soltar: () => { },
     apontar, painelAberto: () => paineis.some(p => p.mesh.visible),
     menu: abrirMenu, quadro, estado: S, relatorio,
