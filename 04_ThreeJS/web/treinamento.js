@@ -430,13 +430,31 @@ export async function iniciar(ctx) {
     itens.forro = { o: g, h }; hitsItem.push(h);
     return g;
   })();
+  // fonte de escrita a mao embutida no site (Permanent Marker, Apache 2.0): o Quest nao tem fonte manuscrita propria
+  let ultimaV = null;
+  const fonteMao = new FontFace('Mao', 'url(' + HQ('fontes/PermanentMarker-Regular.ttf') + ')');
+  fonteMao.load().then(f => { document.fonts.add(f); if (ultimaV) evidencias(ultimaV); }).catch(() => { });
   function evidencias(v) {
+    ultimaV = v;
     const P = CEN.pichacao?.[v?.origem]; const g = picha.cv.getContext('2d'); g.clearRect(0, 0, 512, 320);
     if (P) {
       const velha = v.origem === 'corrente_antiga';
       g.fillStyle = velha ? 'rgba(225,225,215,.38)' : v.origem === 'ameaca_real' ? 'rgba(245,245,240,.95)' : 'rgba(235,235,228,.82)';      // corretivo/caneta clara na divisoria escura
-      g.font = (velha ? '600 ' : '700 ') + '54px "Comic Sans MS", "Segoe Print", cursive'; g.textAlign = 'center';
-      P.parede.split('\n').forEach((l, i, L) => { g.save(); g.translate(256, 160 + (i - (L.length - 1) / 2) * 70); g.rotate((i % 2 ? .04 : -.05)); g.fillText(l, 0, 18); g.restore(); });
+      // escrita a mao: cada letra com tamanho, giro e altura proprios, a linha subindo torta e a tinta falhando um pouco
+      let s = 7 + v.origem.length * 131; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;      // sorteio fixo: sai sempre igual
+      g.font = '400 52px Mao, "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+      const cor = g.fillStyle;
+      P.parede.split('\n').forEach((l, i, L) => {
+        const cs = [...l], ws = cs.map(c => g.measureText(c).width * (.86 + rnd() * .14) + (c === ' ' ? 6 : -1));
+        let x = 256 - ws.reduce((a, b) => a + b, 0) / 2 + (rnd() - .5) * 26;
+        const y0 = 160 + (i - (L.length - 1) / 2) * 74 + 18, inc = (rnd() - .5) * .1, x0 = x;
+        cs.forEach((c, k) => {
+          g.save(); g.translate(x, y0 + (rnd() - .5) * 9 + inc * (x - x0)); g.rotate(inc + (rnd() - .5) * .2); g.scale(.88 + rnd() * .2, .86 + rnd() * .26);
+          g.fillStyle = cor; g.fillText(c, 0, 0);
+          g.globalAlpha = .35; g.fillText(c, 1.6, -1.2);      // segunda passada da caneta, meio fora do lugar
+          g.restore(); x += ws[k];
+        });
+      });
       if (v.origem === 'brincadeira') { g.strokeStyle = 'rgba(235,235,228,.82)'; g.lineWidth = 5; g.beginPath(); g.arc(70, 230, 34, 0, 7); g.moveTo(58, 222); g.lineTo(64, 222); g.moveTo(78, 222); g.lineTo(84, 222); g.moveTo(56, 245); g.lineTo(86, 248); g.stroke(); }
       if (v.origem === 'conflito') { g.strokeStyle = 'rgba(230,90,80,.8)'; g.lineWidth = 4; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(90 + k * 20, 100 + k * 30); g.lineTo(420 - k * 15, 120 + k * 32); g.stroke(); } }
     }

@@ -57,7 +57,7 @@ PECAS = {
     "trilho_bandeja": ("pre:Refeitorio_Trilho_Bandeja", 4.0), "pia_cozinha": ("pre:Cozinha_Pia_Cuba", 1.0),
     "bancada_cozinha": ("pre:Cozinha_Bancada", 2.5), "coifa": ("pre:Cozinha_Coifa", 2.0), "prateleira_cozinha": ("pre:Cozinha_Prateleira", 2.0),
     "bancada_banheiro": ("pre:Banheiro_Bancada", 1.6), "mastro_bandeira": ("pre:Mastro", 2.0), "portao_entrada": ("pre:Portao_", 3.5),
-    "porta_corta_fogo": ("pre:Pav1_Porta_Corta_Fogo", .5), "portao_grade_corredor": ("pre:Corredor_Portao", 2.0), "horta_alface": ("pre:Horta_Alface", .2), "horta_couve": ("pre:Horta_Couve", .3),
+    "porta_corta_fogo": ("pre:Pav1_Porta_Corta_Fogo", .5), "caixas_arquivo": ("pre:Direcao_Armario_Caixa_Arquivo", .7), "material_estante": ("pre:Sala_201_Estante_Material", 3.0), "portao_grade_corredor": ("pre:Corredor_Portao", 2.0), "horta_alface": ("pre:Horta_Alface", .2), "horta_couve": ("pre:Horta_Couve", .3),
     "cadeira_recepcao_plastico": ("pre:Recepcao_Cadeira", .4), "estante_direcao": ("pre:Direcao_Estante", 1.0),
 }
 

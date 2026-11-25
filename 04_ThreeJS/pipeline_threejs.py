@@ -217,7 +217,11 @@ for col in bpy.data.collections:
     # ilha so no lightmap, sem a linha de luz entre pecas vizinhas. Nao muda a forma (distancia de 2 mm).
     for o in objs:
         bmw = bmesh.new(); bmw.from_mesh(o.data)
-        antes = len(bmw.verts); bmesh.ops.remove_doubles(bmw, verts=bmw.verts, dist=.002)
+        # pecas dos modelos do autor (Modelo_*) ficam de fora: as quinas vivas delas sao vertices duplicados no mesmo lugar,
+        # e soldar junta as normais (a porta corta-fogo ficou com sombra escorrendo pelas quinas)
+        autor = {i for i, s in enumerate(o.material_slots) if s.material and s.material.name.startswith("Modelo_")}
+        vs = [v for v in bmw.verts if not any(f.material_index in autor for f in v.link_faces)]
+        antes = len(bmw.verts); bmesh.ops.remove_doubles(bmw, verts=vs, dist=.002)
         if len(bmw.verts) < antes: bmw.to_mesh(o.data)
         bmw.free()
     for o in scene.objects:
