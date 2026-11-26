@@ -2417,12 +2417,12 @@ trocar_peca("placa_horta_realista.glb", [_obs(r"^Horta_Placa")])
 trocar_peca("horta_cebolinha_realista.glb", _pes(r"^Horta_Cebolinha", .1), girar_acaso=True)
 trocar_peca("livro_ocorrencias_realista.glb", [_obs(r"^I_Livro_Ocorrencias_Capa")])
 trocar_peca("pasta_frequencia_realista.glb", [_obs(r"^I_Pasta_Frequencia_Capa")])
-trocar_peca("vaso_sanitario_realista.glb", _dados("Peca_vaso"))
+trocar_peca("vaso_sanitario_sujo_realista.glb", _dados("Peca_vaso"))
 trocar_peca("valvula_descarga_realista.glb", _dados("Peca_valvula"))
-trocar_peca("cuba_torneira_realista.glb", _dados("Peca_cuba_torneira"))
+trocar_peca("cuba_torneira_sujo_realista.glb", _dados("Peca_cuba_torneira"))
 trocar_peca("papeleira_higienica_realista.glb", _cada(r"^Banheiro_Papeleira_Higienica(\.\d+)?$"))
 trocar_peca("alcool_gel_realista.glb", [sorted(_obs(r"^Banheiro_Alcool_Gel"), key=lambda o: "Visor" in o.name)])      # caixa + visor azul
-trocar_peca("mictorio_realista.glb", _dados("Peca_mictorio"))
+trocar_peca("mictorio_sujo_realista.glb", _dados("Peca_mictorio"))
 def _material_estante():                           # blocos coloridos das estantes das salas -> modelos do autor, no tamanho real deles
     bpy.context.view_layer.update(); rx = random.Random(41)
     malhas = {k: _malha_glb(k + "_realista.glb") for k in ("pilha_livros", "caixa_arquivo", "caixa_organizadora")}
@@ -2451,7 +2451,7 @@ def _material_estante():                           # blocos coloridos das estant
     say("[AUTOR] material da estante: %d bloco(s) trocado(s), %d sem espaco retirado(s)" % (n, tira))
 _material_estante()
 trocar_peca("papeleira_toalha_realista.glb", [_obs(r"^Banheiro_Papeleira_Toalha")])
-trocar_peca("bancada_banheiro_realista.glb", [_obs(r"^Banheiro_Bancada")])      # tampo, rodabanca e saia; cubas e torneiras continuam as pecas proprias
+trocar_peca("bancada_banheiro_sujo_realista.glb", [_obs(r"^Banheiro_Bancada")])      # tampo, rodabanca e saia; cubas e torneiras continuam as pecas proprias
 trocar_peca("porta_corta_fogo_realista.glb", _cada(r"^Pav1_Porta_Corta_Fogo(\.\d+)?$"), virar=lambda g: g[0].matrix_world.translation.x > 25)      # as duas pontas do corredor de cima, frente para dentro
 trocar_peca("contentor_lixo_realista.glb", [[c] + [o for o in _obs(r"^Contentor_Lixo_(Tampa|Roda)") if abs(o.matrix_world.translation.x - c.matrix_world.translation.x) < .35]
                                             for c in _obs(r"^Contentor_Lixo_Corpo")])      # corpo + tampa + 2 rodas de cada um dos 3 contentores
