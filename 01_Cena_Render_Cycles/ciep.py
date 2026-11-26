@@ -2431,7 +2431,7 @@ def _material_estante():                           # blocos coloridos das estant
         bl = Vector(((min(p.x for p in pts) + max(p.x for p in pts)) / 2, (min(p.y for p in pts) + max(p.y for p in pts)) / 2, min(p.z for p in pts)))
         tipo = "pilha_livros" if d[2] < .2 and bl.z > .9 else "caixa_arquivo" if d[0] < .2 else "caixa_organizadora"
         vao = min(2, max(0, int((bl.x + 1.8) // 1.2)))      # estante de 3,6 m em 3 vaos de 1,2 m
-        vaos.setdefault((r.name, round(bl.z, 2), vao), []).append((bl.x, a, tipo, bl))
+        vaos.setdefault((r.name, round(bl.z, 1), vao), []).append((bl.x, a, tipo, bl))      # prateleiras em .075/.515/.995: round(,2) separava a mesma prateleira em dois grupos
     n = tira = 0
     for (rn, z, vao), its in vaos.items():         # arruma cada vao da esquerda para a direita, sem uma peca entrar na outra
         its.sort(key=lambda t: t[0]); x0, x1 = -1.8 + vao * 1.2 + .05, -1.8 + (vao + 1) * 1.2 - .05
