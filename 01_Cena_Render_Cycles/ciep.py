@@ -2380,9 +2380,10 @@ def _murais():                                    # murais de cortica dos corred
         base = _re.sub(r"\.\d+$", "", a.name); ca = a.matrix_world.translation
         gs.append([a] + [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith(base + "_") and (o.matrix_world @ Vector(o.bound_box[0]) - ca).xy.length < 1.0])
     return gs
-_ms = _murais()                                   # dois murais do autor intercalados pelos corredores, para nao ficarem todos iguais
-trocar_peca("mural_corredor_realista.glb", _ms[0::2], virar=lambda g: "Fundos" in g[0].name, rebake=True)
-trocar_peca("mural_corredor_variacao_realista.glb", _ms[1::2], virar=lambda g: "Fundos" in g[0].name, rebake=True)
+_ms = _murais()                                   # tres murais do autor alternados pelos corredores, para nao ficarem todos iguais
+trocar_peca("mural_corredor_realista.glb", _ms[0::3], virar=lambda g: "Fundos" in g[0].name, rebake=True)
+trocar_peca("mural_corredor_variacao_realista.glb", _ms[1::3], virar=lambda g: "Fundos" in g[0].name, rebake=True)
+trocar_peca("mural_corredor_variacao_2_realista.glb", _ms[2::3], virar=lambda g: "Fundos" in g[0].name, rebake=True)
 def _pes(rx, raio=.2):                                 # agrupa as pecas soltas de cada pe de planta pela posicao
     gs = []
     for o in _obs(rx):
@@ -2418,6 +2419,9 @@ trocar_peca("livro_ocorrencias_realista.glb", [_obs(r"^I_Livro_Ocorrencias_Capa"
 trocar_peca("pasta_frequencia_realista.glb", [_obs(r"^I_Pasta_Frequencia_Capa")])
 trocar_peca("vaso_sanitario_realista.glb", _dados("Peca_vaso"))
 trocar_peca("valvula_descarga_realista.glb", _dados("Peca_valvula"))
+trocar_peca("cuba_torneira_realista.glb", _dados("Peca_cuba_torneira"))
+trocar_peca("papeleira_higienica_realista.glb", _cada(r"^Banheiro_Papeleira_Higienica(\.\d+)?$"))
+trocar_peca("alcool_gel_realista.glb", [sorted(_obs(r"^Banheiro_Alcool_Gel"), key=lambda o: "Visor" in o.name)])      # caixa + visor azul
 trocar_peca("mictorio_realista.glb", _dados("Peca_mictorio"))
 def _material_estante():                           # blocos coloridos das estantes das salas -> modelos do autor, no tamanho real deles
     bpy.context.view_layer.update(); rx = random.Random(41)

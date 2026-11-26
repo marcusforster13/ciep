@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-11-26 14:47",
+ "gerado_em": "2026-11-26 17:02",
  "qualidade": "alta",
  "lightmaps": {
   "01_Rua_Estatico": {
@@ -24,7 +24,7 @@
   },
   "06_Moveis_Estatico": {
    "lm": "lightmaps/LM_06_Moveis.png",
-   "max": 0.44895
+   "max": 0.45945
   },
   "07_Pilotis_Estatico": {
    "lm": "lightmaps/LM_07_Pilotis.png",
@@ -60,12 +60,12 @@
   },
   "11_Pavimento_1_Estatico": {
    "lm": "lightmaps/LM_11_Pavimento_1.png",
-   "max": 2.78608
+   "max": 2.78613
   }
  },
  "lightmap_ganho": 3.14159,
  "exposicao": 1.0,
- "glb_bytes": 60724580,
+ "glb_bytes": 62270116,
  "env": "env/noite_1k.hdr",
  "env_intensidade": 0.35,
  "cameras": {
