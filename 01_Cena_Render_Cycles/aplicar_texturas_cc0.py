@@ -76,6 +76,7 @@ def media_linear(img):
     m = px.reshape(-1, 4)[::7, :3].mean(0)
     return lin(tuple(m))
 
+MANTEM_TOM = {"Piso_Direcao"}
 def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
     diff, rough, disp = arquivos(pasta)
     if recolor:
@@ -123,6 +124,8 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35, metal=0.0):
         return s_
     td = tex(diff, False)
     fator = [min(1.8, a / max(m, 1e-3)) for a, m in zip(alvo, media_linear(td.image))]
+    if mat.name in MANTEM_TOM:                                    # textura escura e cor clara: o teto por canal deixava cinza; aqui escala junto
+        f = [a / max(m, 1e-3) for a, m in zip(alvo, media_linear(td.image))]; k = min(1.0, 3.0 / max(f)); fator = [v * k for v in f]
     mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"
     next(i for i in mix.inputs if i.name == "Factor" and i.type == "VALUE").default_value = 1.0
     L(td.outputs["Color"], next(i for i in mix.inputs if i.name == "A" and i.type == "RGBA"))
@@ -165,7 +168,8 @@ TABELA = {
     "Armario_Aco_Cinza":  ("metal_pintado", 1.0, "#8a8f94", neutro, .15),
     "Aco_Galvanizado":    ("metal_pintado", 1.0, "#9da2a6", neutro, .1),      # poste, mastro, alambrado: aco galvanizado com marcas de tempo
     "Grama":              ("grama", 1.5, "#56693a", None, .3),                 # leafy_grass
-    "Piso_Granilite":     ("granilite", 2.4, "#b9b7b1", None, .1),             # granite_tile: placas de granilite
+    "Piso_Granilite":     ("granilite", 2.4, "#b9b7b1", None, .1),
+    "Piso_Direcao":       ("granilite", 1.6, "#d4bb92", None, .1),             # mesma placa, bege e maior: ceramica da sala da direcao             # granite_tile: placas de granilite
     "Azulejo_Branco":     ("azulejo", 1.0, "#e8e6df", None, .15),              # long_white_tiles
     # paredes internas: reboco pintado (painted_plaster_wall) com ondulacao e marcas de rolo, em vez do estuque liso
     "Reboco_Interno":     ("fachada_concreto", 1.6, "#e4e1d9", neutro, .3),

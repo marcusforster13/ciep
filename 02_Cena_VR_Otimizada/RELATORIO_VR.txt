@@ -1,15 +1,15 @@
 A MENSAGEM (CIEP) - VERSAO VR OTIMIZADA
 
-DEPOIS: 763476 tris | 44 malhas | 268 slots de material (~draw calls) | 91 luzes
+DEPOIS: 831098 tris | 44 malhas | 271 slots de material (~draw calls) | 91 luzes
 
 Triangulos por colecao:
-  12_Objetos_Soltos                    512310
+  12_Objetos_Soltos                    579600
   06_Moveis                            131712
   03_Predio_Fachada                     37632
   07_Pilotis                            17040
-  08_Interativos                        16266
+  08_Interativos                        16586
   11_Pavimento_1                        15212
-  04_Terreo_Interior                    11190
+  04_Terreo_Interior                    11202
   02_Patio                               9160
   10_Viatura                             8394
   05_Passarela                           4212
@@ -17,16 +17,16 @@ Triangulos por colecao:
 
 Etapas:
   - Grama instanciada removida de 0 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
-  - Modificadores aplicados em 4600 objetos; textos e fios convertidos em malha.
+  - Modificadores aplicados em 4598 objetos; textos e fios convertidos em malha.
   - Bake de 0 materiais procedurais em texturas de imagem.
-  - 29 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
+  - 30 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
-  - Colisao: 928 caixas orientadas preparadas.
+  - Colisao: 929 caixas orientadas preparadas.
   - 6 conjuntos interativos unidos (1 malha por conjunto).
-  - 4561 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
+  - 4559 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: ciep_VR.glb
   - Exportado: ciep_VR.fbx
-  - Colisao: 928 caixas, 11136 tris -> colisao.glb / colisao.fbx
+  - Colisao: 929 caixas, 11148 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps

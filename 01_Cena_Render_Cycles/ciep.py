@@ -865,6 +865,8 @@ for k in range(NM + 1):
 # ------------------------------------------------------------------ 4. bloco administrativo (terreo)
 box("Piso_Terreo_Jogavel", (BX1 - BX0, BY1 - BY0, .15), (0, (BY0 + BY1) / 2, FZ - .073), M["piso"], C_TER)
 box("Piso_Corredor_Terreo", (BX1 - BX0, YC1 - YC0, .004), (0, (YC0 + YC1) / 2, FZ + .004), M["piso_corredor"], C_TER)
+M["piso_direcao"] = mat("Piso_Direcao", "#d6cbb5", .3)          # sala da direcao: ceramica bege clara (pedido do autor); textura em aplicar_texturas_cc0.py
+box("Piso_Direcao", (8.0, YC0 - BY0, .004), (2.0, (BY0 + YC0) / 2, FZ + .004), M["piso_direcao"], C_TER)
 box("Terreo_Forro", (BX1 - BX0, BY1 - BY0, .02), (0, (BY0 + BY1) / 2, FZ + PD - .02), M["laje"], C_TER)
 def janelas_frente(xa, xb, entrada=None, divisorias=()):
     vaos = []
@@ -1306,13 +1308,11 @@ def coleta_seletiva(nome, x, y, rz):
     box(nome + "_Suporte_Barra", (2.08, .03, .03), (0, .12, .55), M["metal"], C_SOLTO, r)
     bloqueio("Bloqueio_" + nome, (2.1, .5, .8), (x, y, FZ + .4))          # uma caixa so para a colisao (fica dentro das lixeiras)
 # (conjuntos de coleta seletiva retirados a pedido do autor)
-for nome, x, y, rz, m in (("Cesto_Sala", 2.5, 13.45, 0, "lix_cinza"), ("Cesto_Direcao", 5.6, 9.5, 0, "lix_cinza"), ("Cesto_Recepcao", -2.5, 3.45, 0, "lix_azul")):
+for nome, x, y, rz, m in (("Cesto_Sala", 2.5, 13.45, 0, "lix_cinza"), ("Cesto_Direcao", 5.6, 9.5, 0, "lix_cinza")):      # (cesto da recepcao retirado a pedido do autor)
     lixeira(nome, x, y, rz, M[m], alt=.42, r=.15)
 lixeira("Lixeira_Pedal_Banheiro", -19.6, 17.8, PI / 2, M["branco"], alt=.48, r=.16)
 # tambor de 200 L pintado, usado como lixeira no patio
-for k, (x, y) in enumerate(((-8.0, -2.2), (20.0, -1.8))):
-    torno("Tambor_%d" % k, [(0, .01), (.29, .01), (.29, .88), (.27, .9), (0, .9)], M["lix_azul"], C_SOLTO, pos=(x, y, FZ))
-    for z in (.3, .6): torno("Tambor_%d_Aro" % k, [(.295, z - .015), (.3, z), (.295, z + .015)], M["lix_azul"], C_SOLTO, pos=(x, y, FZ))
+# (tambores retirados a pedido do autor)
 # extintores: na parede, com placa vermelha e demarcacao no piso (vermelho com borda amarela, como nas escolas)
 M["extintor_corpo"] = mat("Extintor_Vermelho", "#c4161c", .35, .2)
 EXTINTORES = {}
@@ -2123,7 +2123,7 @@ for nome, x0, x1, y0, y1 in (("Sala_201", 10.0, 20.0, .5, PC0), ("Sala_202", 20.
             adesivo(nome + "_Sujeira_Sombra_Carteira", lambda u, v, x=x, y=y: Vector((x + .2 + (u - .5) * 1.25, y + (v - .5) * .75, P1Z + .025)), 1, 1, C_SOLTO, mat_=M_BLOB)
 cantos_sala("Sala_104", 2.0, 12.0, YC1, BY1, FZ + .004, FZ + PD - .03)
 cantos_sala("Recepcao", -10.0, -2.0, BY0, YC0, FZ + .004, FZ + PD)
-cantos_sala("Direcao", -2.0, 6.0, BY0, YC0, FZ + .004, FZ + PD)
+cantos_sala("Direcao", -2.0, 6.0, BY0, YC0, FZ + .008, FZ + PD)      # acima do piso proprio da sala
 cantos_sala("Corredor_Terreo", -20.0, 20.0, YC0, YC1, FZ + .006, FZ + PD)
 for y, s_ in ((PC0, 1), (PC1, -1)):                                 # corredor do 1o andar (o fundo so ate o hall da rampa)
     b_ = 40.0 if s_ == 1 else 20.0
@@ -2355,6 +2355,8 @@ trocar_peca("cardapio_refeitorio_realista.glb", [_obs(r"^Refeitorio_Cardapio")])
 trocar_peca("bandeja_pilha_realista.glb", [_obs(r"^Refeitorio_Bandeja")], dec=.3)
 trocar_peca("horta_canteiro_realista.glb", [_obs(r"^Horta_Canteiro_%d(\.\d+)?$" % k) + _obs(r"^Horta_Canteiro_%d_Terra" % k) for k in range(3)], sem_mat=M["muro"])
 trocar_peca("cartaz_corredor_realista.glb", _cada(r"^Corredor_Frente_Cartaz(\.\d+)?$")[:1], giro=PI)
+trocar_peca("cartaz_corredor_2_realista.glb", [[o] for o in _obs(r"^(Corredor_Frente|Pav1_Frente)_Cartaz(\.\d+)?$") if o.name != "Corredor_Frente_Cartaz"], giro=PI)      # os outros cartazes dos corredores
+trocar_peca("cartaz_corredor_2_realista.glb", _cada(r"^(Corredor_Fundos|Pav1_Fundos)_Cartaz(\.\d+)?$"))      # parede do fundo: virados para o outro lado
 trocar_peca("banco_patio_realista.glb", [sorted([c for c in o.children if c.type == "MESH"], key=lambda c: not c.name.startswith("Banco_Patio_Tampo"))
                                          for o in sorted(bpy.data.objects, key=lambda o: o.name) if o.type == "EMPTY" and _re.match(r"^Banco_Patio(\.\d+)?$", o.name)])
 trocar_peca("pia_cozinha_realista.glb", _cada(r"^Cozinha_Pia_Cuba(\.\d+)?$"))
@@ -2367,7 +2369,7 @@ if _gel:
     _pr = max(p.y for p in pts) - min(p.y for p in pts)
     _gel.matrix_world = Matrix.Translation((KX0 + .1 + _pr / 2 + .01, _cy, 0)) @ Matrix.Rotation(-PI / 2, 4, "Z") @ Matrix.Translation((-_cx, -_cy, 0)) @ _gel.matrix_world
 trocar_peca("cesto_lixo_realista.glb", [sorted([c for c in bpy.data.objects[n].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))
-                                        for n in ("Cesto_Sala", "Cesto_Direcao", "Cesto_Recepcao") if n in bpy.data.objects], escala=1.35)      # 51 cm no modelo -> ~70 cm, lixeira de 50 L
+                                        for n in ("Cesto_Sala", "Cesto_Direcao") if n in bpy.data.objects], escala=1.35)      # 51 cm no modelo -> ~70 cm, lixeira de 50 L
 trocar_peca("cesto_lixo_azul_realista.glb", [sorted([c for c in bpy.data.objects["Corredor_Lixeira_Cheia"].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))]
             if "Corredor_Lixeira_Cheia" in bpy.data.objects else [], escala=1.35)      # mesmo cesto, versao azul (canais R e B trocados na textura)
 for o in _obs(r"^Corredor_Papel_Amassado"):           # papel de cima da tampa retirado a pedido do autor (o do chao fica)
@@ -2378,7 +2380,9 @@ def _murais():                                    # murais de cortica dos corred
         base = _re.sub(r"\.\d+$", "", a.name); ca = a.matrix_world.translation
         gs.append([a] + [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith(base + "_") and (o.matrix_world @ Vector(o.bound_box[0]) - ca).xy.length < 1.0])
     return gs
-trocar_peca("mural_corredor_realista.glb", _murais(), virar=lambda g: "Fundos" in g[0].name, rebake=True)
+_ms = _murais()                                   # dois murais do autor intercalados pelos corredores, para nao ficarem todos iguais
+trocar_peca("mural_corredor_realista.glb", _ms[0::2], virar=lambda g: "Fundos" in g[0].name, rebake=True)
+trocar_peca("mural_corredor_variacao_realista.glb", _ms[1::2], virar=lambda g: "Fundos" in g[0].name, rebake=True)
 def _pes(rx, raio=.2):                                 # agrupa as pecas soltas de cada pe de planta pela posicao
     gs = []
     for o in _obs(rx):
@@ -2393,7 +2397,6 @@ def _quadros():                                    # quadros brancos das salas (
             if q.data.materials and q.data.materials[0] == M["quadro_branco"]]
 trocar_peca("quadro_branco_realista.glb", _quadros())
 trocar_peca("regador_realista.glb", [_obs(r"^Horta_Regador")])
-trocar_peca("tambor_lixo_realista.glb", [_obs(r"^Tambor_%d(_Aro)?(\.\d+)?$" % k) for k in range(2)])
 trocar_peca("hidrante_realista.glb", [_obs(r"^Hidrante_(Caixa|Vidro|Texto)")])
 trocar_peca("mural_avisos_realista.glb", [sorted([c for c in bpy.data.objects["Mural_Entrada"].children if c.type == "MESH"], key=lambda c: not c.name.startswith("Mural_Entrada_Quadro"))]
             if "Mural_Entrada" in bpy.data.objects else [])
@@ -2412,19 +2415,36 @@ for _pn, (_sl, _vir) in PLACAS_PORTA.items():      # placas das portas: o texto 
 trocar_peca("placa_horta_realista.glb", [_obs(r"^Horta_Placa")])
 trocar_peca("horta_cebolinha_realista.glb", _pes(r"^Horta_Cebolinha", .1), girar_acaso=True)
 trocar_peca("livro_ocorrencias_realista.glb", [_obs(r"^I_Livro_Ocorrencias_Capa")])
+trocar_peca("pasta_frequencia_realista.glb", [_obs(r"^I_Pasta_Frequencia_Capa")])
 trocar_peca("vaso_sanitario_realista.glb", _dados("Peca_vaso"))
+trocar_peca("valvula_descarga_realista.glb", _dados("Peca_valvula"))
+trocar_peca("mictorio_realista.glb", _dados("Peca_mictorio"))
 def _material_estante():                           # blocos coloridos das estantes das salas -> modelos do autor, no tamanho real deles
     bpy.context.view_layer.update(); rx = random.Random(41)
     malhas = {k: _malha_glb(k + "_realista.glb") for k in ("pilha_livros", "caixa_arquivo", "caixa_organizadora")}
     if not all(malhas.values()): say("[AUTOR] material da estante: falta modelo"); return
-    n = 0
+    larg_m = {k: max(v.vertices[i].co.x for i in range(len(v.vertices))) - min(v.vertices[i].co.x for i in range(len(v.vertices))) for k, v in malhas.items()}
+    vaos = {}                                      # (estante, prateleira, vao) -> [(x local, objeto, tipo, base local)]
     for a in _obs(r"^.+_Estante_Material(\.\d+)?$"):
-        pts = [a.matrix_world @ Vector(c) for c in a.bound_box]; d = _caixa_local(a)
-        base = Vector(((min(p.x for p in pts) + max(p.x for p in pts)) / 2, (min(p.y for p in pts) + max(p.y for p in pts)) / 2, min(p.z for p in pts)))
-        tipo = "pilha_livros" if d[2] < .2 and base.z - a.parent.matrix_world.translation.z > .9 else "caixa_arquivo" if d[0] < .2 else "caixa_organizadora"
-        rz = a.matrix_world.to_euler().z + PI + rx.uniform(-.12, .12)      # frente do modelo (-y) para a sala
-        a.modifiers.clear(); a.data = malhas[tipo]; a.matrix_world = Matrix.Translation(base) @ Matrix.Rotation(rz, 4, "Z"); n += 1
-    say("[AUTOR] material da estante: %d bloco(s) trocado(s)" % n)
+        r = a.parent; inv = r.matrix_world.inverted(); d = _caixa_local(a)
+        pts = [inv @ (a.matrix_world @ Vector(c)) for c in a.bound_box]
+        bl = Vector(((min(p.x for p in pts) + max(p.x for p in pts)) / 2, (min(p.y for p in pts) + max(p.y for p in pts)) / 2, min(p.z for p in pts)))
+        tipo = "pilha_livros" if d[2] < .2 and bl.z > .9 else "caixa_arquivo" if d[0] < .2 else "caixa_organizadora"
+        vao = min(2, max(0, int((bl.x + 1.8) // 1.2)))      # estante de 3,6 m em 3 vaos de 1,2 m
+        vaos.setdefault((r.name, round(bl.z, 2), vao), []).append((bl.x, a, tipo, bl))
+    n = tira = 0
+    for (rn, z, vao), its in vaos.items():         # arruma cada vao da esquerda para a direita, sem uma peca entrar na outra
+        its.sort(key=lambda t: t[0]); x0, x1 = -1.8 + vao * 1.2 + .05, -1.8 + (vao + 1) * 1.2 - .05
+        while its and sum(larg_m[t[2]] for t in its) + .04 * (len(its) - 1) > x1 - x0:
+            bpy.data.objects.remove(its.pop()[1], do_unlink=True); tira += 1
+        if not its: continue
+        folga = (x1 - x0 - sum(larg_m[t[2]] for t in its)) / (len(its) + 1); x = x0
+        for _, a, tipo, bl in its:
+            x += folga + larg_m[tipo] / 2; r = a.parent
+            rz = PI + rx.uniform(-.06, .06)        # frente do modelo (-y) para a sala (a frente da estante e +y local)
+            mw = r.matrix_world @ Matrix.Translation((x, bl.y, bl.z)) @ Matrix.Rotation(rz, 4, "Z")
+            a.modifiers.clear(); a.data = malhas[tipo]; a.matrix_world = mw; x += larg_m[tipo] / 2; n += 1
+    say("[AUTOR] material da estante: %d bloco(s) trocado(s), %d sem espaco retirado(s)" % (n, tira))
 _material_estante()
 trocar_peca("papeleira_toalha_realista.glb", [_obs(r"^Banheiro_Papeleira_Toalha")])
 trocar_peca("bancada_banheiro_realista.glb", [_obs(r"^Banheiro_Bancada")])      # tampo, rodabanca e saia; cubas e torneiras continuam as pecas proprias
