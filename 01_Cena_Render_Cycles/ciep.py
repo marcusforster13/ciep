@@ -1351,7 +1351,7 @@ for k, (x, y, rz) in enumerate(((3.5, YC0 - .1, PI), (-6.0, YC0 - .1, PI), (11.9
     # evaporadora de parede do autor (a mesma do cassino: modelos/ar_split_realista.glb). O modelo tem as costas em y = 0
     # e a frente para +y; o vazio gira para a frente ficar para dentro da sala. Sem o arquivo, cai na caixa simples.
     r = vazio("Split_%d" % k, (x, y, FZ + 2.55), C_SOLTO, rz)
-    if not peca_glb("Split_%d_Autor" % k, "ar_split_realista.glb", r):
+    if not peca_glb("Split_%d_Autor" % k, "ar_split_sujo_realista.glb", r):
         box("Split_%d_Corpo" % k, (.9, .22, .3), (0, .11, 0), M["split"], C_SOLTO, r, bevel=.03)
 # bebedouro industrial de inox (4 torneiras) na galeria, junto a parede do bloco
 # --- banheiro masculino (x -20 .. -12, y 13 .. 19): azulejo ate 1,8 m, bancada de granito com 3 cubas, mictorios, 3 cabines
@@ -1641,14 +1641,14 @@ MATERIAS = (("PORTUGUÊS", "Interpretação de texto", "1) Leia o texto da pág.
             ("MATEMÁTICA", "Frações equivalentes", "1/2 = 2/4 = 4/8", "Exercícios pág. 58"),
             ("CIÊNCIAS", "O ciclo da água", "evaporação · condensação", "precipitação"),
             ("HISTÓRIA", "Brasil Colônia", "Trabalho: entregar sexta", "Ler cap. 3"))
+QUADRO_ESCRITO = ("Sala_202", "Sala_204")          # quadro do autor ja escrito (matematica, fracoes): sem o texto do codigo
 def vida_sala(nome, x0, x1, y0, y1, idx, frente_y):
     qx = x0 + .14; yc = QUADRO_Y.get(nome, (y0 + y1) / 2); zq = P1Z + 1.5
     t1, t2, t3, t4 = MATERIAS[idx % len(MATERIAS)]
-    texto(nome + "_Quadro_Texto", "Rio, 10 de novembro", .09, (qx + .025, yc - 1.0, zq + .46), "+x", M["texto_az"], C_SOLTO)
-    texto(nome + "_Quadro_Texto", t1, .17, (qx + .025, yc + .1, zq + .26), "+x", M["texto_az"], C_SOLTO)
-    texto(nome + "_Quadro_Texto", t2, .12, (qx + .025, yc + .1, zq + .04), "+x", M["texto_pr"], C_SOLTO)
-    texto(nome + "_Quadro_Texto", t3, .11, (qx + .025, yc + .1, zq - .17), "+x", M["texto_pr"], C_SOLTO)
-    texto(nome + "_Quadro_Texto", t4, .11, (qx + .025, yc + .1, zq - .37), "+x", M["texto_pr"], C_SOLTO)
+    if nome in QUADRO_ESCRITO and os.path.exists(os.path.join(AQUI, "modelos", "quadro_branco_variacao_realista.glb")): t1 = None
+    for _t, _a, _pos, _m in (() if not t1 else (("Rio, 10 de novembro", .09, (qx + .025, yc - 1.0, zq + .46), "texto_az"), (t1, .17, (qx + .025, yc + .1, zq + .26), "texto_az"),
+                             (t2, .12, (qx + .025, yc + .1, zq + .04), "texto_pr"), (t3, .11, (qx + .025, yc + .1, zq - .17), "texto_pr"), (t4, .11, (qx + .025, yc + .1, zq - .37), "texto_pr"))):
+        texto(nome + "_Quadro_Texto", _t, _a, _pos, "+x", M[_m], C_SOLTO)
     relogio(nome + "_Relogio", x0 + .1, yc - 2.7, P1Z + 2.45, PI / 2)     # na parede do quadro, virado para a sala
     ys = [y0 + 1.6 + k * 1.25 for k in range(int((y1 - y0 - 2.4) / 1.25) + 1)]
     ys = ys[:-1] if abs(frente_y - y1) < abs(frente_y - y0) else ys[1:]      # mesma fileira livre junto a porta de sala_aula
@@ -2345,32 +2345,32 @@ def _obs(rx): return sorted((o for o in bpy.data.objects if o.type == "MESH" and
 def _cada(rx): return [[o] for o in _obs(rx)]
 def _dados(nome): return [[o] for o in sorted((o for o in bpy.data.objects if o.type == "MESH" and o.data.name == nome), key=lambda o: o.name)]
 
-trocar_peca("carteira_fnde_realista.glb", _dados("Peca_carteira_fnde"))
-trocar_peca("bebedouro_inox_realista.glb", _dados("Peca_bebedouro"))
+trocar_peca("carteira_fnde_sujo_realista.glb", _dados("Peca_carteira_fnde"))
+trocar_peca("bebedouro_inox_sujo_realista.glb", _dados("Peca_bebedouro"))
 trocar_peca("caderno_realista.glb", _cada(r"^Sala_\d+_Caderno(\.\d+)?$"), mats={"Material": M["papel"]}, cor="Caderno_Capa")
 trocar_peca("lapis_realista.glb", _cada(r"^Sala_\d+_Lapis(\.\d+)?$"))
-trocar_peca("caldeirao_realista.glb", _cada(r"^Cozinha_Caldeirao(\.\d+)?$"))
+trocar_peca("caldeirao_sujo_realista.glb", _cada(r"^Cozinha_Caldeirao(\.\d+)?$"))
 trocar_peca("celular_realista.glb", [_obs(r"^I_Celular_Print_Corpo") + _obs(r"^I_Celular_Print_Tela")])
 trocar_peca("cardapio_refeitorio_realista.glb", [_obs(r"^Refeitorio_Cardapio")])
-trocar_peca("bandeja_pilha_realista.glb", [_obs(r"^Refeitorio_Bandeja")], dec=.3)
+trocar_peca("bandeja_pilha_sujo_realista.glb", [_obs(r"^Refeitorio_Bandeja")], dec=.3)
 trocar_peca("horta_canteiro_realista.glb", [_obs(r"^Horta_Canteiro_%d(\.\d+)?$" % k) + _obs(r"^Horta_Canteiro_%d_Terra" % k) for k in range(3)], sem_mat=M["muro"])
 trocar_peca("cartaz_corredor_realista.glb", _cada(r"^Corredor_Frente_Cartaz(\.\d+)?$")[:1], giro=PI)
 trocar_peca("cartaz_corredor_2_realista.glb", [[o] for o in _obs(r"^(Corredor_Frente|Pav1_Frente)_Cartaz(\.\d+)?$") if o.name != "Corredor_Frente_Cartaz"], giro=PI)      # os outros cartazes dos corredores
 trocar_peca("cartaz_corredor_2_realista.glb", _cada(r"^(Corredor_Fundos|Pav1_Fundos)_Cartaz(\.\d+)?$"))      # parede do fundo: virados para o outro lado
-trocar_peca("banco_patio_realista.glb", [sorted([c for c in o.children if c.type == "MESH"], key=lambda c: not c.name.startswith("Banco_Patio_Tampo"))
+trocar_peca("banco_patio_sujo_realista.glb", [sorted([c for c in o.children if c.type == "MESH"], key=lambda c: not c.name.startswith("Banco_Patio_Tampo"))
                                          for o in sorted(bpy.data.objects, key=lambda o: o.name) if o.type == "EMPTY" and _re.match(r"^Banco_Patio(\.\d+)?$", o.name)])
-trocar_peca("pia_cozinha_realista.glb", _cada(r"^Cozinha_Pia_Cuba(\.\d+)?$"))
-trocar_peca("fogao_realista.glb", [_obs(r"^Cozinha_Fogao(\.\d+)?$") + _obs(r"^Cozinha_Fogao_Boca")])
-trocar_peca("geladeira_realista.glb", [_obs(r"^Cozinha_Geladeira(\.\d+)?$") + _obs(r"^Cozinha_Geladeira_Puxador")])
+trocar_peca("pia_cozinha_sujo_realista.glb", _cada(r"^Cozinha_Pia_Cuba(\.\d+)?$"))
+trocar_peca("fogao_sujo_realista.glb", [_obs(r"^Cozinha_Fogao(\.\d+)?$") + _obs(r"^Cozinha_Fogao_Boca")])
+trocar_peca("geladeira_sujo_realista.glb", [_obs(r"^Cozinha_Geladeira(\.\d+)?$") + _obs(r"^Cozinha_Geladeira_Puxador")])
 _gel = bpy.data.objects.get("Cozinha_Geladeira")        # costas encostadas na parede oeste da cozinha (frente para o meio)
 if _gel:
     bpy.context.view_layer.update(); pts = [_gel.matrix_world @ Vector(c) for c in _gel.bound_box]
     _cx, _cy = (min(p.x for p in pts) + max(p.x for p in pts)) / 2, (min(p.y for p in pts) + max(p.y for p in pts)) / 2
     _pr = max(p.y for p in pts) - min(p.y for p in pts)
     _gel.matrix_world = Matrix.Translation((KX0 + .1 + _pr / 2 + .01, _cy, 0)) @ Matrix.Rotation(-PI / 2, 4, "Z") @ Matrix.Translation((-_cx, -_cy, 0)) @ _gel.matrix_world
-trocar_peca("cesto_lixo_realista.glb", [sorted([c for c in bpy.data.objects[n].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))
+trocar_peca("cesto_lixo_sujo_realista.glb", [sorted([c for c in bpy.data.objects[n].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))
                                         for n in ("Cesto_Sala", "Cesto_Direcao") if n in bpy.data.objects], escala=1.35)      # 51 cm no modelo -> ~70 cm, lixeira de 50 L
-trocar_peca("cesto_lixo_azul_realista.glb", [sorted([c for c in bpy.data.objects["Corredor_Lixeira_Cheia"].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))]
+trocar_peca("cesto_lixo_azul_sujo_realista.glb", [sorted([c for c in bpy.data.objects["Corredor_Lixeira_Cheia"].children if c.type == "MESH"], key=lambda c: not c.name.endswith("_Corpo"))]
             if "Corredor_Lixeira_Cheia" in bpy.data.objects else [], escala=1.35)      # mesmo cesto, versao azul (canais R e B trocados na textura)
 for o in _obs(r"^Corredor_Papel_Amassado"):           # papel de cima da tampa retirado a pedido do autor (o do chao fica)
     if o.matrix_world.translation.z > FZ + .3: bpy.data.objects.remove(o, do_unlink=True)
@@ -2384,25 +2384,43 @@ _ms = _murais()                                   # tres murais do autor alterna
 trocar_peca("mural_corredor_realista.glb", _ms[0::3], virar=lambda g: "Fundos" in g[0].name, rebake=True)
 trocar_peca("mural_corredor_variacao_realista.glb", _ms[1::3], virar=lambda g: "Fundos" in g[0].name, rebake=True)
 trocar_peca("mural_corredor_variacao_2_realista.glb", _ms[2::3], virar=lambda g: "Fundos" in g[0].name, rebake=True)
+_hd = bpy.data.objects.get("Hidrante_Caixa")       # mural que caia atras da caixa do hidrante: sai (o hidrante fica na frente dele)
+if _hd:
+    bpy.context.view_layer.update(); _hp = [_hd.matrix_world @ Vector(c) for c in _hd.bound_box]
+    def _vivo(o):
+        try: return o.name in bpy.data.objects
+        except ReferenceError: return False                 # trocar_peca ja apagou as pecas extras do grupo
+    for g in _ms:
+        g = [o for o in g if _vivo(o)]
+        if not g: continue
+        _mp = [g[0].matrix_world @ Vector(c) for c in g[0].bound_box]
+        if (min(p.x for p in _mp) < max(p.x for p in _hp) + .05 and min(p.x for p in _hp) - .05 < max(p.x for p in _mp)
+                and min(p.y for p in _mp) < max(p.y for p in _hp) + .3 and min(p.y for p in _hp) - .3 < max(p.y for p in _mp)
+                and min(p.z for p in _mp) < max(p.z for p in _hp) and min(p.z for p in _hp) < max(p.z for p in _mp)):
+            say("[AUTOR] mural %s atras do hidrante: retirado" % g[0].name)
+            for o in g: bpy.data.objects.remove(o, do_unlink=True)
 def _pes(rx, raio=.2):                                 # agrupa as pecas soltas de cada pe de planta pela posicao
     gs = []
     for o in _obs(rx):
         c = o.matrix_world.translation; g = next((g for g in gs if (g[0].matrix_world.translation - c).xy.length < raio), None)
         (g.append(o) if g else gs.append([o]))
     return gs
-trocar_peca("mesa_professor_realista.glb", _dados("Peca_mesa_professor"))
+trocar_peca("mesa_professor_sujo_realista.glb", _dados("Peca_mesa_professor"))
 trocar_peca("horta_alface_realista.glb", _pes(r"^Horta_Alface"), dec=.3, girar_acaso=True)
 trocar_peca("horta_couve_realista.glb", [sorted(g, key=lambda o: not o.name.startswith("Horta_Couve_Talo")) for g in _pes(r"^Horta_Couve", .25)], dec=.6, girar_acaso=True)
 def _quadros():                                    # quadros brancos das salas (placa + moldura); o aparador fica
     return [[q] + _obs(r"^%s_Moldura(\.\d+)?$" % _re.escape(q.name)) for q in _obs(r"^(.+_)?Quadro$")
             if q.data.materials and q.data.materials[0] == M["quadro_branco"]]
-trocar_peca("quadro_branco_realista.glb", _quadros())
-trocar_peca("regador_realista.glb", [_obs(r"^Horta_Regador")])
-trocar_peca("hidrante_realista.glb", [_obs(r"^Hidrante_(Caixa|Vidro|Texto)")])
+_qs = _quadros()                                   # variacao do autor (aula de matematica ja escrita) nas salas de QUADRO_ESCRITO
+trocar_peca("quadro_branco_sujo_realista.glb", [g for g in _qs if not g[0].name.startswith(QUADRO_ESCRITO)])
+trocar_peca("quadro_branco_variacao_sujo_realista.glb", [g for g in _qs if g[0].name.startswith(QUADRO_ESCRITO)])
+trocar_peca("regador_sujo_realista.glb", [_obs(r"^Horta_Regador")])
+trocar_peca("hidrante_sujo_realista.glb", [_obs(r"^Hidrante_(Caixa|Vidro|Texto)")])
 trocar_peca("mural_avisos_realista.glb", [sorted([c for c in bpy.data.objects["Mural_Entrada"].children if c.type == "MESH"], key=lambda c: not c.name.startswith("Mural_Entrada_Quadro"))]
             if "Mural_Entrada" in bpy.data.objects else [])
-trocar_peca("mochila_chao_realista.glb", _cada(r"^.+_Mochila_Chao(\.\d+)?$"), dec=.12)      # 52 copias: malha leve
-trocar_peca("extintor_realista.glb", [sorted(_obs(r"^%s_(Corpo|Valvula|Gatilho|Alca|Mangueira|Rotulo|Suporte|Placa|Placa_Texto)(\.\d+)?$" % e.name), key=lambda o: not o.name.endswith("_Corpo"))
+trocar_peca("caixas_arquivo_sujo_realista.glb", [_obs(r"^Direcao_Armario_Caixa_Arquivo")])      # as duas caixas (azul e amarela) num modelo so
+trocar_peca("mochila_chao_sujo_realista.glb", _cada(r"^.+_Mochila_Chao(\.\d+)?$"), dec=.12)      # 52 copias: malha leve
+trocar_peca("extintor_sujo_realista.glb", [sorted(_obs(r"^%s_(Corpo|Valvula|Gatilho|Alca|Mangueira|Rotulo|Suporte|Placa|Placa_Texto)(\.\d+)?$" % e.name), key=lambda o: not o.name.endswith("_Corpo"))
                                       for e in sorted(bpy.data.objects, key=lambda o: o.name) if e.type == "EMPTY" and _re.match(r"^Extintor_[A-Za-z0-9]+(_[AB])?$", e.name)])      # placa do modelo recuada ate a parede em modelos/extintor_realista.glb (vinha 21 cm a frente)
 bpy.context.view_layer.update()
 for _en, (_x, _y, _du) in EXTINTORES.items():      # extintor novo (com a placa) encostado na parede: a placa ficava solta
@@ -2418,14 +2436,17 @@ trocar_peca("horta_cebolinha_realista.glb", _pes(r"^Horta_Cebolinha", .1), girar
 trocar_peca("livro_ocorrencias_realista.glb", [_obs(r"^I_Livro_Ocorrencias_Capa")])
 trocar_peca("pasta_frequencia_realista.glb", [_obs(r"^I_Pasta_Frequencia_Capa")])
 trocar_peca("vaso_sanitario_sujo_realista.glb", _dados("Peca_vaso"))
-trocar_peca("valvula_descarga_realista.glb", _dados("Peca_valvula"))
+trocar_peca("valvula_descarga_sujo_realista.glb", _dados("Peca_valvula"))
 trocar_peca("cuba_torneira_sujo_realista.glb", _dados("Peca_cuba_torneira"))
-trocar_peca("papeleira_higienica_realista.glb", _cada(r"^Banheiro_Papeleira_Higienica(\.\d+)?$"))
-trocar_peca("alcool_gel_realista.glb", [sorted(_obs(r"^Banheiro_Alcool_Gel"), key=lambda o: "Visor" in o.name)])      # caixa + visor azul
+trocar_peca("papeleira_higienica_sujo_realista.glb", _cada(r"^Banheiro_Papeleira_Higienica(\.\d+)?$"))
+trocar_peca("alcool_gel_sujo_realista.glb", [sorted(_obs(r"^Banheiro_Alcool_Gel"), key=lambda o: "Visor" in o.name)])      # caixa + visor azul
 trocar_peca("mictorio_sujo_realista.glb", _dados("Peca_mictorio"))
+for o in [o for o in bpy.data.objects if o.name.startswith("Banheiro_Mictorio")]:   # fora do lightmap: a luz assada na cuba funda fazia manchas com forma
+    for c in list(o.users_collection): c.objects.unlink(o)
+    C_SOLTO.objects.link(o)
 def _material_estante():                           # blocos coloridos das estantes das salas -> modelos do autor, no tamanho real deles
     bpy.context.view_layer.update(); rx = random.Random(41)
-    malhas = {k: _malha_glb(k + "_realista.glb") for k in ("pilha_livros", "caixa_arquivo", "caixa_organizadora")}
+    malhas = {k: _malha_glb(k + ("_sujo" if k != "pilha_livros" else "") + "_realista.glb") for k in ("pilha_livros", "caixa_arquivo", "caixa_organizadora")}
     if not all(malhas.values()): say("[AUTOR] material da estante: falta modelo"); return
     larg_m = {k: max(v.vertices[i].co.x for i in range(len(v.vertices))) - min(v.vertices[i].co.x for i in range(len(v.vertices))) for k, v in malhas.items()}
     vaos = {}                                      # (estante, prateleira, vao) -> [(x local, objeto, tipo, base local)]
@@ -2450,18 +2471,18 @@ def _material_estante():                           # blocos coloridos das estant
             a.modifiers.clear(); a.data = malhas[tipo]; a.matrix_world = mw; x += larg_m[tipo] / 2; n += 1
     say("[AUTOR] material da estante: %d bloco(s) trocado(s), %d sem espaco retirado(s)" % (n, tira))
 _material_estante()
-trocar_peca("papeleira_toalha_realista.glb", [_obs(r"^Banheiro_Papeleira_Toalha")])
+trocar_peca("papeleira_toalha_sujo_realista.glb", [_obs(r"^Banheiro_Papeleira_Toalha")])
 trocar_peca("bancada_banheiro_sujo_realista.glb", [_obs(r"^Banheiro_Bancada")])      # tampo, rodabanca e saia; cubas e torneiras continuam as pecas proprias
-trocar_peca("porta_corta_fogo_realista.glb", _cada(r"^Pav1_Porta_Corta_Fogo(\.\d+)?$"), virar=lambda g: g[0].matrix_world.translation.x > 25)      # as duas pontas do corredor de cima, frente para dentro
-trocar_peca("contentor_lixo_realista.glb", [[c] + [o for o in _obs(r"^Contentor_Lixo_(Tampa|Roda)") if abs(o.matrix_world.translation.x - c.matrix_world.translation.x) < .35]
+trocar_peca("porta_corta_fogo_sujo_realista.glb", _cada(r"^Pav1_Porta_Corta_Fogo(\.\d+)?$"), virar=lambda g: g[0].matrix_world.translation.x > 25)      # as duas pontas do corredor de cima, frente para dentro
+trocar_peca("contentor_lixo_sujo_realista.glb", [[c] + [o for o in _obs(r"^Contentor_Lixo_(Tampa|Roda)") if abs(o.matrix_world.translation.x - c.matrix_world.translation.x) < .35]
                                             for c in _obs(r"^Contentor_Lixo_Corpo")])      # corpo + tampa + 2 rodas de cada um dos 3 contentores
 trocar_peca("mural_recepcao_realista.glb", [sorted(_obs(r"^Recepcao_Mural(_Aviso|_Titulo)?(\.\d+)?$"), key=lambda o: o.name != "Recepcao_Mural")])      # o titulo vem no modelo
 trocar_peca("quadro_avisos_direcao_realista.glb", [_obs(r"^Direcao_Quadro_(Avisos|Papel)")])
 trocar_peca("placa_escola_realista.glb", [sorted([c for c in bpy.data.objects["Placa_Escola"].children if c.type == "MESH"], key=lambda c: not c.name.startswith("Placa_Escola_Chapa"))]
             if "Placa_Escola" in bpy.data.objects else [])
-trocar_peca("gravador_cameras_realista.glb", [_obs(r"^I_Monitor_Cameras_DVR")])
-trocar_peca("telefone_realista.glb", [_obs(r"^I_Telefone_Base") + _obs(r"^I_Telefone_Fone")])
-trocar_peca("coifa_realista.glb", [_obs(r"^Cozinha_Coifa$")])
+trocar_peca("gravador_cameras_sujo_realista.glb", [_obs(r"^I_Monitor_Cameras_DVR")])
+trocar_peca("telefone_sujo_realista.glb", [_obs(r"^I_Telefone_Base") + _obs(r"^I_Telefone_Fone")])
+trocar_peca("coifa_sujo_realista.glb", [_obs(r"^Cozinha_Coifa$")])
 if "Cozinha_Coifa" in bpy.data.objects:            # coifa nova e mais funda: costas na parede, duto proprio ate o teto
     for o in _obs(r"^Cozinha_Coifa_Duto"): bpy.data.objects.remove(o, do_unlink=True)
     bpy.data.objects["Cozinha_Coifa"].location.y -= .205

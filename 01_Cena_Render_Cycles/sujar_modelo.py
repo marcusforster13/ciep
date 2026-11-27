@@ -11,7 +11,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 arg = sys.argv[sys.argv.index("--") + 1:]
 nome = arg[0]; f_fresta = float(arg[1]) if len(arg) > 1 else .9; f_base = float(arg[2]) if len(arg) > 2 else .6
 cor_base = arg[3] if len(arg) > 3 else "encardido"; f_geral = float(arg[4]) if len(arg) > 4 else .3
-ATLAS = "atlas" in arg[5:]
+ATLAS = "atlas" in arg[5:]; FANTASMA = "fantasma" in arg[5:]      # "fantasma": marcas de caneta mal apagada (quadro branco)
 ENTRA = os.path.join(AQUI, "modelos", nome + "_realista.glb")
 SAI = os.path.join(AQUI, "modelos", nome + "_sujo_realista.glb")
 TMP = os.path.join(os.environ.get("TEMP", AQUI), "sujar_" + nome); os.makedirs(TMP, exist_ok=True)
@@ -37,6 +37,8 @@ sc.render.bake.margin = 16
 
 def fazer_atlas(lado=1024):
     """Modelo de cores lisas: UV nova sem sobreposicao, assa cor e rugosidade/metal nela, um material so."""
+    for o in obs:                                  # malha compartilhada (copias): uma copia propria por objeto
+        if o.data.users > 1: o.data = o.data.copy()
     for o in obs:
         for l in o.data.uv_layers: l.active_render = True; break
         o.data.uv_layers.new(name="Atlas")
@@ -107,6 +109,22 @@ bpy.context.view_layer.objects.active = obs[0]
 bpy.ops.object.bake(type="EMIT")
 print("[SUJAR] mascara assada para", nome)
 
+fantasmas = {}
+if FANTASMA:                                     # 2a passada: faixas de escrita apagada (eixo longo do quadro = y, altura = z)
+    for m, (alvo, antes, out, ja) in mascaras.items():
+        nt = m.node_tree; nos = nt.nodes; L = nt.links
+        fa = bpy.data.images.new("Fantasma_" + m.name, *alvo.size, float_buffer=True); fa.colorspace_settings.name = "Non-Color"
+        tc = nos.new("ShaderNodeTexCoord"); mp = nos.new("ShaderNodeMapping"); L.new(tc.outputs["Object"], mp.inputs["Vector"])
+        mp.inputs["Scale"].default_value = (1, 2.2, 16)                            # tracos compridos na horizontal
+        n1 = nos.new("ShaderNodeTexNoise"); L.new(mp.outputs[0], n1.inputs["Vector"]); n1.inputs["Detail"].default_value = 4; n1.inputs["Scale"].default_value = 3
+        n2 = nos.new("ShaderNodeTexNoise"); L.new(tc.outputs["Object"], n2.inputs["Vector"]); n2.inputs["Scale"].default_value = 1.4; n2.inputs["Detail"].default_value = 2
+        n3 = nos.new("ShaderNodeTexNoise"); L.new(tc.outputs["Object"], n3.inputs["Vector"]); n3.inputs["Scale"].default_value = 40; n3.inputs["Detail"].default_value = 6
+        cc = nos.new("ShaderNodeCombineColor"); L.new(n1.outputs["Fac"], cc.inputs[0]); L.new(n2.outputs["Fac"], cc.inputs[1]); L.new(n3.outputs["Fac"], cc.inputs[2])
+        em = nos.new("ShaderNodeEmission"); L.new(cc.outputs[0], em.inputs["Color"]); L.new(em.outputs[0], out.inputs["Surface"])
+        ti = nos.new("ShaderNodeTexImage"); ti.image = fa; nos.active = ti; fantasmas[m] = fa
+    bpy.ops.object.bake(type="EMIT")
+    print("[SUJAR] fantasma de caneta assado")
+
 TINTA = {"encardido": np.array((.52, .46, .36)), "amarelado": np.array((.80, .62, .30))}
 for m, (alvo, antes, out, ja) in mascaras.items():
     nt = m.node_tree
@@ -122,6 +140,14 @@ for m, (alvo, antes, out, ja) in mascaras.items():
     cor = img_cor(m); C = np.array(cor.pixels[:], dtype=np.float32).reshape(hh, w, 4)
     sujo = C[..., :3] * (1 - np.clip(fresta + geral, 0, 1)[..., None] * (1 - TINTA["encardido"]))
     sujo = sujo * (1 - perto[..., None] * (1 - TINTA[cor_base]))
+    if m in fantasmas:                                                 # so na parte branca do quadro (moldura e texto ficam)
+        F = np.array(fantasmas[m].pixels[:], dtype=np.float32).reshape(hh, w, 4)
+        lum = C[..., :3].mean(-1); branco = np.clip((lum - .78) / .1, 0, 1)
+        tr = np.clip((F[..., 0] - .52) / .1, 0, 1) * np.clip((F[..., 1] - .42) / .2, 0, 1) * (.6 + .4 * F[..., 2])
+        borrao = np.clip((F[..., 1] - .5) / .3, 0, 1) * .35
+        g = np.clip(tr + borrao, 0, 1) * branco * .5                           # forca fixa: marcas leves
+        sujo = sujo * (1 - g[..., None] * (1 - np.array((.62, .64, .70))))
+        print("[SUJAR] fantasma: cobertura %.3f" % (g > .02).mean())
     C[..., :3] = np.clip(sujo, 0, 1); cor.pixels[:] = C.ravel()
     orm = img_rug(m)
     if orm and orm.size[:] == cor.size[:]:
