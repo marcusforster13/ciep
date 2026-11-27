@@ -1351,7 +1351,7 @@ for k, (x, y, rz) in enumerate(((3.5, YC0 - .1, PI), (-6.0, YC0 - .1, PI), (11.9
     # evaporadora de parede do autor (a mesma do cassino: modelos/ar_split_realista.glb). O modelo tem as costas em y = 0
     # e a frente para +y; o vazio gira para a frente ficar para dentro da sala. Sem o arquivo, cai na caixa simples.
     r = vazio("Split_%d" % k, (x, y, FZ + 2.55), C_SOLTO, rz)
-    if not peca_glb("Split_%d_Autor" % k, "ar_split_sujo_realista.glb", r):
+    if not peca_glb("Split_%d_Autor" % k, "ar_split_realista.glb", r):
         box("Split_%d_Corpo" % k, (.9, .22, .3), (0, .11, 0), M["split"], C_SOLTO, r, bevel=.03)
 # bebedouro industrial de inox (4 torneiras) na galeria, junto a parede do bloco
 # --- banheiro masculino (x -20 .. -12, y 13 .. 19): azulejo ate 1,8 m, bancada de granito com 3 cubas, mictorios, 3 cabines
@@ -2173,6 +2173,85 @@ for x, y, s_ in ((-14.95, YC0, 1), (12.95, YC0, 1), (-9.05, YC1, -1), (-2.05, YC
     f_ = y + s_ * .029
     adesivo("Porta_Fechada_Sujeira_Mao", lambda u, v, x=x, f_=f_: Vector((x + .3 + (u - .5) * .3, f_, FZ + 1.05 + (v - .5) * .45)), 1, 1, C_SOLTO, mat_=M_MAO)
     adesivo("Porta_Fechada_Sujeira_Pe", lambda u, v, x=x, f_=f_: Vector((x + (u - .5) * .86, f_, FZ + .02 + v * .3)), 1, 1, C_SOLTO, mat_=M_RODAPE)
+# 5) sujeira de parede por adesivo (pedido do autor, 27/11): umidade subindo do piso, infiltracao descendo do teto,
+#    mofo no alto dos banheiros e mao encardida ao lado das portas das salas. Cada adesivo procura a parede com um raio
+#    (cola na superficie real, sem coordenada chutada); se o raio nao achar parede perto, o adesivo e pulado.
+def _ruido(H, W, cel, seed):
+    r = np.random.default_rng(seed); g = r.random((H // cel + 2, W // cel + 2))
+    yy, xx = np.mgrid[0:H, 0:W] / cel; y0, x0 = yy.astype(int), xx.astype(int); fy, fx = yy - y0, xx - x0
+    fy, fx = fy * fy * (3 - 2 * fy), fx * fx * (3 - 2 * fx)
+    return (g[y0, x0] * (1 - fx) + g[y0, x0 + 1] * fx) * (1 - fy) + (g[y0 + 1, x0] * (1 - fx) + g[y0 + 1, x0 + 1] * fx) * fy
+def _bordas(W, H, m=.12):                                           # some nas laterais (adesivo sem recorte reto)
+    xx = np.mgrid[0:H, 0:W][1] / (W - 1); return np.clip(np.minimum(xx, 1 - xx) / m, 0, 1) ** 1.5
+def tex_umidade(seed, W=320, H=160, de_cima=False):
+    """Umidade: mancha amarronzada com borda irregular e linha de sal mais escura (sobe do piso ou desce do teto)."""
+    yy, xx = np.mgrid[0:H, 0:W]; v = 1 - yy / (H - 1); u = xx / (W - 1)      # v = 0 embaixo
+    if de_cima: v = 1 - v
+    r = np.random.default_rng(seed); n = _ruido(H, W, 18, seed); n2 = _ruido(H, W, 5, seed + 1)
+    borda = .5 + .14 * np.sin(u * 7 + r.uniform(0, 6)) + .08 * np.sin(u * 19 + r.uniform(0, 6)) + .18 * (n - .5)
+    if de_cima:                                                     # escorridos descendo
+        for _ in range(5):
+            c = r.uniform(.15, .85); borda = borda + r.uniform(.12, .3) * np.exp(-((u - c) / r.uniform(.006, .02)) ** 2)
+    dentro = np.clip((borda - v) / np.maximum(borda, .05), 0, 1)
+    al = .4 * dentro ** .45 * (.6 + .4 * n2) + .14 * np.exp(-((v - borda) / .035) ** 2)      # mancha cheia; borda so um pouco mais forte
+    al *= _bordas(W, H, .18)
+    rgba = np.zeros((H, W, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .38, .32, .22; rgba[..., 3] = np.clip(al, 0, .5)
+    return rgba
+def tex_mofo(seed, S=200):
+    """Mofo: pintas escuras agrupadas, mais densas no centro, sobre um veu esverdeado."""
+    r = np.random.default_rng(seed); yy, xx = (np.mgrid[0:S, 0:S] - S / 2) / (S / 2)
+    d = np.hypot(xx * .8, yy) * (1 + .25 * (_ruido(S, S, 25, seed) - .5)); cai = np.clip(1 - d, 0, 1) ** 1.2
+    al = .16 * cai * _ruido(S, S, 12, seed + 3)
+    for _ in range(420):
+        cx, cy = r.normal(0, .38, 2); rr = r.uniform(.006, .022) * S
+        px, py = int((cx + 1) * S / 2), int((cy + 1) * S / 2)
+        if 0 <= px < S and 0 <= py < S:
+            m = (np.mgrid[0:S, 0:S][1] - px) ** 2 + (np.mgrid[0:S, 0:S][0] - py) ** 2 < rr * rr
+            al[m] = np.maximum(al[m], r.uniform(.3, .75) * cai[py, px] ** .5)
+    rgba = np.zeros((S, S, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .09, .1, .075; rgba[..., 3] = np.clip(al, 0, .8)
+    return rgba
+def tex_maos(seed, W=96, H=150):
+    """Encardido de mao na parede: varias marcas ovais sobrepostas, mais forte no meio da altura."""
+    r = np.random.default_rng(seed); yy, xx = np.mgrid[0:H, 0:W]; al = np.zeros((H, W))
+    for _ in range(9):
+        cx, cy = r.uniform(.3, .7) * W, r.normal(.5, .15) * H; a, b = r.uniform(.12, .2) * W, r.uniform(.07, .12) * H
+        al = np.maximum(al, r.uniform(.18, .34) * np.clip(1 - ((xx - cx) / a) ** 2 - ((yy - cy) / b) ** 2, 0, 1) ** .8)
+    al *= .7 + .3 * _ruido(H, W, 6, seed)
+    rgba = np.zeros((H, W, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .2, .17, .13; rgba[..., 3] = np.clip(al, 0, .5)
+    return rgba
+M_UMIDADE = [_mat_img("umidade_parede_%d_alpha" % k, tex_umidade(30 + k), True) for k in range(3)]
+M_INFILT_PAREDE = [_mat_img("infiltracao_parede_%d_alpha" % k, tex_umidade(40 + k, de_cima=True), True) for k in range(2)]
+M_MOFO = []
+M_MAO_PAREDE = _mat_img("mao_parede_alpha", tex_maos(60), True)
+bpy.context.view_layer.update(); _dg = bpy.context.evaluated_depsgraph_get(); _n_parede = [0, 0]
+def adesivo_parede(nome, origem, direcao, larg, alt, z_base, m, max_dist=4.0):
+    """Raio horizontal de 'origem' (x, y) na 'direcao' (dx, dy) na altura do meio do adesivo; cola na parede achada."""
+    zc = z_base + alt / 2; o = Vector((origem[0], origem[1], zc)); d = Vector((direcao[0], direcao[1], 0)).normalized()
+    ok, loc, nor, _i, ob, _m = scene.ray_cast(_dg, o, d, distance=max_dist)
+    if not ok or abs(nor.z) > .2 or (ob and ob.name.startswith(("Sujeira", "Img_"))):
+        _n_parede[1] += 1; say("[SUJEIRA] %s: parede nao achada (%s)" % (nome, ob.name if ok and ob else "-")); return
+    nor = Vector((nor.x, nor.y, 0)).normalized()
+    if nor.dot(d) > 0: nor = -nor
+    du = Vector((0, 0, 1)).cross(nor).normalized(); c = loc + nor * .006
+    adesivo(nome, lambda u, v: c + du * (u - .5) * larg + Vector((0, 0, (v - .5) * alt)), 1, 1, C_SOLTO, mat_=m)
+    _n_parede[0] += 1
+yc_t, yc_1 = (YC0 + YC1) / 2, (PC0 + PC1) / 2
+# umidade subindo do piso (trechos de parede livres dos corredores; abaixo dos murais)
+for k, (x, y0, dy, L, zf) in enumerate(((-12.5, yc_t, 1, 1.6, FZ), (2.8, yc_t, 1, 1.8, FZ), (11.6, yc_t, 1, 1.3, FZ),
+                                         (-11.3, yc_t, -1, 1.5, FZ), (7.2, yc_t, -1, 2.0, FZ),
+                                         (29.5, yc_1, -1, 1.6, P1Z), (17.8, yc_1, 1, 1.2, P1Z))):
+    adesivo_parede("Sujeira_Umidade_%d" % k, (x, y0), (0, dy), L, .85, zf + .005, M_UMIDADE[k % 3])
+# infiltracao descendo do teto pela parede
+for k, (x, y0, dy, L, zt) in enumerate(((6.4, yc_t, 1, 1.4, FZ + PD), (19.0, yc_1, -1, 1.2, P1Z + PD1), (-16.5, yc_t, -1, 1.1, FZ + PD))):
+    adesivo_parede("Sujeira_Infiltracao_Parede_%d" % k, (x, y0), (0, dy), L, .9, zt - .92, M_INFILT_PAREDE[k % 2])
+# mofo no alto das paredes dos banheiros (acima das divisorias das cabines)
+for k, (o, d, L) in enumerate(()):                                # (mofo retirado a pedido do autor: as pintas ficaram artificiais)
+    adesivo_parede("Sujeira_Mofo_%d" % k, o, d, L, .7, FZ + PD - .78, M_MOFO[k % 2])
+# mao encardida na parede ao lado das portas das salas de cima (lado da macaneta e do batente)
+for a, b, y, dy in ((14.5, 15.4, PC0, -1), (24.5, 25.4, PC0, -1), (34.5, 35.4, PC0, -1), (14.5, 15.4, PC1, 1)):
+    for x in (a - .32, b + .32):
+        adesivo_parede("Sujeira_Mao_Parede", (x, yc_1), (0, dy), .34, .55, P1Z + .95, M_MAO_PAREDE)
+say("[SUJEIRA] adesivos de parede: %d colados, %d pulados" % tuple(_n_parede))
 # 4) teto: eletrodutos aparentes, caixas de passagem e detectores de fumaca (corredores e salas)
 M.update({"detector": mat("Detector_Fumaca", "#f1f1ec", .4), "caixa_luz": mat("Caixa_Passagem", "#9a9d9f", .5, .3)})
 def detector_fumaca(nome, x, y, z):
@@ -2436,6 +2515,13 @@ trocar_peca("horta_cebolinha_realista.glb", _pes(r"^Horta_Cebolinha", .1), girar
 trocar_peca("livro_ocorrencias_realista.glb", [_obs(r"^I_Livro_Ocorrencias_Capa")])
 trocar_peca("pasta_frequencia_realista.glb", [_obs(r"^I_Pasta_Frequencia_Capa")])
 trocar_peca("vaso_sanitario_sujo_realista.glb", _dados("Peca_vaso"))
+_tampa = _malha_glb("tampa_vaso_realista.glb")       # tampa do autor, aberta e encostada atras (pivo da dobradica dado por ele)
+if _tampa:
+    _pv = Vector((0, .225, .432))
+    _tampa.transform(Matrix.Translation(_pv) @ Matrix.Rotation(math.radians(-100), 4, "X") @ Matrix.Translation(-_pv))
+    for _v in [o for o in bpy.data.objects if o.type == "MESH" and o.data.name.startswith("Autor_vaso_sanitario")]:
+        _t = bpy.data.objects.new(_v.name + "_Tampa", _tampa); C_SOLTO.objects.link(_t); _t.matrix_world = _v.matrix_world.copy()
+    say("[AUTOR] tampa do vaso aberta em %d vaso(s)" % sum(1 for o in bpy.data.objects if o.name.endswith("_Tampa") and o.data == _tampa))
 trocar_peca("valvula_descarga_sujo_realista.glb", _dados("Peca_valvula"))
 trocar_peca("cuba_torneira_sujo_realista.glb", _dados("Peca_cuba_torneira"))
 trocar_peca("papeleira_higienica_sujo_realista.glb", _cada(r"^Banheiro_Papeleira_Higienica(\.\d+)?$"))
