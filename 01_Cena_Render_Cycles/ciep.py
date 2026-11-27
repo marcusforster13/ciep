@@ -2252,6 +2252,146 @@ for a, b, y, dy in ((14.5, 15.4, PC0, -1), (24.5, 25.4, PC0, -1), (34.5, 35.4, P
     for x in (a - .32, b + .32):
         adesivo_parede("Sujeira_Mao_Parede", (x, yc_1), (0, dy), .34, .55, P1Z + .95, M_MAO_PAREDE)
 say("[SUJEIRA] adesivos de parede: %d colados, %d pulados" % tuple(_n_parede))
+# 6) desgaste de uso (pedido do autor, 27/11): caminho gasto no chao, manchas, cadeira arrastada, rodape e encosto de
+#    cadeira na parede do fundo das salas, placas do forro manchadas / faltando / soltas.
+def tex_desgaste(seed, W=256, H=64):
+    """Caminho gasto: faixa escurecida no meio, sem borda definida, irregular ao longo do comprimento."""
+    yy, xx = np.mgrid[0:H, 0:W]; u = xx / (W - 1); v = yy / (H - 1)
+    n = _ruido(H, W, 14, seed); n2 = _ruido(H, W, 4, seed + 7)
+    c = .5 + .12 * np.sin(u * 5 + seed) ; larg = .2 + .06 * (n - .5)
+    al = .17 * np.exp(-((v - c) / larg) ** 2) * (.5 + .5 * n) * (.8 + .2 * n2)
+    al *= np.clip(np.minimum(u, 1 - u) / .15, 0, 1) ** 1.5
+    rgba = np.zeros((H, W, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .27, .24, .2; rgba[..., 3] = al
+    return rgba
+def tex_mancha_piso(seed, S=128):
+    """Mancha seca no piso (liquido derramado): forma irregular, borda um pouco mais escura."""
+    r = np.random.default_rng(seed); yy, xx = (np.mgrid[0:S, 0:S] - S / 2) / (S / 2); ang = np.arctan2(yy, xx)
+    d = np.hypot(xx, yy * 1.25) * (1 + .12 * np.sin(ang * 3 + r.uniform(0, 6)) + .06 * np.sin(ang * 5 + r.uniform(0, 6)) + .12 * (_ruido(S, S, 10, seed) - .5))
+    al = .13 * (d < .7) * (.6 + .4 * _ruido(S, S, 6, seed + 1)) + .18 * np.exp(-((d - .7) / .045) ** 2)
+    rgba = np.zeros((S, S, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .3, .25, .17; rgba[..., 3] = np.clip(al, 0, .35)
+    return rgba
+def tex_arrasto(seed, W=160, H=128):
+    """Marcas de cadeira arrastada: riscos finos curtos, quase paralelos, em pares (os dois pes da cadeira)."""
+    r = np.random.default_rng(seed); yy, xx = np.mgrid[0:H, 0:W]; al = np.zeros((H, W))
+    for _ in range(7):
+        y0 = r.uniform(.2, .8) * H; x0, x1 = sorted(r.uniform(.05, .95, 2) * W); curva = r.uniform(-8, 8)
+        for dy in (0, r.uniform(14, 22)):
+            t = np.clip((xx - x0) / max(x1 - x0, 1), 0, 1); yc = y0 + dy + curva * (t - .5) ** 2 * 4
+            al = np.maximum(al, r.uniform(.2, .4) * np.exp(-((yy - yc) / 1.1) ** 2) * ((xx > x0) & (xx < x1)) * (.6 + .4 * np.sin(t * PI)))
+    al *= .7 + .3 * _ruido(H, W, 5, seed)
+    rgba = np.zeros((H, W, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .22, .21, .2; rgba[..., 3] = np.clip(al, 0, .45)
+    return rgba
+def tex_encosto(seed, W=512, H=64):
+    """Encosto de cadeira na parede: borroes cinzentos curtos numa faixa, alguns riscos horizontais."""
+    r = np.random.default_rng(seed); yy, xx = np.mgrid[0:H, 0:W]; al = np.zeros((H, W))
+    for _ in range(14):
+        cx, cy = r.uniform(.04, .96) * W, r.normal(.5, .12) * H; a, b = r.uniform(.02, .05) * W, r.uniform(.12, .22) * H
+        al = np.maximum(al, r.uniform(.12, .26) * np.clip(1 - ((xx - cx) / a) ** 2 - ((yy - cy) / b) ** 2, 0, 1) ** .7)
+    for _ in range(6):
+        y0, x0 = r.uniform(.3, .7) * H, r.uniform(0, .9) * W; L = r.uniform(.03, .08) * W
+        al = np.maximum(al, r.uniform(.2, .35) * np.exp(-((yy - y0) / .8) ** 2) * ((xx > x0) & (xx < x0 + L)))
+    al *= (.7 + .3 * _ruido(H, W, 6, seed)) * _bordas(W, H, .05)
+    rgba = np.zeros((H, W, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .2, .19, .18; rgba[..., 3] = np.clip(al, 0, .4)
+    return rgba
+def tex_placa_manchada(seed, S=128):
+    """Placa de forro com infiltracao: aneis amarelados irregulares, presos dentro da placa."""
+    r = np.random.default_rng(seed); yy, xx = (np.mgrid[0:S, 0:S] - S / 2) / (S / 2); ang = np.arctan2(yy - r.uniform(-.3, .3), xx - r.uniform(-.3, .3))
+    d = np.hypot(xx - r.uniform(-.25, .25), yy - r.uniform(-.25, .25)) * (1 + .2 * np.sin(ang * 3 + r.uniform(0, 6)) + .15 * (_ruido(S, S, 12, seed) - .5)) / r.uniform(.7, 1.0)
+    al = np.clip(1 - d, 0, 1) ** .7 * .32
+    for rr in (.5, .78): al = np.maximum(al, .42 * np.exp(-((d - rr) / .035) ** 2) * (d < 1))
+    al *= np.clip(np.minimum(np.minimum(xx + 1, 1 - xx), np.minimum(yy + 1, 1 - yy)) / .04, 0, 1)   # nao passa da placa
+    rgba = np.zeros((S, S, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .58, .45, .22; rgba[..., 3] = np.clip(al, 0, .6)
+    return rgba
+def tex_vao_forro(S=64):
+    """Vao de placa faltando: escuro, um pouco menos escuro no meio (laje la em cima)."""
+    yy, xx = (np.mgrid[0:S, 0:S] - S / 2) / (S / 2); al = .93 - .1 * np.clip(1 - np.hypot(xx, yy), 0, 1)
+    rgba = np.zeros((S, S, 4)); rgba[..., 0], rgba[..., 1], rgba[..., 2] = .045, .043, .04; rgba[..., 3] = al
+    return rgba
+M_DESGASTE = [_mat_img("desgaste_piso_%d_alpha" % k, tex_desgaste(70 + k), True) for k in range(3)]
+M_MANCHA_PISO = [_mat_img("mancha_piso_%d_alpha" % k, tex_mancha_piso(80 + k), True) for k in range(3)]
+M_ARRASTO = [_mat_img("arrasto_cadeira_%d_alpha" % k, tex_arrasto(90 + k), True) for k in range(2)]
+M_ENCOSTO = _mat_img("encosto_cadeira_alpha", tex_encosto(95), True)
+M_PLACA = [_mat_img("placa_forro_manchada_%d_alpha" % k, tex_placa_manchada(100 + k), True) for k in range(3)]
+M_VAO_FORRO = _mat_img("vao_forro_alpha", tex_vao_forro(), True)
+_n_uso = [0, 0]
+def _raio_ate(o, d, dist):
+    """ray_cast que atravessa adesivos ja colados (Sujeira_*, Img_*) e acha a superficie de verdade."""
+    o = o.copy()
+    for _ in range(6):
+        ok, loc, nor, _i, ob, _m = scene.ray_cast(_dg, o, d, distance=dist)
+        if not ok or not (ob and ob.name.startswith(("Sujeira", "Img_", "Teto_Infiltracao"))): return ok, loc, nor, ob
+        o = loc + d * .002
+    return False, None, None, None
+def adesivo_chao(nome, x, y, larg, comp, ang, m, z_ref, folga=.0025):
+    """Adesivo deitado no piso, girado 'ang' (rad) em z; o piso e achado com raio de cima para baixo."""
+    ok, loc, nor, ob = _raio_ate(Vector((x, y, z_ref + .6)), Vector((0, 0, -1)), 1.2)
+    if not ok or nor.z < .9 or abs(loc.z - z_ref) > .08:
+        _n_uso[1] += 1; say("[USO] %s: piso nao achado (%s)" % (nome, ob.name if ok and ob else "-")); return
+    z = loc.z + folga; ca, sa = math.cos(ang), math.sin(ang)
+    adesivo(nome, lambda u, v: Vector((x + ca * (u - .5) * larg - sa * (v - .5) * comp, y + sa * (u - .5) * larg + ca * (v - .5) * comp, z)), 1, 1, C_SOLTO, mat_=m)
+    _n_uso[0] += 1
+def adesivo_parede_baixo(nome, origem, direcao, larg, alt, z_base, m, z_raio, max_dist=3.0):
+    """Como adesivo_parede, mas acha a parede com o raio numa altura livre (z_raio, acima das carteiras) e cola em z_base."""
+    d = Vector((direcao[0], direcao[1], 0)).normalized()
+    ok, loc, nor, ob = _raio_ate(Vector((origem[0], origem[1], z_raio)), d, max_dist)
+    if not ok or abs(nor.z) > .2:
+        _n_uso[1] += 1; say("[USO] %s: parede nao achada (%s)" % (nome, ob.name if ok and ob else "-")); return
+    nor = Vector((nor.x, nor.y, 0)).normalized()
+    if nor.dot(d) > 0: nor = -nor
+    du = Vector((0, 0, 1)).cross(nor).normalized(); c = Vector((loc.x, loc.y, z_base + alt / 2)) + nor * .007
+    adesivo(nome, lambda u, v: c + du * (u - .5) * larg + Vector((0, 0, (v - .5) * alt)), 1, 1, C_SOLTO, mat_=m)
+    _n_uso[0] += 1
+ru = random.Random(1127)
+# caminho gasto no meio dos corredores (terreo y 10..13, 1o andar y 9,5..12,5)
+for k, x in enumerate(range(-17, 18, 5)):
+    adesivo_chao("Sujeira_Caminho_Terreo_%d" % k, x + ru.uniform(-.3, .3), (YC0 + YC1) / 2 + ru.uniform(-.25, .25), 5.6, 1.5, 0, M_DESGASTE[k % 3], FZ)
+for k, x in enumerate(range(13, 38, 5)):
+    adesivo_chao("Sujeira_Caminho_Pav1_%d" % k, x + ru.uniform(-.3, .3), (PC0 + PC1) / 2 + ru.uniform(-.2, .2), 5.6, 1.4, 0, M_DESGASTE[(k + 1) % 3], P1Z)
+# desgaste na frente e logo depois das portas das salas de cima (quem entra e sai pisa sempre no mesmo lugar)
+for k, (a, b, y, s_) in enumerate(((14.5, 15.4, PC0, -1), (24.5, 25.4, PC0, -1), (34.5, 35.4, PC0, -1), (14.5, 15.4, PC1, 1))):
+    adesivo_chao("Sujeira_Porta_Corredor_%d" % k, (a + b) / 2, y - s_ * .55, 1.3, .9, PI / 2, M_DESGASTE[k % 3], P1Z)
+    adesivo_chao("Sujeira_Porta_Sala_%d" % k, (a + b) / 2 + .2, y + s_ * .75, 1.6, 1.0, PI / 2 + ru.uniform(-.3, .3), M_DESGASTE[(k + 2) % 3], P1Z)
+# manchas secas de liquido derramado
+for k, (x, y, zr, t) in enumerate(((-6.3, 10.9, FZ, .55), (4.4, 12.1, FZ, .4), (15.8, 11.7, FZ, .5), (21.5, 10.4, P1Z, .45),
+                                    (31.2, 11.6, P1Z, .6), (13.1, 4.6, P1Z, .35), (27.4, 6.8, P1Z, .4), (37.0, 2.6, P1Z, .5), (16.6, 17.5, P1Z, .4))):
+    adesivo_chao("Sujeira_Mancha_Piso_%d" % k, x, y, t * 1.2, t, ru.uniform(0, PI), M_MANCHA_PISO[k % 3], zr)
+# salas de cima: cadeira arrastada (atras de parte das carteiras), rodape e encosto de cadeira na parede do fundo
+for nome, x0, x1, y0, y1 in (("Sala_201", 10.0, 20.0, .5, PC0), ("Sala_202", 20.0, 30.0, .5, PC0), ("Sala_203", 30.0, 40.0, .5, PC0), ("Sala_204", 10.0, 20.0, PC1, PROF - .5)):
+    yc = (y0 + y1) / 2
+    for j in range(7):
+        adesivo_chao("Sujeira_Arrasto_%s" % nome, x0 + 2.8 + ru.randrange(5) * 1.5 + .75 + ru.uniform(-.15, .15), y0 + 1.6 + ru.uniform(0, y1 - y0 - 3.2),
+                     .8, .64, ru.uniform(-.4, .4), M_ARRASTO[j % 2], P1Z, folga=.0015)
+    for j, (ya, yb) in enumerate(((y0 + .6, yc - .4), (yc + .4, y1 - .6))):
+        adesivo_parede_baixo("Sujeira_Rodape_%s" % nome, (x1 - 1.2, (ya + yb) / 2), (1, 0), yb - ya, .32, P1Z + .025, M_RODAPE, P1Z + 1.3)
+        adesivo_parede_baixo("Sujeira_Encosto_%s" % nome, (x1 - 1.2, (ya + yb) / 2 + ru.uniform(-.3, .3)), (1, 0), min(2.2, yb - ya), .28, P1Z + .66, M_ENCOSTO, P1Z + 1.3)
+say("[USO] chao e parede: %d colados, %d pulados" % tuple(_n_uso))
+# forro modular das salas: placas manchadas, uma faltando (vao escuro) e uma solta pendurada de um lado
+def _celula_livre(x, y, zc):
+    ok, loc, _n, ob = _raio_ate(Vector((x, y, zc - .7)), Vector((0, 0, 1)), 1.0)
+    return ok and loc.z > zc - .013
+_n_forro = [0, 0]
+for nome, x0, x1, y0, y1, zf, especial in (("Sala_201", 10.0, 20.0, .5, PC0, P1Z, "solta"), ("Sala_202", 20.0, 30.0, .5, PC0, P1Z, None),
+                                           ("Sala_203", 30.0, 40.0, .5, PC0, P1Z, "falta"), ("Sala_204", 10.0, 20.0, PC1, PROF - .5, P1Z, None),
+                                           ("Sala_104", 2.0, 12.0, YC1, BY1, FZ, "falta")):
+    zc = zf + (PD1 if zf == P1Z else PD) - .03; gx0, gy0, p = x0 + .2, y0 + .2, .625
+    nx, ny = int((x1 - x0 - .2) / p), int((y1 - y0 - .2) / p)
+    celulas = [(i, j) for i in range(1, nx - 1) for j in range(1, ny - 1)]; ru.shuffle(celulas)
+    feitas = []
+    for i, j in celulas:
+        if len(feitas) >= (3 if especial else 4): break
+        cx, cy = gx0 + (i + .5) * p - .1, gy0 + (j + .5) * p - .1                     # grade: x0 + .1 + k * passo
+        if not _celula_livre(cx, cy, zc) or any(abs(i - a) + abs(j - b) < 2 for a, b in feitas): _n_forro[1] += 1; continue
+        k = len(feitas); feitas.append((i, j))
+        if especial and k == 0:                                                       # vao escuro (placa faltando ou solta)
+            adesivo("Sujeira_Forro_Vao_%s" % nome, lambda u, v, cx=cx, cy=cy: Vector((cx + (v - .5) * .6, cy + (u - .5) * .6, zc - .002)), 1, 1, C_SOLTO, mat_=M_VAO_FORRO)
+            if especial == "solta":                                                   # placa presa num lado, o outro caido ~10 cm
+                r_ = vazio(nome + "_Forro_Placa_Solta", (cx - .3, cy, zc - .012), C_SOLTO, 0)
+                r_.rotation_euler = (0, math.radians(10), 0)
+                box(nome + "_Forro_Placa_Solta", (.6, .6, .012), (.3, 0, -.006), M["laje"], C_SOLTO, r_)
+        else:
+            adesivo("Sujeira_Forro_Placa_%s" % nome, lambda u, v, cx=cx, cy=cy: Vector((cx + (v - .5) * .6, cy + (u - .5) * .6, zc - .003)), 1, 1, C_SOLTO, mat_=M_PLACA[(k + len(nome)) % 3])
+        _n_forro[0] += 1
+say("[USO] forro: %d placas mexidas, %d celulas puladas (luminaria/eletroduto)" % tuple(_n_forro))
 # 4) teto: eletrodutos aparentes, caixas de passagem e detectores de fumaca (corredores e salas)
 M.update({"detector": mat("Detector_Fumaca", "#f1f1ec", .4), "caixa_luz": mat("Caixa_Passagem", "#9a9d9f", .5, .3)})
 def detector_fumaca(nome, x, y, z):
@@ -2515,13 +2655,35 @@ trocar_peca("horta_cebolinha_realista.glb", _pes(r"^Horta_Cebolinha", .1), girar
 trocar_peca("livro_ocorrencias_realista.glb", [_obs(r"^I_Livro_Ocorrencias_Capa")])
 trocar_peca("pasta_frequencia_realista.glb", [_obs(r"^I_Pasta_Frequencia_Capa")])
 trocar_peca("vaso_sanitario_sujo_realista.glb", _dados("Peca_vaso"))
-_tampa = _malha_glb("tampa_vaso_realista.glb")       # tampa do autor, aberta e encostada atras (pivo da dobradica dado por ele)
+_tampa = _malha_glb("tampa_vaso_sujo_realista.glb")       # tampa do autor, aberta e encostada atras (pivo da dobradica dado por ele)
 if _tampa:
     _pv = Vector((0, .225, .432))
+    _cz = Vector((0, 0, .436))                         # vira de face: lado liso para fora, apoios de borracha contra a parede
+    _tampa.transform(Matrix.Translation(_cz) @ Matrix.Rotation(math.pi, 4, "Y") @ Matrix.Translation(-_cz))
     _tampa.transform(Matrix.Translation(_pv) @ Matrix.Rotation(math.radians(-100), 4, "X") @ Matrix.Translation(-_pv))
     for _v in [o for o in bpy.data.objects if o.type == "MESH" and o.data.name.startswith("Autor_vaso_sanitario")]:
         _t = bpy.data.objects.new(_v.name + "_Tampa", _tampa); C_SOLTO.objects.link(_t); _t.matrix_world = _v.matrix_world.copy()
     say("[AUTOR] tampa do vaso aberta em %d vaso(s)" % sum(1 for o in bpy.data.objects if o.name.endswith("_Tampa") and o.data == _tampa))
+_mac = _malha_glb("macaneta_porta_realista.glb")     # macaneta do autor nas portas azuis do corredor (mesma medida da antiga:
+if _mac:                                              # centro do espelho em x=0, face da porta em y=0, saindo para +y, z absoluto)
+    _mac_esp = _mac.copy(); _mac_esp.transform(Matrix.Scale(-1, 4, Vector((0, 1, 0)))); _mac_esp.flip_normals()
+    for o in [o for o in bpy.data.objects if _re.match(r"^Porta_Fechada_(Espelho|Roseta|Macaneta|Chave)", o.name)]: bpy.data.objects.remove(o, do_unlink=True)
+    for x, y, s_ in ((-14.95, YC0, 1), (12.95, YC0, 1), (-9.05, YC1, -1), (-2.05, YC1, -1), (16.45, YC1, -1)):
+        _t = bpy.data.objects.new("Porta_Fechada_Macaneta_Autor", _mac if s_ == 1 else _mac_esp); C_SOLTO.objects.link(_t)
+        _t.location = (x + .34, y + s_ * .027, 0)
+    say("[AUTOR] macaneta nas 5 portas do corredor")
+    # portas amarelas das salas de cima: folha aberta encostada na parede (plano YZ), macaneta dos dois lados (sx);
+    # modelo: sai para +y, alavanca para -x -> aqui sai para sx em x e a alavanca aponta para o meio da folha (-s_ em y)
+    for o in [o for o in bpy.data.objects if _re.match(r"^Pav1_Porta_(Macaneta|Roseta)", o.name)]: bpy.data.objects.remove(o, do_unlink=True)
+    _dz = (P1Z + 1.02) - (FZ + 1.05)                                   # altura da alavanca antiga no 1o andar
+    for a, y, s_ in ((24.5, PC0, -1), (34.5, PC0, -1), (14.5, PC1, 1)):
+        yf = y + s_ * (.13 + .45)
+        for sx in (-1, 1):
+            R = Matrix(((0, sx, 0, 0), (s_, 0, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)))
+            me = _mac.copy(); me.transform(Matrix.Translation((a + .03 + sx * .02, yf + s_ * .4, _dz)) @ R)
+            if R.determinant() < 0: me.flip_normals()
+            _t = bpy.data.objects.new("Pav1_Porta_Macaneta_Autor", me); C_SOLTO.objects.link(_t)
+    say("[AUTOR] macaneta nas 3 portas amarelas abertas (dos dois lados)")
 trocar_peca("valvula_descarga_sujo_realista.glb", _dados("Peca_valvula"))
 trocar_peca("cuba_torneira_sujo_realista.glb", _dados("Peca_cuba_torneira"))
 trocar_peca("papeleira_higienica_sujo_realista.glb", _cada(r"^Banheiro_Papeleira_Higienica(\.\d+)?$"))
