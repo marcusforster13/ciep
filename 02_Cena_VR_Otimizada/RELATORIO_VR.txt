@@ -1,6 +1,6 @@
 A MENSAGEM (CIEP) - VERSAO VR OTIMIZADA
 
-DEPOIS: 848244 tris | 44 malhas | 274 slots de material (~draw calls) | 91 luzes
+DEPOIS: 848244 tris | 44 malhas | 269 slots de material (~draw calls) | 91 luzes
 
 Triangulos por colecao:
   12_Objetos_Soltos                    583186

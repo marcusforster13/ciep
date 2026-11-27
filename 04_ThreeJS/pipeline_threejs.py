@@ -16,7 +16,7 @@ Etapas:
   3. HDRI noturno -> .hdr leve para o ceu e reflexos
   4. Exporta cena.glb (Draco) + cena.json (lightmaps, cameras, giroflex)
 """
-import bpy, bmesh, os, sys, json, math, re, time
+import bpy, bmesh, os, sys, json, math, re, time, hashlib
 import numpy as np
 from mathutils import Vector
 
@@ -276,8 +276,16 @@ if hdr_src:
 # texturas dos modelos prontos (carros): PNG grandes -> JPG de ate 1024 px (o .glb cai de ~40 MB para ~15 MB)
 def para_jpg(img, dados):
     alfa = any(k in img.name.lower() for k in ("leaves", "alpha", "folha"))      # folhas das arvores: PNG, para manter o recorte
-    out = os.path.join(CACHE, "modelo_" + bpy.path.clean_name(img.name) + (".png" if alfa else ".jpg"))
+    try:                                         # impressao digital do conteudo: textura editada com o mesmo nome refaz o cache
+        bruto = img.packed_file.data if img.packed_file else open(bpy.path.abspath(img.filepath), "rb").read()
+        dig = hashlib.md5(bruto).hexdigest()[:8]
+    except Exception:                            # imagem gerada na hora (sem arquivo): impressao pelos pixels
+        px = np.empty(len(img.pixels), np.float32); img.pixels.foreach_get(px); dig = hashlib.md5(px.tobytes()).hexdigest()[:8]
+    base = "modelo_" + bpy.path.clean_name(img.name)
+    out = os.path.join(CACHE, base + "_" + dig + (".png" if alfa else ".jpg"))
     if not os.path.exists(out):
+        for velho in os.listdir(CACHE):          # descarta as versoes anteriores da mesma textura
+            if re.fullmatch(re.escape(base) + r"(_[0-9a-f]{8}|_\d+x\d+)?\.(jpg|png)", velho): os.remove(os.path.join(CACHE, velho))
         w, h = img.size
         copia = img.copy()
         lim = 2048 if img.name.startswith(("rebake_", "autor_placa_")) else 1024      # desenhos refeitos e texto das placas: 2048

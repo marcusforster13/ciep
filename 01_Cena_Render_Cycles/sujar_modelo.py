@@ -3,12 +3,15 @@
 # Uso: blender -b --factory-startup --python sujar_modelo.py -- <nome> [forca_frestas] [forca_base] [cor_base]
 #   nome: arquivo em modelos/ sem "_realista.glb" (ex.: bancada_banheiro)
 #   cor_base: "encardido" (marrom acinzentado) ou "amarelado" (mancha de urina/calcario)
+#   5o: forca do encardido geral; 6o: "atlas" para modelos de cores lisas (sem textura): assa as cores
+#   numa textura unica com UV nova e troca todos os materiais por um so antes de sujar
 import bpy, os, sys, numpy as np
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 arg = sys.argv[sys.argv.index("--") + 1:]
 nome = arg[0]; f_fresta = float(arg[1]) if len(arg) > 1 else .9; f_base = float(arg[2]) if len(arg) > 2 else .6
 cor_base = arg[3] if len(arg) > 3 else "encardido"; f_geral = float(arg[4]) if len(arg) > 4 else .3
+ATLAS = "atlas" in arg[5:]
 ENTRA = os.path.join(AQUI, "modelos", nome + "_realista.glb")
 SAI = os.path.join(AQUI, "modelos", nome + "_sujo_realista.glb")
 TMP = os.path.join(os.environ.get("TEMP", AQUI), "sujar_" + nome); os.makedirs(TMP, exist_ok=True)
@@ -19,13 +22,70 @@ obs = [o for o in bpy.data.objects if o.type == "MESH"]
 bpy.context.view_layer.update()
 zs = [(o.matrix_world @ v.co).z for o in obs for v in o.data.vertices]; z0, z1 = min(zs), max(zs); h = max(z1 - z0, 1e-3)
 
-def img_do(mat, chave):
-    for nd in mat.node_tree.nodes:
-        if nd.type == "TEX_IMAGE" and nd.image and chave in nd.image.name: return nd.image
-mats = {s.material for o in obs for s in o.material_slots if s.material}
+def _bsdf(m): return next((n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None) if m.use_nodes else None
+def _img_atras(sock, prof=3):                      # imagem que alimenta um soquete (direto ou via separar cor / mistura)
+    if not sock.is_linked or prof < 0: return None
+    n = sock.links[0].from_node
+    if n.type == "TEX_IMAGE": return n.image
+    for i in n.inputs:
+        im = _img_atras(i, prof - 1)
+        if im: return im
+def img_cor(m): p = _bsdf(m); return _img_atras(p.inputs["Base Color"]) if p else None
+def img_rug(m): p = _bsdf(m); return _img_atras(p.inputs["Roughness"]) if p else None
+sc = bpy.context.scene; sc.render.engine = "CYCLES"; sc.cycles.device = "CPU"; sc.cycles.samples = 64
+sc.render.bake.margin = 16
+
+def fazer_atlas(lado=1024):
+    """Modelo de cores lisas: UV nova sem sobreposicao, assa cor e rugosidade/metal nela, um material so."""
+    for o in obs:
+        for l in o.data.uv_layers: l.active_render = True; break
+        o.data.uv_layers.new(name="Atlas")
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in obs: o.select_set(True); o.data.uv_layers.active = o.data.uv_layers["Atlas"]
+    bpy.context.view_layer.objects.active = obs[0]
+    bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=.01, scale_to_bounds=True); bpy.ops.object.mode_set(mode="OBJECT")
+    col = bpy.data.images.new(nome + "_BaseColor", lado, lado); rm = bpy.data.images.new(nome + "_Metallic-Roughness", lado, lado)
+    rm.colorspace_settings.name = "Non-Color"
+    for alvo, qual in ((col, "cor"), (rm, "rm")):
+        guarda = []
+        for m in {s.material for o in obs for s in o.material_slots if s.material}:
+            nt = m.node_tree; nos = nt.nodes; L = nt.links; p = _bsdf(m); ja = {n.name for n in nos}
+            out = next(n for n in nos if n.type == "OUTPUT_MATERIAL" and n.is_active_output)
+            antes = out.inputs["Surface"].links[0].from_socket if out.inputs["Surface"].links else None
+            em = nos.new("ShaderNodeEmission")
+            if qual == "cor":
+                if p.inputs["Base Color"].is_linked: L.new(p.inputs["Base Color"].links[0].from_socket, em.inputs["Color"])
+                else: em.inputs["Color"].default_value = p.inputs["Base Color"].default_value
+            else:
+                cc = nos.new("ShaderNodeCombineColor"); L.new(cc.outputs[0], em.inputs["Color"])
+                for k, nm in ((1, "Roughness"), (2, "Metallic")):
+                    if p.inputs[nm].is_linked: L.new(p.inputs[nm].links[0].from_socket, cc.inputs[k])
+                    else: cc.inputs[k].default_value = p.inputs[nm].default_value
+            L.new(em.outputs[0], out.inputs["Surface"])
+            uv = nos.new("ShaderNodeUVMap"); uv.uv_map = "Atlas"; ti = nos.new("ShaderNodeTexImage"); ti.image = alvo
+            L.new(uv.outputs[0], ti.inputs["Vector"]); nos.active = ti; guarda.append((m, ja, antes, out))
+        bpy.ops.object.bake(type="EMIT")
+        for m, ja, antes, out in guarda:
+            if antes: m.node_tree.links.new(antes, out.inputs["Surface"])
+            for nd in list(m.node_tree.nodes):
+                if nd.name not in ja: m.node_tree.nodes.remove(nd)
+    for im in (col, rm): im.pack()
+    novo = bpy.data.materials.new(nome + "_Atlas"); novo.use_nodes = True; nt = novo.node_tree; p = _bsdf(novo)
+    tc = nt.nodes.new("ShaderNodeTexImage"); tc.image = col; nt.links.new(tc.outputs["Color"], p.inputs["Base Color"])
+    tr = nt.nodes.new("ShaderNodeTexImage"); tr.image = rm; sp = nt.nodes.new("ShaderNodeSeparateColor"); nt.links.new(tr.outputs["Color"], sp.inputs[0])
+    nt.links.new(sp.outputs[1], p.inputs["Roughness"]); nt.links.new(sp.outputs[2], p.inputs["Metallic"])
+    for o in obs:
+        me = o.data
+        for l in [l for l in me.uv_layers if l.name != "Atlas"]: me.uv_layers.remove(l)
+        me.uv_layers["Atlas"].name = "UVMap"; me.materials.clear(); me.materials.append(novo)
+    print("[SUJAR] atlas %dx%d feito (cores lisas -> textura)" % (lado, lado))
+if ATLAS: fazer_atlas()
+
+mats = {s.material for o in obs for s in o.material_slots if s.material and img_cor(s.material)}
 mascaras = {}
 for m in mats:                                  # um no de imagem alvo por material, no tamanho da cor base
-    cor = img_do(m, "BaseColor"); w, hh = cor.size
+    cor = img_cor(m); w, hh = cor.size
     alvo = bpy.data.images.new("Mascara_" + m.name, w, hh, float_buffer=True); alvo.colorspace_settings.name = "Non-Color"
     nt = m.node_tree; nos = nt.nodes; L = nt.links; ja = {n.name for n in nos}
     ao = nos.new("ShaderNodeAmbientOcclusion"); ao.only_local = True; ao.samples = 24; ao.inputs["Distance"].default_value = max(.03, h * .12)
@@ -42,8 +102,6 @@ for m in mats:                                  # um no de imagem alvo por mater
     L.new(em.outputs[0], out.inputs["Surface"])
     ti = nos.new("ShaderNodeTexImage"); ti.image = alvo; nos.active = ti
 
-sc = bpy.context.scene; sc.render.engine = "CYCLES"; sc.cycles.device = "CPU"; sc.cycles.samples = 64
-sc.render.bake.margin = 16
 for o in obs: o.select_set(True)
 bpy.context.view_layer.objects.active = obs[0]
 bpy.ops.object.bake(type="EMIT")
@@ -55,18 +113,17 @@ for m, (alvo, antes, out, ja) in mascaras.items():
     if antes: nt.links.new(antes, out.inputs["Surface"])            # devolve o shader original
     w, hh = alvo.size
     M = np.array(alvo.pixels[:], dtype=np.float32).reshape(hh, w, 4)
-    _d = bpy.data.images.new("dbg", w, hh); _d.pixels[:] = np.concatenate([M[..., :3], np.ones((hh, w, 1), np.float32)], -1).ravel(); _d.filepath_raw = os.path.join(TMP, "mascara.png"); _d.file_format = "PNG"; _d.save()
     uso = M[..., 3] > .5 if M[..., 3].min() < .5 else np.ones(M.shape[:2], bool)
     b = M[..., 2]; lo, hi = np.percentile(b[uso], 10), np.percentile(b[uso], 90)
     ruido = np.clip((b - lo) / max(hi - lo, 1e-4), 0, 1)               # ruido normalizado: manchas de verdade, nao um veu
     fresta = np.clip(M[..., 0], 0, 1) ** 1.2 * (.35 + .65 * ruido) * f_fresta
     geral = ruido ** 2.5 * f_geral                                      # encardido de uso, em manchas, na peca toda
     perto = np.clip(M[..., 1], 0, 1) ** 1.3 * (.25 + .75 * ruido) * f_base
-    cor = img_do(m, "BaseColor"); C = np.array(cor.pixels[:], dtype=np.float32).reshape(hh, w, 4)
+    cor = img_cor(m); C = np.array(cor.pixels[:], dtype=np.float32).reshape(hh, w, 4)
     sujo = C[..., :3] * (1 - np.clip(fresta + geral, 0, 1)[..., None] * (1 - TINTA["encardido"]))
     sujo = sujo * (1 - perto[..., None] * (1 - TINTA[cor_base]))
     C[..., :3] = np.clip(sujo, 0, 1); cor.pixels[:] = C.ravel()
-    orm = img_do(m, "Roughness")
+    orm = img_rug(m)
     if orm and orm.size[:] == cor.size[:]:
         R = np.array(orm.pixels[:], dtype=np.float32).reshape(hh, w, 4)
         R[..., 1] = np.clip(R[..., 1] + .3 * np.clip(fresta + perto + geral, 0, 1), 0, 1); orm.pixels[:] = R.ravel()
